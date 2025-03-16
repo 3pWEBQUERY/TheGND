@@ -1,74 +1,98 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Logo from '@/components/Logo';
 
+// Haupt-Login-Seite, die den Suspense-Boundary bereitstellt
 const LoginPage: React.FC = () => {
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const [currentStep, setCurrentStep] = useState(1);
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [randomImageNumber, setRandomImageNumber] = useState<number>(1);
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	
-	useEffect(() => {
-		// Prüfen, ob der Benutzer gerade registriert wurde
-		if (searchParams.get('registered') === 'true') {
-			setSuccessMessage('Registrierung erfolgreich! Bitte melden Sie sich an.');
-		}
-	}, [searchParams]);
-	
-	const handleNextStep = () => {
-		setCurrentStep(2);
-	};
-	
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		
-		if (currentStep === 1) {
-			handleNextStep();
-		} else {
-			setIsSubmitting(true);
-			setError(null);
-			
-			try {
-				const result = await signIn('credentials', {
-					redirect: false,
-					email,
-					password
-				});
-				
-				if (result?.error) {
-					throw new Error(result.error);
-				}
-				
-				if (result?.ok) {
-					// Weiterleitung zur Startseite nach erfolgreicher Anmeldung
-					router.push('/');
-				}
-			} catch (err) {
-				console.error('Anmeldefehler:', err);
-				setError(err instanceof Error ? err.message : 'Ein unbekannter Fehler ist aufgetreten');
-			} finally {
-				setIsSubmitting(false);
-			}
-		}
-	};
+  return (
+    <Suspense fallback={<LoginSkeleton />}>
+      <LoginForm />
+    </Suspense>
+  );
+};
 
-	useEffect(() => {
-		// Zufällige Zahl zwischen 1 und 10 generieren (für die 10 Bilder im Ordner)
-		const randomNum = Math.floor(Math.random() * 10) + 1;
-		setRandomImageNumber(randomNum);
-		console.log("Zufällige Bildnummer (Login):", randomNum);
-	}, []);
+// Einfaches Skeleton-Loading für den Suspense-Fallback
+const LoginSkeleton = () => {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-black">
+      <div className="bg-white/10 backdrop-blur-md rounded-lg shadow-lg p-8 w-full max-w-md">
+        <div className="h-8 bg-gray-300/20 rounded mb-6"></div>
+        <div className="h-10 bg-gray-300/20 rounded mb-4"></div>
+        <div className="h-10 bg-gray-300/20 rounded mb-4"></div>
+        <div className="h-10 bg-gray-300/20 rounded"></div>
+      </div>
+    </div>
+  );
+};
 
-	return (
+// Innere Komponente, die useSearchParams verwendet
+const LoginForm: React.FC = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [randomImageNumber, setRandomImageNumber] = useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Prüfen, ob der Benutzer gerade registriert wurde
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMessage('Registrierung erfolgreich! Bitte melden Sie sich an.');
+    }
+  }, [searchParams]);
+	
+  const handleNextStep = () => {
+    setCurrentStep(2);
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (currentStep === 1) {
+      handleNextStep();
+    } else {
+      setIsSubmitting(true);
+      setError(null);
+      
+      try {
+        const result = await signIn('credentials', {
+          redirect: false,
+          email,
+          password
+        });
+        
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+        
+        if (result?.ok) {
+          // Weiterleitung zur Startseite nach erfolgreicher Anmeldung
+          router.push('/');
+        }
+      } catch (err) {
+        console.error('Anmeldefehler:', err);
+        setError(err instanceof Error ? err.message : 'Ein unbekannter Fehler ist aufgetreten');
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Zufällige Zahl zwischen 1 und 10 generieren (für die 10 Bilder im Ordner)
+    const randomNum = Math.floor(Math.random() * 10) + 1;
+    setRandomImageNumber(randomNum);
+    console.log("Zufällige Bildnummer (Login):", randomNum);
+  }, []);
+
+  return (
 		<div className="flex min-h-screen relative overflow-hidden">
 			{/* Zufälliges Hintergrundbild */}
 			<img 

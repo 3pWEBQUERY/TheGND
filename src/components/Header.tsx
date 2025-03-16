@@ -10,7 +10,7 @@ export default function Header() {
   const currentPath = usePathname();
   const isAuthenticated = status === 'authenticated';
   return (
-    <header className="px-6 relative h-14 bg-[hsl(240,10%,3.9%)] backdrop-blur-sm bg-opacity-80 z-50">
+    <header className="px-6 absolute top-0 left-0 right-0 h-14 backdrop-blur-sm z-50">
       <div className="absolute left-6 top-0 h-14 flex items-center">
         <Link href="/" className="flex items-center">
           <div>

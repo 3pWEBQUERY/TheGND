@@ -4,6 +4,14 @@ const nextConfig = {
     domains: ['thegnd.io'],
     // Deaktiviere Bildoptimierung, um Probleme zu vermeiden
     unoptimized: true,
+    // Erlaube externe Bilder
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'thegnd.io',
+        pathname: '/uploads/**',
+      },
+    ],
   },
   // Basispfad für die Anwendung
   basePath: '',
@@ -14,6 +22,11 @@ const nextConfig = {
         source: '/api/:path*',
         destination: '/api/:path*',
       },
+      // Statische Dateien umleiten
+      {
+        source: '/uploads/:path*',
+        destination: '/uploads/:path*',
+      },
     ];
   },
   // Statische Dateien konfigurieren
@@ -21,6 +34,13 @@ const nextConfig = {
   // Konfiguriere den Pfad für statische Dateien
   publicRuntimeConfig: {
     staticFolder: '/uploads',
+  },
+  // Konfiguriere die statischen Ordner
+  experimental: {
+    outputFileTracingRoot: process.cwd(),
+    outputFileTracingIncludes: {
+      '/': ['public/**/*'],
+    },
   },
 };
 

@@ -54,7 +54,10 @@ export async function POST(request: NextRequest) {
       
       // Zielverzeichnis bestimmen
       const mediaFolder = mediaType === 'IMAGE' ? 'images' : 'videos';
+      // Stelle sicher, dass der Pfad korrekt ist für die Bereitstellung
       const directory = join(process.cwd(), 'public', 'uploads', type, mediaFolder);
+      
+      console.log('Aktuelles Arbeitsverzeichnis:', process.cwd());
       
       console.log('Zielverzeichnis:', directory);
       
@@ -69,8 +72,11 @@ export async function POST(request: NextRequest) {
         console.log('Datei gespeichert:', filePath);
         
         // Relativen Pfad für die Datenbank erstellen
-        // Verwende den vollständigen Pfad für die Bereitstellung
-        const relativePath = `https://thegnd.io/uploads/${type}/${mediaFolder}/${filename}`;
+        // Verwende den relativen Pfad, der von Next.js korrekt bereitgestellt wird
+        const relativePath = `/uploads/${type}/${mediaFolder}/${filename}`;
+        
+        console.log('Relativer Pfad für die Datenbank:', relativePath);
+        console.log('Vollständiger URL für den Browser:', `https://thegnd.io${relativePath}`);
         
         // Metadaten für Bilder und Videos - mit null initialisieren
         let width = null;

@@ -6,9 +6,8 @@ import { authOptions } from '@/lib/auth';
 // GET /api/posts/[postId]/comments - Kommentare zu einem Beitrag abrufen
 export async function GET(
   request: NextRequest,
-  context: { params: { postId: string } }
+  { params }: { params: { postId: string } }
 ) {
-  const { params } = context;
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);
@@ -112,9 +111,8 @@ export async function GET(
 // POST /api/posts/[postId]/comments - Neuen Kommentar erstellen
 export async function POST(
   request: NextRequest,
-  context: { params: { postId: string } }
+  { params }: { params: { postId: string } }
 ) {
-  const { params } = context;
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);

@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // POST /api/comments/[commentId]/like - Kommentar liken
 export async function POST(
   request: NextRequest,
-  { params }: { params: { commentId: string } }
+  context: { params: { commentId: string } }
 ) {
   try {
     // Authentifizierung prüfen
@@ -15,8 +15,7 @@ export async function POST(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    // Wichtig: params als Promise behandeln
-    const { commentId } = await params;
+    const { commentId } = context.params;
     const userId = session.user.id;
 
     // Prüfen, ob der Kommentar existiert
@@ -65,7 +64,7 @@ export async function POST(
 // DELETE /api/comments/[commentId]/like - Like entfernen
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { commentId: string } }
+  context: { params: { commentId: string } }
 ) {
   try {
     // Authentifizierung prüfen
@@ -74,8 +73,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    // Wichtig: params als Promise behandeln
-    const { commentId } = await params;
+    const { commentId } = context.params;
     const userId = session.user.id;
 
     // Prüfen, ob der Kommentar existiert

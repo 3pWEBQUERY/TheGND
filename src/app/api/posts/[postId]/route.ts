@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // GET /api/posts/[postId] - Einzelnen Beitrag abrufen
 export async function GET(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  context: { params: { postId: string } }
 ) {
   try {
     // Authentifizierung prüfen
@@ -15,8 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    // Wichtig: params als Promise behandeln
-    const { postId } = await params;
+    const { postId } = context.params;
     const userId = session.user.id;
 
     // Beitrag abrufen
@@ -84,7 +83,7 @@ export async function GET(
 // PUT /api/posts/[postId] - Beitrag bearbeiten
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  context: { params: { postId: string } }
 ) {
   try {
     // Authentifizierung prüfen
@@ -94,8 +93,7 @@ export async function PUT(
     }
 
     const userId = session.user.id;
-    // Wichtig: params als Promise behandeln
-    const { postId } = await params;
+    const { postId } = context.params;
 
     // Anfragedaten abrufen
     const data = await request.json();
@@ -210,7 +208,7 @@ export async function PUT(
 // DELETE /api/posts/[postId] - Beitrag löschen
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  context: { params: { postId: string } }
 ) {
   try {
     // Authentifizierung prüfen
@@ -220,8 +218,7 @@ export async function DELETE(
     }
 
     const userId = session.user.id;
-    // Wichtig: params als Promise behandeln
-    const { postId } = await params;
+    const { postId } = context.params;
 
     // Prüfen, ob der Beitrag existiert und dem Benutzer gehört
     const post = await prisma.post.findUnique({

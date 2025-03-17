@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -396,11 +395,9 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
       <div className="p-4 flex items-center">
         <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
           {post.author.image ? (
-            <Image 
+            <img 
               src={post.author.image} 
               alt={post.author.name || post.author.username} 
-              width={40} 
-              height={40} 
               className="w-full h-full object-cover"
             />
           ) : (
@@ -440,11 +437,9 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
           {/* Aktives Medium */}
           <div>
             {post.media[activeMediaIndex].type === 'IMAGE' ? (
-              <Image 
+              <img 
                 src={post.media[activeMediaIndex].url} 
                 alt="Beitragsbild" 
-                width={800} 
-                height={600} 
                 className="w-full object-cover max-h-[500px]"
               />
             ) : (
@@ -575,11 +570,9 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
                 {currentUser?.image ? (
-                  <Image 
+                  <img 
                     src={currentUser.image} 
                     alt="Profilbild" 
-                    width={32} 
-                    height={32} 
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -631,11 +624,9 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                   <div className="flex">
                     <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
                       {comment.author.image ? (
-                        <Image 
+                        <img 
                           src={comment.author.image} 
                           alt={comment.author.name || comment.author.username} 
-                          width={32} 
-                          height={32} 
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -660,11 +651,9 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                           {comment.media.map(media => (
                             <div key={media.id} className="mt-2">
                               {media.type === 'IMAGE' ? (
-                                <Image 
+                                <img 
                                   src={media.url} 
                                   alt="Kommentar-Bild" 
-                                  width={200} 
-                                  height={150} 
                                   className="rounded-md max-h-40 object-cover"
                                 />
                               ) : (
@@ -711,11 +700,9 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                         <div key={reply.id} className="flex">
                           <div className="w-6 h-6 rounded-full overflow-hidden mr-2 flex-shrink-0">
                             {reply.author.image ? (
-                              <Image 
+                              <img 
                                 src={reply.author.image} 
                                 alt={reply.author.name || reply.author.username} 
-                                width={24} 
-                                height={24} 
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -740,11 +727,9 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                                 {reply.media.map(media => (
                                   <div key={media.id} className="mt-2">
                                     {media.type === 'IMAGE' ? (
-                                      <Image 
+                                      <img 
                                         src={media.url} 
                                         alt="Antwort-Bild" 
-                                        width={150} 
-                                        height={100} 
                                         className="rounded-md max-h-32 object-cover"
                                       />
                                     ) : (

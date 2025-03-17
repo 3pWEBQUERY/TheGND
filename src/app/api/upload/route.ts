@@ -77,7 +77,15 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Upload-Fehler:', error);
-    return NextResponse.json({ error: 'Fehler beim Hochladen der Datei' }, { status: 500 });
+    // Detailliertere Fehlerinformationen
+    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('Fehlerdetails:', { message: errorMessage, stack: errorStack });
+    
+    return NextResponse.json({ 
+      error: 'Fehler beim Hochladen der Datei', 
+      details: errorMessage 
+    }, { status: 500 });
   }
 }
 

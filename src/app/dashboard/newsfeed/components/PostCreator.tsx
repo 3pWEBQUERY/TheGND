@@ -82,13 +82,15 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
       });
       
       if (!response.ok) {
-        throw new Error('Fehler beim Hochladen der Datei');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.details || 'Fehler beim Hochladen der Datei');
       }
       
       const data = await response.json();
       return data.id;
     } catch (error) {
       console.error('Fehler beim Hochladen:', error);
+      setError(error instanceof Error ? error.message : 'Fehler beim Hochladen der Datei');
       return null;
     }
   };
@@ -112,6 +114,9 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
         const mediaId = await uploadMedia(image, 'post');
         if (mediaId) {
           mediaIds.push(mediaId);
+        } else {
+          // Wenn der Upload fehlschlägt, brechen wir ab
+          throw new Error('Fehler beim Hochladen eines Bildes');
         }
       }
       
@@ -120,6 +125,9 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
         const mediaId = await uploadMedia(selectedVideo, 'post');
         if (mediaId) {
           mediaIds.push(mediaId);
+        } else {
+          // Wenn der Upload fehlschlägt, brechen wir ab
+          throw new Error('Fehler beim Hochladen des Videos');
         }
       }
       

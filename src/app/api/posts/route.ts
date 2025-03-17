@@ -320,6 +320,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Fehler beim Erstellen des Beitrags:', error);
-    return NextResponse.json({ error: 'Fehler beim Erstellen des Beitrags' }, { status: 500 });
+    // Detailliertere Fehlerinformationen
+    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('Fehlerdetails:', { message: errorMessage, stack: errorStack });
+    
+    return NextResponse.json({ 
+      error: 'Fehler beim Erstellen des Beitrags', 
+      details: errorMessage 
+    }, { status: 500 });
   }
 }

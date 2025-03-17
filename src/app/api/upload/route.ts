@@ -50,8 +50,10 @@ export async function POST(request: NextRequest) {
     // Relativen Pfad für die Datenbank erstellen
     const relativePath = `/uploads/${type}/${mediaFolder}/${filename}`;
     
-    // Metadaten für Bilder und Videos
-    let width, height, duration;
+    // Metadaten für Bilder und Videos - mit null initialisieren
+    let width = null;
+    let height = null;
+    let duration = null;
     
     // In Datenbank speichern
     const media = await prisma.media.create({

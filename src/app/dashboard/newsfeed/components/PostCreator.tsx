@@ -18,6 +18,7 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,6 +101,7 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
     }
     
     setIsSubmitting(true);
+    setError(null);
     
     try {
       // Medien hochladen
@@ -134,7 +136,8 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
       });
       
       if (!response.ok) {
-        throw new Error('Fehler beim Erstellen des Beitrags');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Fehler beim Erstellen des Beitrags');
       }
       
       // Formular zurücksetzen
@@ -157,6 +160,7 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
       }
     } catch (error) {
       console.error('Fehler beim Erstellen des Beitrags:', error);
+      setError(error instanceof Error ? error.message : 'Ein unbekannter Fehler ist aufgetreten');
     } finally {
       setIsSubmitting(false);
     }
@@ -241,6 +245,13 @@ export default function PostCreator({ session, onPostCreated }: PostCreatorProps
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+            
+            {/* Fehlermeldung */}
+            {error && (
+              <div className="mt-3 p-3 bg-red-100 text-red-800 rounded-lg">
+                <p>{error}</p>
               </div>
             )}
             

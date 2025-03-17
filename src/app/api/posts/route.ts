@@ -242,84 +242,117 @@ export async function GET(request: NextRequest) {
 // POST /api/posts - Neuen Beitrag erstellen
 export async function POST(request: NextRequest) {
   try {
+    console.log('POST /api/posts - Anfrage erhalten');
+    
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);
+    console.log('Session:', session);
+    
     if (!session?.user) {
+      console.log('Nicht authentifiziert');
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
+    
+    console.log('Benutzer authentifiziert:', session.user.id);
 
     // Anfragedaten abrufen
     const data = await request.json();
+    console.log('Anfragedaten:', data);
+    
     const { content, mediaIds = [] } = data;
 
     if (!content && mediaIds.length === 0) {
+      console.log('Beitrag muss Text oder Medien enthalten');
       return NextResponse.json({ error: 'Beitrag muss Text oder Medien enthalten' }, { status: 400 });
     }
 
     // Hashtags aus dem Inhalt extrahieren
     const hashtags = content.match(/#(\w+)/g) || [];
     const tagNames = hashtags.map((tag: string) => tag.substring(1).toLowerCase());
+    console.log('Extrahierte Tags:', tagNames);
 
-    // Beitrag erstellen
-    const post = await prisma.post.create({
-      data: {
-        content,
-        authorId: session.user.id,
-        media: {
-          connect: mediaIds.map((id: string) => ({ id }))
-        }
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            image: true
-          }
+    try {
+      console.log('Versuche, Beitrag zu erstellen...');
+      console.log('Benutzer-ID:', session.user.id);
+      console.log('Content:', content);
+      console.log('Media IDs:', mediaIds);
+      
+      // Beitrag erstellen
+      const post = await prisma.post.create({
+        data: {
+          content,
+          authorId: session.user.id,
+          media: mediaIds.length > 0 ? {
+            connect: mediaIds.map((id: string) => ({ id }))
+          } : undefined
         },
-        media: true
-      }
-    });
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              image: true
+            }
+          },
+          media: true
+        }
+      });
+      
+      console.log('Beitrag erstellt:', post.id);
 
-    // Tags erstellen oder verknüpfen
-    if (tagNames.length > 0) {
-      // Für jeden Tag:
-      // 1. Finde oder erstelle den Tag
-      // 2. Verknüpfe ihn mit dem Beitrag
-      for (const name of tagNames) {
-        const tag = await prisma.tag.upsert({
-          where: { name },
-          update: {},
-          create: { name }
-        });
+      // Tags erstellen oder verknüpfen
+      if (tagNames.length > 0) {
+        console.log('Verarbeite Tags...');
+        // Für jeden Tag:
+        // 1. Finde oder erstelle den Tag
+        // 2. Verknüpfe ihn mit dem Beitrag
+        for (const name of tagNames) {
+          console.log('Verarbeite Tag:', name);
+          const tag = await prisma.tag.upsert({
+            where: { name },
+            update: {},
+            create: { name }
+          });
 
-        await prisma.postTag.create({
-          data: {
-            postId: post.id,
-            tagId: tag.id
-          }
-        });
+          await prisma.postTag.create({
+            data: {
+              postId: post.id,
+              tagId: tag.id
+            }
+          });
+        }
       }
+
+      console.log('Beitrag erfolgreich erstellt');
+      return NextResponse.json({
+        id: post.id,
+        content: post.content,
+        createdAt: post.createdAt,
+        author: post.author,
+        media: post.media.map((media: any) => ({
+          id: media.id,
+          url: media.url,
+          type: media.type
+        })),
+        likes: 0,
+        comments: 0,
+        isLiked: false,
+        isSaved: false
+      });
+    } catch (dbError) {
+      console.error('Datenbankfehler beim Erstellen des Beitrags:', dbError);
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unbekannter Datenbankfehler';
+      const errorStack = dbError instanceof Error ? dbError.stack : '';
+      console.error('Datenbankfehlerdetails:', { message: errorMessage, stack: errorStack });
+      
+      return NextResponse.json({ 
+        error: 'Datenbankfehler beim Erstellen des Beitrags', 
+        details: errorMessage 
+      }, { status: 500 });
     }
-
-    return NextResponse.json({
-      id: post.id,
-      content: post.content,
-      createdAt: post.createdAt,
-      author: post.author,
-      media: post.media.map((media: any) => ({
-        id: media.id,
-        url: media.url,
-        type: media.type
-      })),
-      likes: 0,
-      comments: 0,
-      isLiked: false,
-      isSaved: false
-    });
   } catch (error) {
-    console.error('Fehler beim Erstellen des Beitrags:', error);
+    console.error('Allgemeiner Fehler beim Erstellen des Beitrags:', error);
     // Detailliertere Fehlerinformationen
     const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
     const errorStack = error instanceof Error ? error.stack : '';

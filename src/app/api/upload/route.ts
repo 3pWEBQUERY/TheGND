@@ -72,17 +72,10 @@ export async function POST(request: NextRequest) {
         console.log('Datei gespeichert:', filePath);
         
         // Relativen Pfad für die Datenbank erstellen
-        // Verwende den relativen Pfad, der von Next.js korrekt bereitgestellt wird
         const relativePath = `/uploads/${type}/${mediaFolder}/${filename}`;
         
-        // Für die Produktion: Vollständige URL mit der Domain
-        // Für die Entwicklung: Relativer Pfad
-        const isProduction = process.env.NODE_ENV === 'production';
-        const baseUrl = isProduction ? 'https://thegnd.io' : '';
-        const fullUrl = `${baseUrl}${relativePath}`;
-        
+        // Speichere nur den relativen Pfad in der Datenbank
         console.log('Relativer Pfad:', relativePath);
-        console.log('Vollständiger URL für den Browser:', fullUrl);
         
         // Metadaten für Bilder und Videos - mit null initialisieren
         let width = null;
@@ -95,7 +88,7 @@ export async function POST(request: NextRequest) {
           const media = await prisma.media.create({
             data: {
               type: mediaType,
-              url: fullUrl, // Verwende die vollständige URL statt des relativen Pfads
+              url: relativePath, // Speichere nur den relativen Pfad
               filename: originalName,
               size: buffer.length,
               mimeType: file.type,
@@ -109,7 +102,7 @@ export async function POST(request: NextRequest) {
           
           return NextResponse.json({ 
             id: media.id,
-            url: fullUrl, // Verwende die vollständige URL statt des relativen Pfads
+            url: relativePath, // Gib den relativen Pfad zurück
             type: mediaType
           });
         } catch (dbError) {

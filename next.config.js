@@ -8,12 +8,12 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'thegnd.io',
+        hostname: '**', // Erlaube alle Domains
         pathname: '/uploads/**',
       },
       {
         protocol: 'http',
-        hostname: 'localhost',
+        hostname: '**', // Erlaube alle Domains
         pathname: '/uploads/**',
       },
     ],

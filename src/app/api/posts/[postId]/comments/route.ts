@@ -4,10 +4,7 @@ import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 
 // GET /api/posts/[postId]/comments - Kommentare zu einem Beitrag abrufen
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { postId: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);
@@ -15,7 +12,9 @@ export async function GET(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const { postId } = params;
+    // Post-ID aus der URL extrahieren
+    const pathParts = request.nextUrl.pathname.split('/');
+    const postId = pathParts[pathParts.length - 2]; // posts/[postId]/comments
     const userId = session.user.id;
 
     // URL-Parameter abrufen
@@ -109,10 +108,7 @@ export async function GET(
 }
 
 // POST /api/posts/[postId]/comments - Neuen Kommentar erstellen
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { postId: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);
@@ -120,7 +116,9 @@ export async function POST(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const { postId } = params;
+    // Post-ID aus der URL extrahieren
+    const pathParts = request.nextUrl.pathname.split('/');
+    const postId = pathParts[pathParts.length - 2]; // posts/[postId]/comments
     const userId = session.user.id;
 
     // Anfragedaten abrufen

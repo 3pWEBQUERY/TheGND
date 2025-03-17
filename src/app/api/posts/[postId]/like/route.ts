@@ -4,10 +4,7 @@ import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 
 // POST /api/posts/[postId]/like - Beitrag liken
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { postId: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);
@@ -15,7 +12,9 @@ export async function POST(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const { postId } = params;
+    // Post-ID aus der URL extrahieren
+    const pathParts = request.nextUrl.pathname.split('/');
+    const postId = pathParts[pathParts.length - 2]; // posts/[postId]/like
     const userId = session.user.id;
 
     // Prüfen, ob der Beitrag existiert
@@ -60,10 +59,7 @@ export async function POST(
 }
 
 // DELETE /api/posts/[postId]/like - Like entfernen
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { postId: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);
@@ -71,7 +67,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const { postId } = params;
+    // Post-ID aus der URL extrahieren
+    const pathParts = request.nextUrl.pathname.split('/');
+    const postId = pathParts[pathParts.length - 2]; // posts/[postId]/like
     const userId = session.user.id;
 
     // Prüfen, ob der Beitrag existiert

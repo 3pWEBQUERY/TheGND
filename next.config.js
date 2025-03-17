@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['thegnd.io'],
+    domains: ['thegnd.io', 'localhost'],
     // Deaktiviere Bildoptimierung, um Probleme zu vermeiden
     unoptimized: true,
     // Erlaube externe Bilder
@@ -9,6 +9,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'thegnd.io',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
         pathname: '/uploads/**',
       },
     ],

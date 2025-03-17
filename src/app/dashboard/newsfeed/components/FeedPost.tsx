@@ -13,11 +13,10 @@ const getFullImageUrl = (url: string) => {
     return url;
   }
   
-  // Wenn die URL mit /uploads/ beginnt, füge die Domain hinzu
+  // Wenn die URL mit /uploads/ beginnt, füge die aktuelle Domain hinzu
   if (url.startsWith('/uploads/')) {
-    // In der Produktion: thegnd.io, in der Entwicklung: localhost:3000
-    const isProduction = process.env.NODE_ENV === 'production';
-    const baseUrl = isProduction ? 'https://thegnd.io' : '';
+    // Verwende die aktuelle Domain des Browsers
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     return `${baseUrl}${url}`;
   }
   

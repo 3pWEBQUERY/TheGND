@@ -36,6 +36,12 @@ model User {
   sessions      Session[]
   conversations ConversationParticipant[]
   messages      Message[]
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  saves         Save[]
+  followedBy    Follow[]    @relation("following")
+  following     Follow[]    @relation("follower")
 }
 
 model Account {
@@ -103,4 +109,107 @@ model Message {
   isRead          Boolean      @default(false)
   sender          User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
   conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model Media {
+  id          String      @id @default(cuid())
+  type        MediaType
+  url         String
+  filename    String
+  size        Int
+  mimeType    String
+  width       Int?
+  height      Int?
+  duration    Int?
+  createdAt   DateTime    @default(now())
+  postId      String?
+  post        Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId   String?
+  comment     Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id          String      @id @default(cuid())
+  content     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  authorId    String
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  media       Media[]
+  likes       Like[]
+  comments    Comment[]
+  saves       Save[]
+  tags        PostTag[]
+}
+
+model Comment {
+  id          String      @id @default(cuid())
+  content     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  authorId    String
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId      String
+  post        Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      Comment?    @relation("CommentToComment", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[]   @relation("CommentToComment")
+  likes       Like[]
+  media       Media[]
+}
+
+model Like {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId      String?
+  post        Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId   String?
+  comment     Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId, commentId])
+}
+
+model Save {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId      String
+  post        Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId])
+}
+
+model Follow {
+  id              String      @id @default(cuid())
+  createdAt       DateTime    @default(now())
+  followerId      String
+  follower        User        @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId     String
+  following       User        @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  @@unique([followerId, followingId])
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  posts       PostTag[]
+}
+
+model PostTag {
+  id          String      @id @default(cuid())
+  postId      String
+  post        Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId       String
+  tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, tagId])
 }

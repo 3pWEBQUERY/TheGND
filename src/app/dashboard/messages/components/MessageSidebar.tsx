@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Conversation } from '../page';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -25,12 +25,31 @@ const MessageSidebar: React.FC<MessageSidebarProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [newUserId, setNewUserId] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'requests'>('all');
 
-  // Filtere Konversationen basierend auf dem Suchbegriff
-  const filteredConversations = conversations.filter(conversation => {
-    const otherParticipant = conversation.participants.find(p => p.id !== currentUserId);
-    return otherParticipant?.username.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // Filtere Konversationen basierend auf dem Suchbegriff und dem aktiven Tab
+  const filteredConversations = useMemo(() => {
+    // Zuerst nach Suchbegriff filtern
+    const searchFiltered = conversations.filter(conversation => {
+      const otherParticipant = conversation.participants.find(p => p.id !== currentUserId);
+      return otherParticipant?.username.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+
+    // Dann nach Tab filtern
+    if (activeTab === 'all') {
+      return searchFiltered;
+    } else {
+      // "Anfragen" sind Konversationen, bei denen der aktuelle Benutzer noch keine Nachricht gesendet hat
+      return searchFiltered.filter(conversation => {
+        // Wenn es keine letzte Nachricht gibt, ist es eine Anfrage
+        if (!conversation.lastMessage) return true;
+        
+        // Prüfe, ob alle Nachrichten von anderen Benutzern stammen
+        // (Vereinfachte Logik: Wir prüfen nur die letzte Nachricht)
+        return conversation.lastMessage.senderId !== currentUserId;
+      });
+    }
+  }, [conversations, searchTerm, activeTab, currentUserId]);
 
   // Funktion zum Formatieren des Zeitstempels
   const formatTimestamp = (date: Date) => {
@@ -214,10 +233,24 @@ const MessageSidebar: React.FC<MessageSidebarProps> = ({
 
       {/* Tabs */}
       <div className="border-t border-border p-2 flex">
-        <button className="flex-1 py-2 text-center text-sm font-medium accent-bg text-white rounded-md">
+        <button 
+          className={`flex-1 py-2 text-center text-sm font-medium rounded-md transition-colors ${
+            activeTab === 'all' 
+              ? 'accent-bg text-white' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          onClick={() => setActiveTab('all')}
+        >
           Alle
         </button>
-        <button className="flex-1 py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground">
+        <button 
+          className={`flex-1 py-2 text-center text-sm font-medium rounded-md transition-colors ${
+            activeTab === 'requests' 
+              ? 'accent-bg text-white' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          onClick={() => setActiveTab('requests')}
+        >
           Anfragen
         </button>
       </div>

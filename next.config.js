@@ -45,11 +45,9 @@ const nextConfig = {
     staticFolder: '/uploads',
   },
   // Konfiguriere die statischen Ordner
-  experimental: {
-    outputFileTracingRoot: process.cwd(),
-    outputFileTracingIncludes: {
-      '/': ['public/**/*'],
-    },
+  outputFileTracingRoot: process.cwd(),
+  outputFileTracingIncludes: {
+    '/': ['public/**/*'],
   },
   // Middleware für statische Dateien und API-Routen
   async headers() {

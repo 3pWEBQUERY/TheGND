@@ -6,8 +6,9 @@ import { authOptions } from '@/lib/auth';
 // POST /api/comments/[commentId]/like - Kommentar liken
 export async function POST(
   request: NextRequest,
-  { params }: { params: { commentId: string } }
+  context: { params: { commentId: string } }
 ) {
+  const { params } = context;
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);
@@ -64,8 +65,9 @@ export async function POST(
 // DELETE /api/comments/[commentId]/like - Like entfernen
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { commentId: string } }
+  context: { params: { commentId: string } }
 ) {
+  const { params } = context;
   try {
     // Authentifizierung prüfen
     const session = await getServerSession(authOptions);

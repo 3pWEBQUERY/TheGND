@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [],
+    domains: ['thegnd.io'],
     // Deaktiviere Bildoptimierung, um Probleme zu vermeiden
     unoptimized: true,
   },
@@ -15,6 +15,12 @@ const nextConfig = {
         destination: '/api/:path*',
       },
     ];
+  },
+  // Statische Dateien konfigurieren
+  output: 'standalone',
+  // Konfiguriere den Pfad für statische Dateien
+  publicRuntimeConfig: {
+    staticFolder: '/uploads',
   },
 };
 

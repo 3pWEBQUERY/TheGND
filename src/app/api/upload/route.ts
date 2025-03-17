@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
         console.log('Datei gespeichert:', filePath);
         
         // Relativen Pfad für die Datenbank erstellen
-        const relativePath = `/uploads/${type}/${mediaFolder}/${filename}`;
+        // Verwende den vollständigen Pfad für die Bereitstellung
+        const relativePath = `https://thegnd.io/uploads/${type}/${mediaFolder}/${filename}`;
         
         // Metadaten für Bilder und Videos - mit null initialisieren
         let width = null;

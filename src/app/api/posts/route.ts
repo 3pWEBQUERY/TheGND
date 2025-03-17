@@ -279,19 +279,30 @@ export async function POST(request: NextRequest) {
       
       // Überprüfen, ob der Benutzer existiert
       console.log('Überprüfe, ob der Benutzer existiert...');
+      console.log('Benutzer-E-Mail:', session.user.email);
+      
+      if (!session.user.email) {
+        console.error('Keine E-Mail-Adresse in der Sitzung gefunden');
+        return NextResponse.json({ 
+          error: 'Keine E-Mail-Adresse', 
+          details: 'Die E-Mail-Adresse des Benutzers fehlt in der Sitzung' 
+        }, { status: 400 });
+      }
+      
+      // Versuche, den Benutzer anhand seiner E-Mail-Adresse zu finden
       const user = await prisma.user.findUnique({
-        where: { id: session.user.id }
+        where: { email: session.user.email }
       });
       
       if (!user) {
-        console.error('Benutzer nicht gefunden:', session.user.id);
+        console.error('Benutzer nicht gefunden mit E-Mail:', session.user.email);
         return NextResponse.json({ 
           error: 'Benutzer nicht gefunden', 
           details: 'Der angemeldete Benutzer existiert nicht in der Datenbank' 
         }, { status: 404 });
       }
       
-      console.log('Benutzer gefunden:', user.id);
+      console.log('Benutzer gefunden mit ID:', user.id);
       
       // Beitrag erstellen
       const post = await prisma.post.create({

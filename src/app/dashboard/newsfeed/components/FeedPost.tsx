@@ -13,9 +13,18 @@ const getFullImageUrl = (url: string) => {
     return url;
   }
   
-  // Wenn die URL mit /uploads/ beginnt, füge die aktuelle Domain hinzu
-  if (url.startsWith('/uploads/')) {
+  // Wenn die URL mit /uploads/ beginnt oder mit uploads/ beginnt
+  if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+    // Stelle sicher, dass die URL mit einem Schrägstrich beginnt
+    const normalizedPath = url.startsWith('/') ? url : `/${url}`;
+    
     // Verwende die aktuelle Domain des Browsers
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${baseUrl}${normalizedPath}`;
+  }
+  
+  // Wenn die URL mit einem Schrägstrich beginnt, füge die Domain hinzu
+  if (url.startsWith('/')) {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     return `${baseUrl}${url}`;
   }

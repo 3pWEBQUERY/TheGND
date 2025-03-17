@@ -481,7 +481,7 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
     <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
       {/* Beitrags-Header */}
       <div className="p-4 flex items-center">
-        <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+        <div className="w-20 h-20 rounded-full overflow-hidden mr-3">
           {post.author.image ? (
             <img 
               src={getFullImageUrl(post.author.image)} 

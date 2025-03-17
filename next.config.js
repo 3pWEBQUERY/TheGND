@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['thegnd.io', 'localhost'],
+    domains: ['thegnd.io', 'localhost', 'ixqhqgvgxnpxfbvxnzxl.blob.vercel-storage.com'],
     // Deaktiviere Bildoptimierung, um Probleme zu vermeiden
     unoptimized: true,
     // Erlaube externe Bilder
@@ -15,6 +15,10 @@ const nextConfig = {
         protocol: 'http',
         hostname: '**', // Erlaube alle Domains
         pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.blob.vercel-storage.com', // Erlaube Vercel Blob Domains
       },
     ],
   },

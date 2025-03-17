@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
+import { put } from '@vercel/blob';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,10 +35,9 @@ export async function POST(request: NextRequest) {
     try {
       // Datei-Informationen
       const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
       
       console.log('Datei-Informationen:', { 
-        size: buffer.length, 
+        size: bytes.byteLength, 
         type: file.type 
       });
       
@@ -52,30 +50,17 @@ export async function POST(request: NextRequest) {
       // Medientyp bestimmen
       const mediaType = file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO';
       
-      // Zielverzeichnis bestimmen
+      // Medienordner für den Pfad bestimmen
       const mediaFolder = mediaType === 'IMAGE' ? 'images' : 'videos';
-      // Stelle sicher, dass der Pfad korrekt ist für die Bereitstellung
-      const directory = join(process.cwd(), 'public', 'uploads', type, mediaFolder);
-      
-      console.log('Aktuelles Arbeitsverzeichnis:', process.cwd());
-      
-      console.log('Zielverzeichnis:', directory);
       
       try {
-        // Verzeichnis erstellen, falls es nicht existiert
-        await mkdir(directory, { recursive: true });
-        console.log('Verzeichnis erstellt oder existiert bereits');
+        // Datei auf Vercel Blob hochladen
+        const blob = await put(`${type}/${mediaFolder}/${filename}`, file, {
+          access: 'public',
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        });
         
-        // Datei speichern
-        const filePath = join(directory, filename);
-        await writeFile(filePath, buffer);
-        console.log('Datei gespeichert:', filePath);
-        
-        // Relativen Pfad für die Datenbank erstellen
-        const relativePath = `/uploads/${type}/${mediaFolder}/${filename}`;
-        
-        // Speichere nur den relativen Pfad in der Datenbank
-        console.log('Relativer Pfad:', relativePath);
+        console.log('Datei auf Vercel Blob hochgeladen:', blob.url);
         
         // Metadaten für Bilder und Videos - mit null initialisieren
         let width = null;
@@ -88,9 +73,9 @@ export async function POST(request: NextRequest) {
           const media = await prisma.media.create({
             data: {
               type: mediaType,
-              url: relativePath, // Speichere nur den relativen Pfad
+              url: blob.url, // Speichere die vollständige Blob-URL
               filename: originalName,
-              size: buffer.length,
+              size: bytes.byteLength,
               mimeType: file.type,
               width,
               height,
@@ -102,7 +87,7 @@ export async function POST(request: NextRequest) {
           
           return NextResponse.json({ 
             id: media.id,
-            url: relativePath, // Gib den relativen Pfad zurück
+            url: blob.url, // Gib die vollständige Blob-URL zurück
             type: mediaType
           });
         } catch (dbError) {

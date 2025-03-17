@@ -9,6 +9,7 @@ const getFullImageUrl = (url: string) => {
   if (!url) return '';
   
   // Wenn die URL bereits mit http:// oder https:// beginnt, ist sie bereits vollständig
+  // Dies schließt auch Vercel Blob-URLs ein, die mit https:// beginnen
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }

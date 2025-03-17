@@ -28,11 +28,11 @@ export default function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
 
   return (
     <div className="bg-card rounded-lg border border-border mb-6 shadow-sm overflow-hidden">
-      <div className="flex">
+      <div className="flex flex-col sm:flex-row">
         {tabs.map(tab => (
           <button
             key={tab.id}
-            className={`flex-1 py-2 px-4 text-center transition-colors duration-200 flex items-center justify-center rounded-md mx-1 ${
+            className={`flex-1 py-2 px-4 text-center transition-colors duration-200 flex items-center justify-center rounded-md mx-1 my-1 sm:my-0 ${
               activeTab === tab.id 
                 ? 'accent-bg text-white font-medium' 
                 : 'hover:bg-[hsl(345.3,82.7%,40.8%)] hover:bg-opacity-10 hover:text-white'

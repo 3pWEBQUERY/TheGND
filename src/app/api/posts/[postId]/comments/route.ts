@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // GET /api/posts/[postId]/comments - Kommentare zu einem Beitrag abrufen
 export async function GET(
   request: NextRequest,
-  { params }: any
+  { params }: { params: { postId: string } }
 ) {
   try {
     // Authentifizierung prüfen
@@ -111,7 +111,7 @@ export async function GET(
 // POST /api/posts/[postId]/comments - Neuen Kommentar erstellen
 export async function POST(
   request: NextRequest,
-  { params }: any
+  { params }: { params: { postId: string } }
 ) {
   try {
     // Authentifizierung prüfen

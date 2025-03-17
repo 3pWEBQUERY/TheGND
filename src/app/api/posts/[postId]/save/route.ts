@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // POST /api/posts/[postId]/save - Beitrag speichern
 export async function POST(
   request: NextRequest,
-  { params }: any
+  { params }: { params: { postId: string } }
 ) {
   try {
     // Authentifizierung prüfen
@@ -57,7 +57,7 @@ export async function POST(
 // DELETE /api/posts/[postId]/save - Speichern entfernen
 export async function DELETE(
   request: NextRequest,
-  { params }: any
+  { params }: { params: { postId: string } }
 ) {
   try {
     // Authentifizierung prüfen

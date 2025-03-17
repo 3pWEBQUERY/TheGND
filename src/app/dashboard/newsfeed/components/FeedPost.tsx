@@ -11,6 +11,10 @@ const getFullImageUrl = (url: string) => {
   // Wenn die URL bereits mit http:// oder https:// beginnt, ist sie bereits vollständig
   // Dies schließt auch Vercel Blob-URLs ein, die mit https:// beginnen
   if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Vercel BLOB-URLs sollten unverändert zurückgegeben werden
+    if (url.includes('blob.vercel-storage.com')) {
+      return url;
+    }
     return url;
   }
   
@@ -152,15 +156,26 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
   const handleLike = async () => {
     try {
       const method = isLiked ? 'DELETE' : 'POST';
-      const response = await fetch(`/api/posts/${post.id}/like`, {
+      console.log(`API-Aufruf: ${method} /api/posts/${post.id}/like`);
+      
+      // Verwende absolute URL
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const response = await fetch(`${baseUrl}/api/posts/${post.id}/like`, {
         method,
       });
       
       if (!response.ok) {
-        throw new Error(`Fehler beim ${isLiked ? 'Entfernen des Likes' : 'Liken'}`);
+        const errorText = await response.text();
+        console.error('API-Fehler:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Fehler: ${response.status} ${response.statusText} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('API-Antwort:', data);
       
       // UI aktualisieren
       setIsLiked(!isLiked);
@@ -171,7 +186,10 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
         onPostUpdated(post.id, { isLiked: !isLiked, likes: data.likes });
       }
     } catch (error) {
-      console.error('Fehler bei der Like-Aktion:', error);
+      console.error('Detaillierter Fehler:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'Kein Stack-Trace verfügbar'
+      });
     }
   };
 
@@ -179,15 +197,26 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
   const handleSave = async () => {
     try {
       const method = isSaved ? 'DELETE' : 'POST';
-      const response = await fetch(`/api/posts/${post.id}/save`, {
+      console.log(`API-Aufruf: ${method} /api/posts/${post.id}/save`);
+      
+      // Verwende absolute URL
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const response = await fetch(`${baseUrl}/api/posts/${post.id}/save`, {
         method,
       });
       
       if (!response.ok) {
-        throw new Error(`Fehler beim ${isSaved ? 'Entfernen des Speicherns' : 'Speichern'}`);
+        const errorText = await response.text();
+        console.error('API-Fehler:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Fehler: ${response.status} ${response.statusText} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('API-Antwort:', data);
       
       // UI aktualisieren
       setIsSaved(!isSaved);
@@ -197,7 +226,10 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
         onPostUpdated(post.id, { isSaved: !isSaved });
       }
     } catch (error) {
-      console.error('Fehler bei der Speichern-Aktion:', error);
+      console.error('Detaillierter Fehler:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'Kein Stack-Trace verfügbar'
+      });
     }
   };
 
@@ -209,7 +241,11 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
     setIsSubmittingComment(true);
     
     try {
-      const response = await fetch(`/api/posts/${post.id}/comments`, {
+      console.log(`API-Aufruf: POST /api/posts/${post.id}/comments`);
+      
+      // Verwende absolute URL
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const response = await fetch(`${baseUrl}/api/posts/${post.id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -221,10 +257,17 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
       });
       
       if (!response.ok) {
-        throw new Error('Fehler beim Erstellen des Kommentars');
+        const errorText = await response.text();
+        console.error('API-Fehler:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Fehler: ${response.status} ${response.statusText} - ${errorText}`);
       }
       
       const newComment = await response.json();
+      console.log('API-Antwort:', newComment);
       
       if (replyToCommentId) {
         // Wenn es eine Antwort ist, füge sie zum übergeordneten Kommentar hinzu
@@ -258,7 +301,10 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
       setReplyToCommentId(null);
       setReplyToUsername(null);
     } catch (error) {
-      console.error('Fehler beim Erstellen des Kommentars:', error);
+      console.error('Detaillierter Fehler:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'Kein Stack-Trace verfügbar'
+      });
     } finally {
       setIsSubmittingComment(false);
     }
@@ -361,12 +407,17 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
   const handleCommentLike = async (commentId: string, isLiked: boolean) => {
     try {
       const method = isLiked ? 'DELETE' : 'POST';
-      const response = await fetch(`/api/comments/${commentId}/like`, {
+      console.log(`API-Aufruf: ${method} /api/comments/${commentId}/like`);
+      
+      // Verwende absolute URL
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const response = await fetch(`${baseUrl}/api/comments/${commentId}/like`, {
         method,
       });
       
       // Auch bei Fehlern (z.B. 400) die UI aktualisieren
       const data = await response.json();
+      console.log('API-Antwort:', data);
       
       if (response.ok) {
         // UI aktualisieren für den Hauptkommentar
@@ -392,10 +443,17 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
           })
         );
       } else {
-        console.error(`Fehler beim ${isLiked ? 'Entfernen des Likes' : 'Liken'} des Kommentars:`, data.error);
+        console.error('API-Fehler:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: data.error
+        });
       }
     } catch (error) {
-      console.error('Fehler bei der Kommentar-Like-Aktion:', error);
+      console.error('Detaillierter Fehler:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'Kein Stack-Trace verfügbar'
+      });
     }
   };
 

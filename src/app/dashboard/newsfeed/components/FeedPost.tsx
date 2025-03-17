@@ -4,6 +4,27 @@ import React, { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 
+// Hilfsfunktion, um sicherzustellen, dass Bild-URLs vollständig sind
+const getFullImageUrl = (url: string) => {
+  if (!url) return '';
+  
+  // Wenn die URL bereits mit http:// oder https:// beginnt, ist sie bereits vollständig
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Wenn die URL mit /uploads/ beginnt, füge die Domain hinzu
+  if (url.startsWith('/uploads/')) {
+    // In der Produktion: thegnd.io, in der Entwicklung: localhost:3000
+    const isProduction = process.env.NODE_ENV === 'production';
+    const baseUrl = isProduction ? 'https://thegnd.io' : '';
+    return `${baseUrl}${url}`;
+  }
+  
+  // Andernfalls gib die URL unverändert zurück
+  return url;
+};
+
 interface Media {
   id: string;
   url: string;
@@ -396,7 +417,7 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
         <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
           {post.author.image ? (
             <img 
-              src={post.author.image} 
+              src={getFullImageUrl(post.author.image)} 
               alt={post.author.name || post.author.username} 
               className="w-full h-full object-cover"
             />
@@ -438,13 +459,13 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
           <div>
             {post.media[activeMediaIndex].type === 'IMAGE' ? (
               <img 
-                src={post.media[activeMediaIndex].url} 
+                src={getFullImageUrl(post.media[activeMediaIndex].url)} 
                 alt="Beitragsbild" 
                 className="w-full object-cover max-h-[500px]"
               />
             ) : (
               <video 
-                src={post.media[activeMediaIndex].url} 
+                src={getFullImageUrl(post.media[activeMediaIndex].url)} 
                 controls 
                 className="w-full max-h-[500px] object-contain"
               />
@@ -571,7 +592,7 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
               <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
                 {currentUser?.image ? (
                   <img 
-                    src={currentUser.image} 
+                    src={getFullImageUrl(currentUser.image)} 
                     alt="Profilbild" 
                     className="w-full h-full object-cover"
                   />
@@ -625,7 +646,7 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                     <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
                       {comment.author.image ? (
                         <img 
-                          src={comment.author.image} 
+                          src={getFullImageUrl(comment.author.image)} 
                           alt={comment.author.name || comment.author.username} 
                           className="w-full h-full object-cover"
                         />
@@ -652,13 +673,13 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                             <div key={media.id} className="mt-2">
                               {media.type === 'IMAGE' ? (
                                 <img 
-                                  src={media.url} 
+                                  src={getFullImageUrl(media.url)} 
                                   alt="Kommentar-Bild" 
                                   className="rounded-md max-h-40 object-cover"
                                 />
                               ) : (
                                 <video 
-                                  src={media.url} 
+                                  src={getFullImageUrl(media.url)} 
                                   controls 
                                   className="rounded-md max-h-40 w-full"
                                 />
@@ -701,7 +722,7 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                           <div className="w-6 h-6 rounded-full overflow-hidden mr-2 flex-shrink-0">
                             {reply.author.image ? (
                               <img 
-                                src={reply.author.image} 
+                                src={getFullImageUrl(reply.author.image)} 
                                 alt={reply.author.name || reply.author.username} 
                                 className="w-full h-full object-cover"
                               />
@@ -728,13 +749,13 @@ export default function FeedPost({ post, currentUser, onPostUpdated }: FeedPostP
                                   <div key={media.id} className="mt-2">
                                     {media.type === 'IMAGE' ? (
                                       <img 
-                                        src={media.url} 
+                                        src={getFullImageUrl(media.url)} 
                                         alt="Antwort-Bild" 
                                         className="rounded-md max-h-32 object-cover"
                                       />
                                     ) : (
                                       <video 
-                                        src={media.url} 
+                                        src={getFullImageUrl(media.url)} 
                                         controls 
                                         className="rounded-md max-h-32 w-full"
                                       />

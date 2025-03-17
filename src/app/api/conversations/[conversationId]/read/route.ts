@@ -6,7 +6,7 @@ import prisma from '@/lib/prisma';
 // POST /api/conversations/[conversationId]/read - Nachrichten als gelesen markieren
 export async function POST(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  context: { params: { conversationId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,7 @@ export async function POST(
     }
 
     const userId = session.user.id;
-    const { conversationId } = params;
+    const { conversationId } = context.params;
 
     // Überprüfe, ob der Benutzer Zugriff auf die Konversation hat
     const participant = await prisma.conversationParticipant.findFirst({

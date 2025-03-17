@@ -13,8 +13,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Kommentar-ID aus der URL extrahieren
-    const commentId = request.nextUrl.pathname.split('/').pop()?.replace('/like', '') || '';
+    const pathParts = request.nextUrl.pathname.split('/');
+    const commentId = pathParts[pathParts.length - 2]; // comments/[commentId]/like
     const userId = session.user.id;
+
+    console.log('Kommentar liken:', { commentId, userId, path: request.nextUrl.pathname, pathParts });
 
     // Prüfen, ob der Kommentar existiert
     const comment = await prisma.comment.findUnique({
@@ -69,8 +72,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Kommentar-ID aus der URL extrahieren
-    const commentId = request.nextUrl.pathname.split('/').pop()?.replace('/like', '') || '';
+    const pathParts = request.nextUrl.pathname.split('/');
+    const commentId = pathParts[pathParts.length - 2]; // comments/[commentId]/like
     const userId = session.user.id;
+
+    console.log('Kommentar unlike:', { commentId, userId, path: request.nextUrl.pathname, pathParts });
 
     // Prüfen, ob der Kommentar existiert
     const comment = await prisma.comment.findUnique({

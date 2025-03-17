@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Session } from 'next-auth';
 
 interface DashboardSidebarProps {
@@ -9,6 +10,15 @@ interface DashboardSidebarProps {
 }
 
 export default function DashboardSidebar({ session, favoriteTags }: DashboardSidebarProps) {
+  const pathname = usePathname();
+  
+  // Funktion zum Bestimmen des Navigationsstils basierend auf dem aktuellen Pfad
+  const getNavLinkClass = (path: string) => {
+    const isActive = pathname === path;
+    return isActive
+      ? "flex items-center py-2 px-3 accent-bg text-white rounded-md"
+      : "flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200";
+  };
   return (
     <div className="lg:w-1/4">
       {/* Profilkarte */}
@@ -58,44 +68,44 @@ export default function DashboardSidebar({ session, favoriteTags }: DashboardSid
       <div className="bg-card rounded-lg p-6 border border-border mb-6 shadow-sm">
         <h3 className="font-medium mb-3">Dashboard Navigation</h3>
         <nav className="space-y-2">
-          <Link href="/dashboard" className="flex items-center py-2 px-3 accent-bg text-white rounded-md">
+          <Link href="/dashboard" className={getNavLinkClass('/dashboard')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             Dashboard
           </Link>
-          <Link href="/explore" className="flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200">
+          <Link href="/explore" className={getNavLinkClass('/explore')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             Mein Profil
           </Link>
-          <Link href="/people" className="flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200">
+          <Link href="/people" className={getNavLinkClass('/people')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             Newsfeed
           </Link>
-          <Link href="/trending" className="flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200">
+          <Link href="/trending" className={getNavLinkClass('/trending')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
             Statistiken
           </Link>
-          <Link href="/notifications" className="flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200">
+          <Link href="/notifications" className={getNavLinkClass('/notifications')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             Benachrichtigungen
             <span className="ml-auto accent-bg text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
           </Link>
-          <Link href="/messages" className="flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200">
+          <Link href="/messages" className={getNavLinkClass('/messages')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
             Nachrichten
           </Link>
-          <Link href="/saved" className="flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200">
+          <Link href="/saved" className={getNavLinkClass('/saved')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>

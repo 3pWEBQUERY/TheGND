@@ -72,6 +72,9 @@ export default function Header() {
               
               <div className="absolute right-0 mt-1 w-48 bg-[hsl(240,10%,3.9%)] border border-white/10 rounded-md shadow-lg overflow-hidden z-50 hidden group-hover:block">
                 <div className="py-1">
+                <Link href="/dashboard" className="block px-4 py-2 text-sm text-white hover:bg-[hsl(345.3,82.7%,40.8%)]">
+                    Dashboard
+                  </Link>
                   <Link href="/profile" className="block px-4 py-2 text-sm text-white hover:bg-[hsl(345.3,82.7%,40.8%)]">
                     Profil
                   </Link>

@@ -6,7 +6,7 @@ import prisma from '@/lib/prisma';
 // GET /api/conversations/[conversationId] - Eine bestimmte Konversation mit Nachrichten abrufen
 export async function GET(
   req: NextRequest,
-  context: { params: { conversationId: string } }
+  params: { conversationId: string }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,7 @@ export async function GET(
     }
 
     const userId = session.user.id;
-    const { conversationId } = context.params;
+    const { conversationId } = params;
 
     // Überprüfe, ob der Benutzer Zugriff auf die Konversation hat
     const participant = await prisma.conversationParticipant.findFirst({

@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // POST /api/posts/[postId]/save - Beitrag speichern
 export async function POST(
   request: NextRequest,
-  context: { params: { postId: string } }
+  { params }: any
 ) {
   try {
     // Authentifizierung prüfen
@@ -15,7 +15,7 @@ export async function POST(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const { postId } = context.params;
+    const { postId } = params;
     const userId = session.user.id;
 
     // Prüfen, ob der Beitrag existiert
@@ -57,7 +57,7 @@ export async function POST(
 // DELETE /api/posts/[postId]/save - Speichern entfernen
 export async function DELETE(
   request: NextRequest,
-  context: { params: { postId: string } }
+  { params }: any
 ) {
   try {
     // Authentifizierung prüfen
@@ -66,7 +66,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const { postId } = context.params;
+    const { postId } = params;
     const userId = session.user.id;
 
     // Prüfen, ob der Beitrag existiert

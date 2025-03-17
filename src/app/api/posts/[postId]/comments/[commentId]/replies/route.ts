@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // GET /api/posts/[postId]/comments/[commentId]/replies - Antworten auf einen Kommentar abrufen
 export async function GET(
   request: NextRequest,
-  context: { params: { postId: string; commentId: string } }
+  { params }: any
 ) {
   try {
     // Authentifizierung prüfen
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const { postId, commentId } = context.params;
+    const { postId, commentId } = params;
     const userId = session.user.id;
 
     // URL-Parameter abrufen

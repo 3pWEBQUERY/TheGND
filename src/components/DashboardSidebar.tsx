@@ -14,7 +14,8 @@ export default function DashboardSidebar({ session, favoriteTags }: DashboardSid
   
   // Funktion zum Bestimmen des Navigationsstils basierend auf dem aktuellen Pfad
   const getNavLinkClass = (path: string) => {
-    const isActive = pathname === path;
+    // Prüft, ob der aktuelle Pfad mit dem Link-Pfad beginnt
+    const isActive = pathname === path || pathname.startsWith(`${path}/`);
     return isActive
       ? "flex items-center py-2 px-3 accent-bg text-white rounded-md"
       : "flex items-center py-2 px-3 text-foreground hover:bg-[hsl(345.3,82.7%,40.8%)] hover:text-white rounded-md transition-colors duration-200";
@@ -99,7 +100,7 @@ export default function DashboardSidebar({ session, favoriteTags }: DashboardSid
             Benachrichtigungen
             <span className="ml-auto accent-bg text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
           </Link>
-          <Link href="/dashboard/messages" className={getNavLinkClass('/messages')}>
+          <Link href="/dashboard/messages" className={getNavLinkClass('/dashboard/messages')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>

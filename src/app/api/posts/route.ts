@@ -277,11 +277,27 @@ export async function POST(request: NextRequest) {
       console.log('Content:', content);
       console.log('Media IDs:', mediaIds);
       
+      // Überprüfen, ob der Benutzer existiert
+      console.log('Überprüfe, ob der Benutzer existiert...');
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id }
+      });
+      
+      if (!user) {
+        console.error('Benutzer nicht gefunden:', session.user.id);
+        return NextResponse.json({ 
+          error: 'Benutzer nicht gefunden', 
+          details: 'Der angemeldete Benutzer existiert nicht in der Datenbank' 
+        }, { status: 404 });
+      }
+      
+      console.log('Benutzer gefunden:', user.id);
+      
       // Beitrag erstellen
       const post = await prisma.post.create({
         data: {
           content,
-          authorId: session.user.id,
+          authorId: user.id, // Verwende die bestätigte Benutzer-ID
           media: mediaIds.length > 0 ? {
             connect: mediaIds.map((id: string) => ({ id }))
           } : undefined

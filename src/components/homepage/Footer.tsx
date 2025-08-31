@@ -11,7 +11,7 @@ export default function Footer() {
             aria-hidden="true"
           />
           <p className="text-[13px] md:text-sm font-light text-neutral-300 leading-relaxed mb-8 max-w-md mx-auto">
-            The premier destination for sophisticated companionship services.
+            Finde deine Girls Next Door auf THEGND.
           </p>
           <div className="flex justify-center gap-6 mb-8">
             <Link

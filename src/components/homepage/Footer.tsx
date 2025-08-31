@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="bg-gray-100 py-16">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center">
-          <h3 className="text-2xl font-thin tracking-wider text-gray-800 mb-4">PRIVATE</h3>
+          <h3 className="text-2xl font-thin tracking-wider text-gray-800 mb-4">THEGND</h3>
           <p className="text-sm font-light text-gray-600 leading-relaxed mb-8 max-w-md mx-auto">
             The premier destination for sophisticated companionship services.
           </p>

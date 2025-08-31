@@ -1,12 +1,14 @@
 'use client'
 
-import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
+import DashboardHeader from '@/components/DashboardHeader'
 import Footer from '@/components/homepage/Footer'
+import { useSession } from 'next-auth/react'
 
 export default function NotificationsPage() {
+  const { data: session } = useSession()
   return (
     <div className="min-h-screen bg-white">
-      <MinimalistNavigation />
+      <DashboardHeader session={session} activeTab="notifications" setActiveTab={() => {}} />
       <div className="max-w-7xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-light tracking-widest text-gray-900">BENACHRICHTIGUNGEN</h1>
         <div className="w-24 h-px bg-pink-500 mt-3" />

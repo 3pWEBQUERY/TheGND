@@ -33,6 +33,19 @@ enum OnboardingStatus {
   SKIPPED
 }
 
+// Privacy & Notifications Enums
+enum ProfileVisibility {
+  PUBLIC
+  VERIFIED
+  PRIVATE
+}
+
+enum NotificationPreference {
+  ALL
+  IMPORTANT
+  NONE
+}
+
 // User Authentication Model
 model User {
   id                String            @id @default(cuid())
@@ -112,6 +125,10 @@ model Profile {
   city        String?
   country     String?
   zipCode     String?
+  
+  // Privacy & Notifications
+  visibility             ProfileVisibility       @default(PUBLIC)
+  notificationPreference NotificationPreference  @default(ALL)
   
   // Structured geolocation fields
   latitude    Float?

@@ -15,9 +15,15 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<string>('profil')
   const detailsRef = useRef<HTMLDivElement>(null)
   const [displayName, setDisplayName] = useState<string>('')
+  const [city, setCity] = useState<string>('')
+  const [country, setCountry] = useState<string>('')
   const [loadingProfile, setLoadingProfile] = useState<boolean>(false)
   const [savingProfile, setSavingProfile] = useState<boolean>(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error' | null; text: string }>({ type: null, text: '' })
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'VERIFIED' | 'PRIVATE'>('PUBLIC')
+  const [notificationPref, setNotificationPref] = useState<'ALL' | 'IMPORTANT' | 'NONE'>('ALL')
+  const [savingPrivacy, setSavingPrivacy] = useState<boolean>(false)
+  const [privacyMessage, setPrivacyMessage] = useState<{ type: 'success' | 'error' | null; text: string }>({ type: null, text: '' })
 
   const go = (value: string) => {
     setTab(value)
@@ -27,7 +33,28 @@ export default function SettingsPage() {
     })
   }
 
-  // Load current user's profile to prefill display name
+  const handleSavePrivacy = async () => {
+    try {
+      setSavingPrivacy(true)
+      setPrivacyMessage({ type: null, text: '' })
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileData: {
+          visibility,
+          notificationPreference: notificationPref,
+        } })
+      })
+      if (!res.ok) throw new Error('Failed')
+      setPrivacyMessage({ type: 'success', text: 'Privatsphäre gespeichert' })
+    } catch (e) {
+      setPrivacyMessage({ type: 'error', text: 'Speichern fehlgeschlagen' })
+    } finally {
+      setSavingPrivacy(false)
+    }
+  }
+
+  // Load current user's profile to prefill display name, city and country
   useEffect(() => {
     let active = true
     const load = async () => {
@@ -38,6 +65,10 @@ export default function SettingsPage() {
         const data = await res.json()
         if (active) {
           setDisplayName(data?.user?.profile?.displayName ?? '')
+          setCity(data?.user?.profile?.city ?? '')
+          setCountry(data?.user?.profile?.country ?? '')
+          setVisibility((data?.user?.profile?.visibility as 'PUBLIC' | 'VERIFIED' | 'PRIVATE') ?? 'PUBLIC')
+          setNotificationPref((data?.user?.profile?.notificationPreference as 'ALL' | 'IMPORTANT' | 'NONE') ?? 'ALL')
         }
       } catch (e) {
         // ignore
@@ -56,7 +87,11 @@ export default function SettingsPage() {
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileData: { displayName: displayName?.trim() || null } })
+        body: JSON.stringify({ profileData: { 
+          displayName: displayName?.trim() || null,
+          city: city?.trim() || null,
+          country: country?.trim() || null,
+        } })
       })
       if (!res.ok) throw new Error('Failed')
       setSaveMessage({ type: 'success', text: 'Profil gespeichert' })
@@ -138,17 +173,23 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <Label htmlFor="city" className="text-xs font-light tracking-widest text-gray-800 uppercase">STADT</Label>
-                  <Input id="city" placeholder="z. B. Berlin" className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent" />
+                  <Input
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="z. B. Berlin"
+                    className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">LAND</Label>
                   <div className="mt-2">
-                    <Select defaultValue="de">
+                    <Select value={country} onValueChange={setCountry}>
                       <SelectTrigger className="w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 bg-transparent"><SelectValue placeholder="Land wählen" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="de">Deutschland</SelectItem>
-                        <SelectItem value="at">Österreich</SelectItem>
-                        <SelectItem value="ch">Schweiz</SelectItem>
+                        <SelectItem value="Deutschland">Deutschland</SelectItem>
+                        <SelectItem value="Österreich">Österreich</SelectItem>
+                        <SelectItem value="Schweiz">Schweiz</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -195,12 +236,12 @@ export default function SettingsPage() {
                 <div>
                   <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">SICHTBARKEIT</Label>
                   <div className="mt-2">
-                    <Select defaultValue="public">
+                    <Select value={visibility} onValueChange={(v) => setVisibility(v as 'PUBLIC' | 'VERIFIED' | 'PRIVATE')}>
                       <SelectTrigger className="w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 bg-transparent"><SelectValue placeholder="Sichtbarkeit wählen" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public">Öffentlich</SelectItem>
-                        <SelectItem value="verified">Nur verifiziert</SelectItem>
-                        <SelectItem value="private">Privat</SelectItem>
+                      <SelectContent className="rounded-none border border-gray-200 shadow-none">
+                        <SelectItem className="rounded-none" value="PUBLIC">Öffentlich</SelectItem>
+                        <SelectItem className="rounded-none" value="VERIFIED">Nur verifiziert</SelectItem>
+                        <SelectItem className="rounded-none" value="PRIVATE">Privat</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -208,19 +249,24 @@ export default function SettingsPage() {
                 <div>
                   <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">BENACHRICHTIGUNGEN</Label>
                   <div className="mt-2">
-                    <Select defaultValue="all">
+                    <Select value={notificationPref} onValueChange={(v) => setNotificationPref(v as 'ALL' | 'IMPORTANT' | 'NONE')}>
                       <SelectTrigger className="w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 bg-transparent"><SelectValue placeholder="Benachrichtigungen" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Alle</SelectItem>
-                        <SelectItem value="important">Nur wichtige</SelectItem>
-                        <SelectItem value="none">Keine</SelectItem>
+                      <SelectContent className="rounded-none border border-gray-200 shadow-none">
+                        <SelectItem className="rounded-none" value="ALL">Alle</SelectItem>
+                        <SelectItem className="rounded-none" value="IMPORTANT">Nur wichtige</SelectItem>
+                        <SelectItem className="rounded-none" value="NONE">Keine</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               </div>
               <div className="mt-6">
-                <Button className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none">Speichern</Button>
+                <Button onClick={handleSavePrivacy} disabled={savingPrivacy || loadingProfile} className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none disabled:opacity-60">{savingPrivacy ? 'Speichern…' : 'Speichern'}</Button>
+                {privacyMessage.type && (
+                  <p className={privacyMessage.type === 'success' ? 'mt-2 text-xs text-pink-600' : 'mt-2 text-xs text-red-600'} aria-live="polite">
+                    {privacyMessage.text}
+                  </p>
+                )}
               </div>
             </TabsContent>
 

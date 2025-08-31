@@ -254,9 +254,9 @@ export default function SettingsPage() {
     }
   }
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen flex flex-col bg-white">
       <DashboardHeader session={session} activeTab="settings" setActiveTab={() => {}} />
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="flex-1 max-w-7xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-light tracking-widest text-gray-900">EINSTELLUNGEN</h1>
         <div className="w-24 h-px bg-pink-500 mt-3" />
         <p className="text-sm text-gray-600 mt-4">Verwalte dein Profil, Konto und Privatsphäre.</p>

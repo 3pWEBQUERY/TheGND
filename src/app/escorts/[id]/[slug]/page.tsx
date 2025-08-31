@@ -94,8 +94,9 @@ async function getEscort(id: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string; slug: string } }): Promise<Metadata> {
-  const data = await getEscort(params.id)
+export async function generateMetadata({ params }: { params: Promise<{ id: string; slug: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const data = await getEscort(id)
   const title = data?.name ? `${data.name} | Escort Profil` : 'Escort Profil'
   const description = data?.slogan || data?.description || undefined
   return {
@@ -109,13 +110,14 @@ export async function generateMetadata({ params }: { params: { id: string; slug:
   }
 }
 
-export default async function EscortProfilePage({ params }: { params: { id: string; slug: string } }) {
-  const data = await getEscort(params.id)
+export default async function EscortProfilePage({ params }: { params: Promise<{ id: string; slug: string }> }) {
+  const { id, slug } = await params
+  const data = await getEscort(id)
   // Redirect to canonical slug if mismatch
   if (data?.name) {
     const expectedSlug = slugify(data.name)
-    if (expectedSlug && params.slug !== expectedSlug) {
-      redirect(`/escorts/${params.id}-${expectedSlug}`)
+    if (expectedSlug && slug !== expectedSlug) {
+      redirect(`/escorts/${id}/${expectedSlug}`)
     }
   }
   if (!data) {

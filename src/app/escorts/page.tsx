@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import StoriesGallery from '@/components/homepage/StoriesGallery'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
@@ -13,6 +13,14 @@ import type { EscortItem, EscortFilters } from '@/types/escort'
 // EscortItem type is imported from '@/types/escort'
 
 export default function EscortsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white"><MinimalistNavigation /><div className="max-w-5xl mx-auto px-6 py-10">Laden...</div><Footer /></div>}>
+      <EscortsPageInner />
+    </Suspense>
+  )
+}
+
+function EscortsPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [q, setQ] = useState('')

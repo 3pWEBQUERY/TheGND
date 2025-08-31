@@ -292,7 +292,7 @@ model BillingCustomer {
   user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider             BillingProvider
   providerCustomerId   String
-  defaultPaymentMethodId String?
+  defaultPaymentMethodId String?        @unique
   defaultPaymentMethod  PaymentMethod?  @relation("DefaultPaymentMethodOnCustomer", fields: [defaultPaymentMethodId], references: [id])
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt

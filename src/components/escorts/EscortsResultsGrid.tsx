@@ -40,7 +40,7 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
 
           {items?.map((e) => {
             const slug = e.name ? slugify(e.name) : 'escort'
-            const href = `/escorts/${e.id}-${slug}`
+            const href = `/escorts/${e.id}/${slug}`
             return (
             <Link href={href} key={e.id} className="group cursor-pointer block">
               <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden mb-3">

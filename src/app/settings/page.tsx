@@ -7,7 +7,7 @@ import { useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function SettingsPage() {
@@ -80,18 +80,11 @@ export default function SettingsPage() {
         {/* Detail-Einstellungen */}
         <div className="mt-12" id="settings-details" ref={detailsRef}>
           <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList>
-              <TabsTrigger value="profil">Profil</TabsTrigger>
-              <TabsTrigger value="konto">Konto</TabsTrigger>
-              <TabsTrigger value="privatsphaere">Privatsphäre</TabsTrigger>
-              <TabsTrigger value="abos">Abos & Zahlungen</TabsTrigger>
-            </TabsList>
-
             <TabsContent value="profil" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="displayName" className="text-xs font-light tracking-widest text-gray-700">ANZEIGENAME</Label>
-                  <Input id="displayName" placeholder="z. B. Anna" className="mt-2" />
+                  <Input id="displayName" placeholder="z. B. Anna, Maria, ..." className="mt-2" />
                 </div>
                 <div>
                   <Label htmlFor="city" className="text-xs font-light tracking-widest text-gray-700">STADT</Label>

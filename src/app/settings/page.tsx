@@ -83,18 +83,18 @@ export default function SettingsPage() {
             <TabsContent value="profil" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="displayName" className="text-xs font-light tracking-widest text-gray-700">ANZEIGENAME</Label>
-                  <Input id="displayName" placeholder="z. B. Anna, Maria, ..." className="mt-2" />
+                  <Label htmlFor="displayName" className="text-xs font-light tracking-widest text-gray-800 uppercase">ANZEIGENAME</Label>
+                  <Input id="displayName" placeholder="z. B. Anna, Maria, ..." className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent" />
                 </div>
                 <div>
-                  <Label htmlFor="city" className="text-xs font-light tracking-widest text-gray-700">STADT</Label>
-                  <Input id="city" placeholder="z. B. Berlin" className="mt-2" />
+                  <Label htmlFor="city" className="text-xs font-light tracking-widest text-gray-800 uppercase">STADT</Label>
+                  <Input id="city" placeholder="z. B. Berlin" className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent" />
                 </div>
                 <div>
-                  <Label className="text-xs font-light tracking-widest text-gray-700">LAND</Label>
+                  <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">LAND</Label>
                   <div className="mt-2">
                     <Select defaultValue="de">
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Land wählen" /></SelectTrigger>
+                      <SelectTrigger className="w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 bg-transparent"><SelectValue placeholder="Land wählen" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="de">Deutschland</SelectItem>
                         <SelectItem value="at">Österreich</SelectItem>
@@ -105,37 +105,37 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="mt-6">
-                <Button className="bg-pink-500 hover:bg-pink-600">Speichern</Button>
+                <Button className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none">Speichern</Button>
               </div>
             </TabsContent>
 
             <TabsContent value="konto" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="email" className="text-xs font-light tracking-widest text-gray-700">E-MAIL</Label>
-                  <Input id="email" type="email" placeholder="name@example.com" className="mt-2" />
+                  <Label htmlFor="email" className="text-xs font-light tracking-widest text-gray-800 uppercase">E-MAIL</Label>
+                  <Input id="email" type="email" placeholder="name@example.com" className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent" />
                 </div>
                 <div>
-                  <Label htmlFor="password" className="text-xs font-light tracking-widest text-gray-700">NEUES PASSWORT</Label>
-                  <Input id="password" type="password" className="mt-2" />
+                  <Label htmlFor="password" className="text-xs font-light tracking-widest text-gray-800 uppercase">NEUES PASSWORT</Label>
+                  <Input id="password" type="password" className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent" />
                 </div>
                 <div>
-                  <Label htmlFor="password2" className="text-xs font-light tracking-widest text-gray-700">PASSWORT BESTÄTIGEN</Label>
-                  <Input id="password2" type="password" className="mt-2" />
+                  <Label htmlFor="password2" className="text-xs font-light tracking-widest text-gray-800 uppercase">PASSWORT BESTÄTIGEN</Label>
+                  <Input id="password2" type="password" className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent" />
                 </div>
               </div>
               <div className="mt-6">
-                <Button className="bg-pink-500 hover:bg-pink-600">Änderungen speichern</Button>
+                <Button className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none">Änderungen speichern</Button>
               </div>
             </TabsContent>
 
             <TabsContent value="privatsphaere" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label className="text-xs font-light tracking-widest text-gray-700">SICHTBARKEIT</Label>
+                  <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">SICHTBARKEIT</Label>
                   <div className="mt-2">
                     <Select defaultValue="public">
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Sichtbarkeit wählen" /></SelectTrigger>
+                      <SelectTrigger className="w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 bg-transparent"><SelectValue placeholder="Sichtbarkeit wählen" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="public">Öffentlich</SelectItem>
                         <SelectItem value="verified">Nur verifiziert</SelectItem>
@@ -145,10 +145,10 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs font-light tracking-widest text-gray-700">BENACHRICHTIGUNGEN</Label>
+                  <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">BENACHRICHTIGUNGEN</Label>
                   <div className="mt-2">
                     <Select defaultValue="all">
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Benachrichtigungen" /></SelectTrigger>
+                      <SelectTrigger className="w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 bg-transparent"><SelectValue placeholder="Benachrichtigungen" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Alle</SelectItem>
                         <SelectItem value="important">Nur wichtige</SelectItem>
@@ -159,14 +159,14 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="mt-6">
-                <Button className="bg-pink-500 hover:bg-pink-600">Speichern</Button>
+                <Button className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none">Speichern</Button>
               </div>
             </TabsContent>
 
             <TabsContent value="abos" className="mt-6">
               <p className="text-sm text-gray-600">Hier verwaltest du dein Abo, Rechnungen und Zahlungsmethoden.</p>
               <div className="mt-4">
-                <Button className="bg-pink-500 hover:bg-pink-600">Abo verwalten</Button>
+                <Button className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none">Abo verwalten</Button>
               </div>
             </TabsContent>
           </Tabs>

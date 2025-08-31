@@ -66,12 +66,12 @@ export default function MinimalistNavigation() {
               <div className="hidden md:flex items-center space-x-4">
                 <Link href="/auth/signin">
                   <Button variant="ghost" className="text-sm font-light tracking-widest text-white hover:text-pink-500">
-                    LOGIN
+                    ANMELDEN
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
                   <Button className="bg-pink-500 hover:bg-pink-600 text-white text-sm font-light tracking-widest px-6">
-                    REGISTER
+                    REGISTRIEREN
                   </Button>
                 </Link>
               </div>

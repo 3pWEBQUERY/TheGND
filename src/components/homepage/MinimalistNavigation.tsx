@@ -28,7 +28,7 @@ export default function MinimalistNavigation() {
     <nav className="absolute top-0 w-full z-50 bg-transparent">
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex justify-between items-center">
-          <div className="text-sm font-light tracking-widest text-white">
+          <div className="text-2xl font-light tracking-widest text-white">
             <Link href="/">THEGND</Link>
           </div>
           

@@ -3,7 +3,7 @@
 import DashboardHeader from '@/components/DashboardHeader'
 import Footer from '@/components/homepage/Footer'
 import { useSession } from 'next-auth/react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,10 @@ export default function SettingsPage() {
   const { data: session } = useSession()
   const [tab, setTab] = useState<string>('profil')
   const detailsRef = useRef<HTMLDivElement>(null)
+  const [displayName, setDisplayName] = useState<string>('')
+  const [loadingProfile, setLoadingProfile] = useState<boolean>(false)
+  const [savingProfile, setSavingProfile] = useState<boolean>(false)
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error' | null; text: string }>({ type: null, text: '' })
 
   const go = (value: string) => {
     setTab(value)
@@ -21,6 +25,46 @@ export default function SettingsPage() {
     requestAnimationFrame(() => {
       detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
+  }
+
+  // Load current user's profile to prefill display name
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      try {
+        setLoadingProfile(true)
+        const res = await fetch('/api/profile')
+        if (!res.ok) return
+        const data = await res.json()
+        if (active) {
+          setDisplayName(data?.user?.profile?.displayName ?? '')
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        if (active) setLoadingProfile(false)
+      }
+    }
+    load()
+    return () => { active = false }
+  }, [])
+
+  const handleSaveProfile = async () => {
+    try {
+      setSavingProfile(true)
+      setSaveMessage({ type: null, text: '' })
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileData: { displayName: displayName?.trim() || null } })
+      })
+      if (!res.ok) throw new Error('Failed')
+      setSaveMessage({ type: 'success', text: 'Profil gespeichert' })
+    } catch (e) {
+      setSaveMessage({ type: 'error', text: 'Speichern fehlgeschlagen' })
+    } finally {
+      setSavingProfile(false)
+    }
   }
   return (
     <div className="min-h-screen bg-white">
@@ -84,7 +128,13 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="displayName" className="text-xs font-light tracking-widest text-gray-800 uppercase">ANZEIGENAME</Label>
-                  <Input id="displayName" placeholder="z. B. Anna, Maria, ..." className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent" />
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="z. B. Anna, Maria, ..."
+                    className="mt-2 border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="city" className="text-xs font-light tracking-widest text-gray-800 uppercase">STADT</Label>
@@ -105,7 +155,18 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="mt-6">
-                <Button className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none">Speichern</Button>
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile || loadingProfile}
+                  className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none disabled:opacity-60"
+                >
+                  {savingProfile ? 'Speichern…' : 'Speichern'}
+                </Button>
+                {saveMessage.type && (
+                  <p className={saveMessage.type === 'success' ? 'mt-2 text-xs text-pink-600' : 'mt-2 text-xs text-red-600'} aria-live="polite">
+                    {saveMessage.text}
+                  </p>
+                )}
               </div>
             </TabsContent>
 

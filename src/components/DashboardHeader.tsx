@@ -238,9 +238,13 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     )}
                   </div>
                   <div className="p-3 border-t border-gray-100 text-right">
-                    <button className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase">
+                    <Link
+                      href="/notifications"
+                      onClick={() => setNotifOpen(false)}
+                      className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase inline-block"
+                    >
                       ALLE ANZEIGEN
-                    </button>
+                    </Link>
                   </div>
                 </div>
               )}

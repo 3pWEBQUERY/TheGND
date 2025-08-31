@@ -16,6 +16,7 @@ declare module 'next-auth' {
   
   interface JWT {
     id: string
+    email: string
     userType: string
     onboardingStatus: string
   }
@@ -65,6 +66,7 @@ export const authOptions = {
       // On sign-in set values from the authenticated user
       if (user) {
         token.id = user.id
+        token.email = user.email
         token.userType = user.userType
         token.onboardingStatus = user.onboardingStatus
       }
@@ -75,14 +77,15 @@ export const authOptions = {
         if (session.user.onboardingStatus) token.onboardingStatus = session.user.onboardingStatus
       }
 
-      // Always sync from DB to ensure latest onboardingStatus/userType
+      // Always sync from DB to ensure latest email/userType/onboardingStatus
       if (token?.id) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { userType: true, onboardingStatus: true },
+            select: { email: true, userType: true, onboardingStatus: true },
           })
           if (dbUser) {
+            token.email = dbUser.email
             token.userType = dbUser.userType
             token.onboardingStatus = dbUser.onboardingStatus
           }
@@ -96,6 +99,7 @@ export const authOptions = {
     async session({ session, token }: { session: any; token: any }) {
       if (token) {
         session.user.id = token.id as string
+        session.user.email = token.email as string
         session.user.userType = token.userType as string
         session.user.onboardingStatus = token.onboardingStatus as string
       }

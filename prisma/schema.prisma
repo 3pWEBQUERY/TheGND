@@ -69,6 +69,7 @@ model User {
   followers         Follow[]          @relation("Following")
   likes             Like[]
   notifications     Notification[]
+  billingCustomers  BillingCustomer[]
 
   @@map("users")
 }
@@ -266,4 +267,108 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@map("notifications")
+}
+
+// Billing Enums
+enum BillingProvider {
+  STRIPE
+  PADDLE
+  LEMONSQUEEZY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  UNPAID
+}
+
+// Billing Models
+model BillingCustomer {
+  id                   String           @id @default(cuid())
+  userId               String
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider             BillingProvider
+  providerCustomerId   String
+  defaultPaymentMethodId String?
+  defaultPaymentMethod  PaymentMethod?  @relation("DefaultPaymentMethodOnCustomer", fields: [defaultPaymentMethodId], references: [id])
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  // Relations
+  paymentMethods       PaymentMethod[] @relation("CustomerPaymentMethods")
+  subscriptions        Subscription[]
+  invoices             Invoice[]
+
+  @@unique([userId, provider])
+  @@unique([provider, providerCustomerId])
+  @@map("billing_customers")
+}
+
+model PaymentMethod {
+  id                      String          @id @default(cuid())
+  billingCustomerId       String
+  billingCustomer         BillingCustomer @relation("CustomerPaymentMethods", fields: [billingCustomerId], references: [id], onDelete: Cascade)
+  providerPaymentMethodId String
+  brand                   String
+  last4                   String
+  expMonth                Int
+  expYear                 Int
+  isDefault               Boolean         @default(false)
+  createdAt               DateTime        @default(now())
+  // Back relation for the customer's default payment method
+  defaultForCustomer      BillingCustomer? @relation("DefaultPaymentMethodOnCustomer")
+
+  @@unique([billingCustomerId, providerPaymentMethodId])
+  @@map("billing_payment_methods")
+}
+
+model Subscription {
+  id                     String           @id @default(cuid())
+  billingCustomerId      String
+  billingCustomer        BillingCustomer  @relation(fields: [billingCustomerId], references: [id], onDelete: Cascade)
+  providerSubscriptionId String
+  status                 SubscriptionStatus
+  planName               String?
+  priceId                String?
+  amount                 Int?
+  currency               String?
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAt               DateTime?
+  cancelAtPeriodEnd      Boolean?         @default(false)
+  endedAt                DateTime?
+  trialStart             DateTime?
+  trialEnd               DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  // Relations
+  invoices               Invoice[]
+
+  @@unique([providerSubscriptionId])
+  @@map("billing_subscriptions")
+}
+
+model Invoice {
+  id                 String           @id @default(cuid())
+  billingCustomerId  String
+  billingCustomer    BillingCustomer  @relation(fields: [billingCustomerId], references: [id], onDelete: Cascade)
+  subscriptionId     String?
+  subscription       Subscription?    @relation(fields: [subscriptionId], references: [id])
+  providerInvoiceId  String
+  amount             Int
+  currency           String
+  status             String
+  hostedInvoiceUrl   String?
+  pdf                String?
+  issuedAt           DateTime
+  paidAt             DateTime?
+  createdAt          DateTime        @default(now())
+
+  @@index([subscriptionId])
+  @@unique([providerInvoiceId])
+  @@map("billing_invoices")
 }

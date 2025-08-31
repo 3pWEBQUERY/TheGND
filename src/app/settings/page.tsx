@@ -3,6 +3,7 @@
 import DashboardHeader from '@/components/DashboardHeader'
 import Footer from '@/components/homepage/Footer'
 import { useSession } from 'next-auth/react'
+import { useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function SettingsPage() {
   const { data: session } = useSession()
+  const [tab, setTab] = useState<string>('profil')
+  const detailsRef = useRef<HTMLDivElement>(null)
+
+  const go = (value: string) => {
+    setTab(value)
+    // smooth scroll to details section
+    requestAnimationFrame(() => {
+      detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
   return (
     <div className="min-h-screen bg-white">
       <DashboardHeader session={session} activeTab="settings" setActiveTab={() => {}} />
@@ -20,27 +31,55 @@ export default function SettingsPage() {
         <p className="text-sm text-gray-600 mt-4">Verwalte dein Profil, Konto und Privatsphäre.</p>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border border-gray-200 p-6">
+          <div
+            className="border border-gray-200 p-6 cursor-pointer hover:bg-pink-50/40 hover:border-pink-200 transition-colors"
+            role="button"
+            tabIndex={0}
+            onClick={() => go('profil')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('profil') } }}
+            aria-controls="settings-details"
+          >
             <h2 className="text-sm font-light tracking-widest text-gray-800">PROFIL</h2>
             <p className="text-xs text-gray-500 mt-2">Profilangaben, Avatar und Details bearbeiten.</p>
           </div>
-          <div className="border border-gray-200 p-6">
+          <div
+            className="border border-gray-200 p-6 cursor-pointer hover:bg-pink-50/40 hover:border-pink-200 transition-colors"
+            role="button"
+            tabIndex={0}
+            onClick={() => go('konto')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('konto') } }}
+            aria-controls="settings-details"
+          >
             <h2 className="text-sm font-light tracking-widest text-gray-800">KONTO</h2>
             <p className="text-xs text-gray-500 mt-2">E-Mail, Passwort und Sicherheit.</p>
           </div>
-          <div className="border border-gray-200 p-6">
+          <div
+            className="border border-gray-200 p-6 cursor-pointer hover:bg-pink-50/40 hover:border-pink-200 transition-colors"
+            role="button"
+            tabIndex={0}
+            onClick={() => go('privatsphaere')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('privatsphaere') } }}
+            aria-controls="settings-details"
+          >
             <h2 className="text-sm font-light tracking-widest text-gray-800">PRIVATSPHÄRE</h2>
             <p className="text-xs text-gray-500 mt-2">Sichtbarkeit und Benachrichtigungen steuern.</p>
           </div>
-          <div className="border border-gray-200 p-6">
+          <div
+            className="border border-gray-200 p-6 cursor-pointer hover:bg-pink-50/40 hover:border-pink-200 transition-colors"
+            role="button"
+            tabIndex={0}
+            onClick={() => go('abos')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('abos') } }}
+            aria-controls="settings-details"
+          >
             <h2 className="text-sm font-light tracking-widest text-gray-800">ABOS & ZAHLUNGEN</h2>
             <p className="text-xs text-gray-500 mt-2">Abo-Status und Rechnungen.</p>
           </div>
         </div>
 
         {/* Detail-Einstellungen */}
-        <div className="mt-12">
-          <Tabs defaultValue="profil" className="w-full">
+        <div className="mt-12" id="settings-details" ref={detailsRef}>
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList>
               <TabsTrigger value="profil">Profil</TabsTrigger>
               <TabsTrigger value="konto">Konto</TabsTrigger>

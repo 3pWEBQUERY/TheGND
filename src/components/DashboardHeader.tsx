@@ -36,7 +36,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     signOut({ callbackUrl: '/' })
   }
 
-  const userType = session.user.userType as UserType
+  const userType = (session?.user?.userType as UserType) ?? 'MEMBER'
   const canStories = canCreateStories(userType)
 
   const loadNotifications = async () => {
@@ -259,12 +259,12 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     <AvatarImage src={avatarUrl} alt="avatar" />
                   ) : (
                     <AvatarFallback className="text-xs font-light tracking-widest text-gray-600">
-                      {session.user.email.charAt(0).toUpperCase()}
+                      {session?.user?.email?.charAt(0)?.toUpperCase() ?? '?'}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <div className="text-sm font-light text-gray-800">{session.user.email}</div>
+                  <div className="text-sm font-light text-gray-800">{session?.user?.email ?? 'Gast'}</div>
                   <div className="text-xs font-light text-gray-500 tracking-wide uppercase">
                     {getUserTypeDisplayName(userType)}
                   </div>

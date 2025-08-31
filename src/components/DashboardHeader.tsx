@@ -29,6 +29,8 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const [notifLoading, setNotifLoading] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' })
@@ -82,6 +84,19 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     }
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [notifOpen])
+
+  // Close user dropdown on outside click
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', onClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [userMenuOpen])
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -231,22 +246,42 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
               )}
             </div>
             
-            <div className="flex items-center space-x-3">
-              <Avatar className="size-8 bg-gray-200">
-                {avatarUrl ? (
-                  <AvatarImage src={avatarUrl} alt="avatar" />
-                ) : (
-                  <AvatarFallback className="text-xs font-light tracking-widest text-gray-600">
-                    {session.user.email.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div className="hidden md:block">
-                <div className="text-sm font-light text-gray-800">{session.user.email}</div>
-                <div className="text-xs font-light text-gray-500 tracking-wide uppercase">
-                  {getUserTypeDisplayName(userType)}
+            <div className="relative" ref={userMenuRef}>
+              <button 
+                type="button"
+                onClick={() => setUserMenuOpen(o => !o)}
+                className="flex items-center space-x-3 hover:opacity-90 transition-opacity"
+                aria-haspopup="true"
+                aria-expanded={userMenuOpen}
+              >
+                <Avatar className="size-8 bg-gray-200">
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt="avatar" />
+                  ) : (
+                    <AvatarFallback className="text-xs font-light tracking-widest text-gray-600">
+                      {session.user.email.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="hidden md:block text-left">
+                  <div className="text-sm font-light text-gray-800">{session.user.email}</div>
+                  <div className="text-xs font-light text-gray-500 tracking-wide uppercase">
+                    {getUserTypeDisplayName(userType)}
+                  </div>
                 </div>
-              </div>
+              </button>
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-50">
+                  <div className="py-2">
+                    <Link href="/notifications" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
+                      BENACHRICHTIGUNGEN
+                    </Link>
+                    <Link href="/settings" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
+                      EINSTELLUNGEN
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
             
             <button 

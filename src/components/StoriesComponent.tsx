@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Plus, Eye, Clock, Image, X } from 'lucide-react'
 import { getUserTypeDisplayName } from '@/lib/validations'
+import { uploadFiles } from '@/utils/uploadthing'
 
 interface Story {
   id: string
@@ -50,8 +51,8 @@ export default function StoriesComponent() {
 
   const handleFilesSelected = (files: FileList | null) => {
     if (!files) return
-    const maxImageSize = 15 * 1024 * 1024
-    const maxVideoSize = 200 * 1024 * 1024
+    const maxImageSize = 16 * 1024 * 1024
+    const maxVideoSize = 256 * 1024 * 1024
     const allowedImage = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
     const allowedVideo = ['video/mp4', 'video/webm', 'video/quicktime']
 
@@ -68,11 +69,11 @@ export default function StoriesComponent() {
         continue
       }
       if (isImage && (!allowedImage.includes(f.type) || f.size > maxImageSize)) {
-        errorMsg = 'Ein Bild ist ungültig oder zu groß (max. 15MB).'
+        errorMsg = 'Ein Bild ist ungültig oder zu groß (max. 16MB).'
         continue
       }
       if (isVideo && (!allowedVideo.includes(f.type) || f.size > maxVideoSize)) {
-        errorMsg = 'Ein Video ist ungültig oder zu groß (max. 200MB).'
+        errorMsg = 'Ein Video ist ungültig oder zu groß (max. 256MB).'
         continue
       }
       valid.push(f)
@@ -119,15 +120,15 @@ export default function StoriesComponent() {
     try {
       let uploaded: Array<{ url: string; mediaType: 'image' | 'video' }> = []
       if (selectedFiles.length > 0) {
-        const form = new FormData()
-        form.append('type', 'story')
-        for (const f of selectedFiles) {
-          form.append('files', f)
-        }
-        const upRes = await fetch('/api/upload', { method: 'POST', body: form })
-        if (!upRes.ok) throw new Error('Upload fehlgeschlagen')
-        const upJson = await upRes.json()
-        uploaded = (upJson.files || []).map((f: any) => ({ url: f.url as string, mediaType: f.mediaType as 'image' | 'video' }))
+        const results = await uploadFiles('storyMedia', {
+          files: selectedFiles,
+        })
+        uploaded = results
+          .filter((r: any) => typeof r?.url === 'string')
+          .map((r: any) => ({
+            url: r.url as string,
+            mediaType: typeof r.type === 'string' && r.type.startsWith('video/') ? 'video' : 'image',
+          }))
       }
 
       const created: Story[] = []
@@ -381,7 +382,7 @@ export default function StoriesComponent() {
                     className="border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent"
                   />
                   <div className="text-xs font-light tracking-wide text-gray-400 mt-2">
-                    Bilder bis 15MB, Videos bis 200MB. Mehrfachauswahl möglich.
+                    Bilder bis 16MB, Videos bis 256MB. Mehrfachauswahl möglich.
                   </div>
                   {uploadError && (
                     <div className="text-xs font-light tracking-wide text-pink-600 mt-2">{uploadError}</div>

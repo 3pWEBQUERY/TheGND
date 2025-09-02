@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { getUserTypeDisplayName, formatTimeAgo } from '@/lib/validations'
 import { UserType } from '@prisma/client'
+import { uploadFiles } from '@/utils/uploadthing'
 
 interface Post {
   id: string
@@ -115,7 +116,7 @@ export default function NewsfeedComponent() {
   const onFilesSelected: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const files = Array.from(e.target.files || [])
     const allowedImage = ['image/jpeg','image/jpg','image/png','image/webp','image/gif']
-    const maxImage = 15 * 1024 * 1024
+    const maxImage = 16 * 1024 * 1024
     const errs: string[] = []
     const accepted: File[] = []
     const previews: string[] = []
@@ -131,7 +132,7 @@ export default function NewsfeedComponent() {
         continue
       }
       if (f.size > maxImage) {
-        errs.push(`Bild zu groß (max 15MB): ${f.name}`)
+        errs.push(`Bild zu groß (max 16MB): ${f.name}`)
         continue
       }
       accepted.push(f)
@@ -184,16 +185,10 @@ export default function NewsfeedComponent() {
       }
       let uploadedUrls: string[] = []
       if (selectedFiles.length > 0) {
-        const form = new FormData()
-        form.append('type', 'post')
-        for (const f of selectedFiles) form.append('files', f)
-        const upRes = await fetch('/api/upload', { method: 'POST', body: form })
-        if (!upRes.ok) throw new Error('Upload fehlgeschlagen')
-        const upJson = await upRes.json()
-        const files = Array.isArray(upJson.files) ? upJson.files : []
-        uploadedUrls = files
-          .filter((f: any) => f && (f.mediaType === 'image' || (typeof f.type === 'string' && f.type.startsWith('image/'))))
-          .map((f: any) => normalizeUrl(f.url as string))
+        const results = await uploadFiles('postImages', { files: selectedFiles })
+        uploadedUrls = results
+          .filter((r: any) => typeof r?.url === 'string')
+          .map((r: any) => normalizeUrl(r.url as string))
       }
 
       const existingNormalized = newPostImages.map(normalizeUrl)

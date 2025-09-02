@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
+import { uploadFiles } from '@/utils/uploadthing'
 
 export default function EscortOnboardingStep4() {
   const router = useRouter()
@@ -78,8 +79,8 @@ export default function EscortOnboardingStep4() {
     const files = Array.from(e.target.files || [])
     const newErrors: string[] = []
     const accepted: File[] = []
-    const maxImage = 15 * 1024 * 1024
-    const maxVideo = 200 * 1024 * 1024
+    const maxImage = 16 * 1024 * 1024
+    const maxVideo = 256 * 1024 * 1024
     const allowedImage = ['image/jpeg','image/jpg','image/png','image/webp','image/gif']
     const allowedVideo = ['video/mp4','video/webm','video/quicktime']
 
@@ -99,11 +100,11 @@ export default function EscortOnboardingStep4() {
         continue
       }
       if (isImage && f.size > maxImage) {
-        newErrors.push(`Bild zu groß (max 15MB): ${f.name}`)
+        newErrors.push(`Bild zu groß (max 16MB): ${f.name}`)
         continue
       }
       if (isVideo && f.size > maxVideo) {
-        newErrors.push(`Video zu groß (max 200MB): ${f.name}`)
+        newErrors.push(`Video zu groß (max 256MB): ${f.name}`)
         continue
       }
       accepted.push(f)
@@ -124,17 +125,16 @@ export default function EscortOnboardingStep4() {
     setIsUploading(true)
     setErrors([])
     try {
-      const form = new FormData()
-      form.append('type', 'gallery')
-      for (const f of selectedFiles) form.append('files', f)
-      const res = await fetch('/api/upload', { method: 'POST', body: form })
-      if (!res.ok) {
-        const out = await res.json().catch(() => ({}))
-        setErrors([out.error || 'Fehler beim Upload'])
-        return
-      }
-      const data = await res.json()
-      const files = (data.files || []) as Array<{ url: string; filename: string; type: string; mediaType: 'image'|'video'; size: number }>
+      const results = await uploadFiles('storyMedia', { files: selectedFiles })
+      const files = results
+        .filter((r: any) => typeof r?.url === 'string')
+        .map((r: any) => {
+          const url = r.url as string
+          const t = (typeof r.type === 'string' ? r.type : '')
+          const mediaType = t.startsWith('video/') ? 'video' as const : 'image' as const
+          const filename = url.split('/').pop() || url
+          return { url, filename, type: t, mediaType, size: 0 }
+        })
       setUploaded(prev => [...prev, ...files])
       setSelectedFiles([])
     } catch (e) {
@@ -145,11 +145,9 @@ export default function EscortOnboardingStep4() {
   }
 
   const deleteUploaded = async (filename: string) => {
-    try {
-      const res = await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, { method: 'DELETE' })
-      if (!res.ok) return
-      setUploaded(prev => prev.filter(f => f.filename !== filename))
-    } catch {}
+    // With UploadThing, we don't delete remote files here.
+    // We only remove the item from this onboarding list.
+    setUploaded(prev => prev.filter(f => f.filename !== filename))
   }
 
   return (
@@ -206,7 +204,7 @@ export default function EscortOnboardingStep4() {
               onClick={onPickFiles}
             >
               <div className="text-sm font-light text-gray-600">
-                Dateien hier klicken, um Bilder/Videos auszuwählen (Bilder ≤ 15MB, Videos ≤ 200MB)
+                Dateien hier klicken, um Bilder/Videos auszuwählen (Bilder ≤ 16MB, Videos ≤ 256MB)
               </div>
             </div>
 

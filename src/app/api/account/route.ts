@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { isEmailAdmin } from '@/lib/admin'
 
 type AppSession = { user?: { id?: string } }
 
@@ -43,7 +44,7 @@ export async function GET() {
       return NextResponse.json({ error: 'User nicht gefunden' }, { status: 404 })
     }
 
-    return NextResponse.json({ email: user.email, createdAt: user.createdAt }, { status: 200 })
+    return NextResponse.json({ email: user.email, createdAt: user.createdAt, isAdmin: isEmailAdmin(user.email) }, { status: 200 })
   } catch (error) {
     console.error('Account GET error:', error)
     return NextResponse.json({ error: 'Server Fehler' }, { status: 500 })

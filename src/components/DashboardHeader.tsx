@@ -31,6 +31,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' })
@@ -72,6 +73,19 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     }
     if (session?.user?.id) loadAvatar()
   }, [session?.user?.id])
+
+  // Load admin flag to conditionally show ACP link
+  useEffect(() => {
+    const loadAdmin = async () => {
+      try {
+        const res = await fetch('/api/account')
+        if (!res.ok) return
+        const data = await res.json()
+        setIsAdmin(!!data?.isAdmin)
+      } catch {}
+    }
+    loadAdmin()
+  }, [])
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -283,6 +297,11 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     <Link href="/settings" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       EINSTELLUNGEN
                     </Link>
+                    {isAdmin && (
+                      <Link href="/acp" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
+                        ADMIN
+                      </Link>
+                    )}
                   </div>
                 </div>
               )}

@@ -3,6 +3,8 @@ import Footer from '@/components/homepage/Footer'
 import { prisma } from '@/lib/prisma'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import MessageButton from '@/components/MessageButton'
+import GalleryGrid from '@/components/GalleryGrid'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -132,7 +134,7 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
     )
   }
 
-  const { name, slogan, city, country, image, description, details, gallery, mediaImages, contact } = data
+  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, contact } = data
   const images = [image, ...mediaImages, ...gallery].filter(Boolean) as string[]
 
   return (
@@ -179,20 +181,19 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
             {slogan && <p className="text-sm text-gray-600 mt-2 italic">“{slogan}”</p>}
 
             {/* CTA / Interaktion */}
-            {(contact.phone || contact.website) && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {contact.phone && (
-                  <a href={`tel:${contact.phone}`} className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
-                    ANRUFEN
-                  </a>
-                )}
-                {contact.website && (
-                  <a href={contact.website} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
-                    WEBSEITE
-                  </a>
-                )}
-              </div>
-            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <MessageButton toUserId={escortId} toDisplayName={name ?? undefined} toAvatar={image ?? undefined} />
+              {contact.phone && (
+                <a href={`tel:${contact.phone}`} className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
+                  ANRUFEN
+                </a>
+              )}
+              {contact.website && (
+                <a href={contact.website} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
+                  WEBSEITE
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
@@ -244,14 +245,7 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
         {images.length > 0 && (
           <div className="mt-10">
             <h2 className="text-lg font-light tracking-widest text-gray-800">GALERIE</h2>
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
-              {images.map((src, i) => (
-                <div key={`${src}-${i}`} className="aspect-[3/4] bg-gray-200 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt={name ?? ''} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
+            <GalleryGrid images={images} altBase={name ?? ''} className="mt-4" />
           </div>
         )}
       </div>

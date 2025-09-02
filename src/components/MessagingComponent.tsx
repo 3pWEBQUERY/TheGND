@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { 
   MessageCircle, 
   Send, 
@@ -65,6 +66,7 @@ interface User {
 
 export default function MessagingComponent() {
   const { data: session } = useSession()
+  const searchParams = useSearchParams()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
@@ -75,10 +77,23 @@ export default function MessagingComponent() {
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [prefill, setPrefill] = useState<{ id: string; name?: string; avatar?: string; userType?: string } | null>(null)
 
   useEffect(() => {
     fetchConversations()
   }, [])
+
+  // Read `to` from query params to open/start a conversation directly
+  useEffect(() => {
+    const to = searchParams.get('to')
+    const toName = searchParams.get('toName') || undefined
+    const toAvatar = searchParams.get('toAvatar') || undefined
+    if (to) {
+      setSelectedConversation(to)
+      setPrefill({ id: to, name: toName, avatar: toAvatar, userType: 'ESCORT' })
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (selectedConversation) {
@@ -89,6 +104,13 @@ export default function MessagingComponent() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Focus message textarea when a conversation is selected
+  useEffect(() => {
+    if (selectedConversation) {
+      textareaRef.current?.focus()
+    }
+  }, [selectedConversation])
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
@@ -198,6 +220,13 @@ export default function MessagingComponent() {
 
   const getSelectedConversationInfo = () => {
     if (!selectedConversation) return null
+    if (prefill && prefill.id === selectedConversation) {
+      return {
+        name: prefill.name || '',
+        avatar: prefill.avatar,
+        userType: prefill.userType
+      }
+    }
     
     const conversation = conversations.find(c => 
       (c.senderId === selectedConversation && c.receiverId === session?.user?.id) ||
@@ -418,6 +447,7 @@ export default function MessagingComponent() {
                       sendMessage()
                     }
                   }}
+                  ref={textareaRef}
                   className="flex-1 min-h-[40px] max-h-[120px] resize-none border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 text-sm font-light focus:border-pink-500 focus:outline-none bg-transparent"
                 />
                 <button 

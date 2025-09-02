@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { getUserTypeDisplayName, canCreateStories } from '@/lib/validations'
 import { UserType } from '@prisma/client'
@@ -16,6 +16,7 @@ import DashboardMobileNavigation from '@/components/DashboardMobileNavigation'
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
@@ -25,6 +26,14 @@ export default function DashboardPage() {
       router.push('/onboarding')
     }
   }, [session, status, router])
+
+  // Initialize tab from URL (?tab=messages,profile,network,...)
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && typeof tab === 'string') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   const handleSignOut = () => {
     // Handled in DashboardHeader component

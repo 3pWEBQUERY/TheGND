@@ -137,61 +137,61 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
             
             {/* Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <button 
-                onClick={() => setActiveTab('dashboard')}
+              <Link 
+                href="/dashboard?tab=dashboard"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
                   activeTab === 'dashboard' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                 }`}
               >
                 DASHBOARD
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'dashboard' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('feed')}
+              </Link>
+              <Link 
+                href="/dashboard?tab=feed"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
                   activeTab === 'feed' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                 }`}
               >
                 FEED
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'feed' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('profile')}
+              </Link>
+              <Link 
+                href="/dashboard?tab=profile"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
                   activeTab === 'profile' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                 }`}
               >
                 PROFIL
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'profile' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('messages')}
+              </Link>
+              <Link 
+                href="/dashboard?tab=messages"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
                   activeTab === 'messages' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                 }`}
               >
                 NACHRICHTEN
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'messages' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('network')}
+              </Link>
+              <Link 
+                href="/dashboard?tab=network"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
                   activeTab === 'network' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                 }`}
               >
                 NETZWERK
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'network' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </button>
+              </Link>
               {canStories && (
-                <button 
-                  onClick={() => setActiveTab('stories')}
+                <Link 
+                  href="/dashboard?tab=stories"
                   className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
                     activeTab === 'stories' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                   }`}
                 >
                   STORIES
                   <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'stories' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-                </button>
+                </Link>
               )}
             </div>
           </div>

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(
   request: NextRequest,
-  { params }: any
+  { params }: { params: Promise<{ storyId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)

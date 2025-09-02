@@ -139,7 +139,7 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
       {/* Hero Section */}
-      <section className="relative h-[50vh] min-h-[400px]">
+      <section className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">
         {/* Background image with dark overlay */}
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}

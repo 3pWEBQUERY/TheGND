@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
@@ -44,10 +44,17 @@ export default function StoriesComponent() {
   })
   const [creating, setCreating] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [filePreviews, setFilePreviews] = useState<Array<{ name: string; url: string; mediaType: 'image' | 'video'; size: number }>>([])
+  const [filePreviews, setFilePreviews] = useState<Array<{ name: string; url: string; mediaType: 'image' | 'video'; size: number; posterDataUrl?: string }>>([])
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [authorSequence, setAuthorSequence] = useState<Story[]>([])
   const [seqIndex, setSeqIndex] = useState(0)
+  // Auto-advance + progress state for viewer
+  const [autoAdvancePaused, setAutoAdvancePaused] = useState(false)
+  const [progress, setProgress] = useState(0) // 0..100
+  const advanceTimerRef = useRef<number | null>(null)
+  const progressRafRef = useRef<number | null>(null)
+  const progressStartRef = useRef<number | null>(null)
+  const lastItemIdRef = useRef<string | null>(null)
 
   const handleFilesSelected = (files: FileList | null) => {
     if (!files) return
@@ -58,7 +65,7 @@ export default function StoriesComponent() {
 
     const arr = Array.from(files)
     const valid: File[] = []
-    const previews: Array<{ name: string; url: string; mediaType: 'image' | 'video'; size: number }> = []
+    const previews: Array<{ name: string; url: string; mediaType: 'image' | 'video'; size: number; posterDataUrl?: string }> = []
     let errorMsg: string | null = null
 
     for (const f of arr) {
@@ -87,7 +94,71 @@ export default function StoriesComponent() {
 
     setUploadError(errorMsg)
     setSelectedFiles(prev => [...prev, ...valid])
-    setFilePreviews(prev => [...prev, ...previews])
+    // Persist previews immediately
+    setFilePreviews(prev => {
+      const startIndex = prev.length
+      const next = [...prev, ...previews]
+      // For added video previews, generate poster frames asynchronously
+      previews.forEach((p, idx) => {
+        const absoluteIndex = startIndex + idx
+        if (p.mediaType === 'video') {
+          generatePosterFromVideoUrl(p.url).then((poster) => {
+            if (poster) {
+              setFilePreviews(cur => cur.map((cp, i) => i === absoluteIndex ? { ...cp, posterDataUrl: poster } : cp))
+            }
+          }).catch(() => {})
+        }
+      })
+      return next
+    })
+  }
+
+  async function generatePosterFromVideoUrl(url: string, seekTime: number = 0.1): Promise<string | null> {
+    return new Promise((resolve) => {
+      try {
+        const video = document.createElement('video')
+        video.src = url
+        video.crossOrigin = 'anonymous'
+        video.muted = true
+        video.playsInline = true
+        const onLoaded = async () => {
+          try {
+            if (!isFinite(video.duration) || video.duration === 0) {
+              // fallback: still try first frame
+            }
+            const target = Math.min(seekTime, Math.max(0, (video.duration || 1) - 0.01))
+            const seekHandler = () => {
+              try {
+                const canvas = document.createElement('canvas')
+                canvas.width = video.videoWidth || 720
+                canvas.height = video.videoHeight || 1280
+                const ctx = canvas.getContext('2d')
+                if (!ctx) return resolve(null)
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+                resolve(dataUrl)
+              } catch {
+                resolve(null)
+              } finally {
+                cleanup()
+              }
+            }
+            video.currentTime = target
+            video.addEventListener('seeked', seekHandler, { once: true })
+          } catch {
+            cleanup(); resolve(null)
+          }
+        }
+        const cleanup = () => {
+          video.removeEventListener('loadeddata', onLoaded)
+          video.src = ''
+        }
+        video.addEventListener('loadeddata', onLoaded, { once: true })
+        video.addEventListener('error', () => { cleanup(); resolve(null) }, { once: true })
+      } catch {
+        resolve(null)
+      }
+    })
   }
 
   const removeSelectedFile = (index: number) => {
@@ -98,6 +169,63 @@ export default function StoriesComponent() {
   useEffect(() => {
     fetchStories()
   }, [])
+
+  // Auto-advance current image in viewer after 10s and animate progress
+  useEffect(() => {
+    if (!viewDialogOpen || authorSequence.length === 0) return
+    // Clear previous timers/raf
+    if (advanceTimerRef.current) {
+      window.clearTimeout(advanceTimerRef.current)
+      advanceTimerRef.current = null
+    }
+    if (progressRafRef.current) {
+      cancelAnimationFrame(progressRafRef.current)
+      progressRafRef.current = null
+    }
+    const current = authorSequence[seqIndex]
+    if (!current) return
+    // Reset progress when switching items
+    if (lastItemIdRef.current !== current.id) {
+      setProgress(0)
+      lastItemIdRef.current = current.id
+    }
+    if (autoAdvancePaused) return
+    if (current.image) {
+      const total = 10000 // 10s
+      const startAt = Date.now() - Math.round((progress / 100) * total)
+      progressStartRef.current = startAt
+      const tick = () => {
+        if (!progressStartRef.current) return
+        const elapsed = Date.now() - progressStartRef.current
+        const pct = Math.min(100, Math.max(0, (elapsed / total) * 100))
+        setProgress(pct)
+        if (pct < 100 && !autoAdvancePaused) {
+          progressRafRef.current = requestAnimationFrame(tick)
+        }
+      }
+      progressRafRef.current = requestAnimationFrame(tick)
+      advanceTimerRef.current = window.setTimeout(() => {
+        setSeqIndex((i) => {
+          const next = i + 1
+          if (next >= authorSequence.length) {
+            setViewDialogOpen(false)
+            return i
+          }
+          return next
+        })
+      }, 10000)
+    }
+    return () => {
+      if (advanceTimerRef.current) {
+        window.clearTimeout(advanceTimerRef.current)
+        advanceTimerRef.current = null
+      }
+      if (progressRafRef.current) {
+        cancelAnimationFrame(progressRafRef.current)
+        progressRafRef.current = null
+      }
+    }
+  }, [viewDialogOpen, authorSequence, seqIndex, autoAdvancePaused])
 
   const fetchStories = async () => {
     try {
@@ -118,16 +246,18 @@ export default function StoriesComponent() {
 
     setCreating(true)
     try {
-      let uploaded: Array<{ url: string; mediaType: 'image' | 'video' }> = []
+      let uploaded: Array<{ url: string; mediaType: 'image' | 'video'; index: number }> = []
       if (selectedFiles.length > 0) {
         const results = await uploadFiles('storyMedia', {
           files: selectedFiles,
         })
         uploaded = results
-          .filter((r: any) => typeof r?.url === 'string')
-          .map((r: any) => ({
+          .map((r: any, i: number) => ({ r, i }))
+          .filter(({ r }: any) => typeof r?.url === 'string')
+          .map(({ r, i }: any) => ({
             url: r.url as string,
-            mediaType: typeof r.type === 'string' && r.type.startsWith('video/') ? 'video' : 'image',
+            mediaType: (selectedFiles[i]?.type?.startsWith('video/') || (typeof r.type === 'string' && r.type.startsWith('video/'))) ? 'video' : 'image',
+            index: i,
           }))
       }
 
@@ -136,7 +266,13 @@ export default function StoriesComponent() {
         for (const item of uploaded) {
           const body: any = { content: newStory.content }
           if (item.mediaType === 'image') body.image = item.url
-          if (item.mediaType === 'video') body.video = item.url
+          if (item.mediaType === 'video') {
+            body.video = item.url
+            const preview = filePreviews[item.index]
+            if (preview?.posterDataUrl) {
+              body.posterDataUrl = preview.posterDataUrl
+            }
+          }
           const res = await fetch('/api/stories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -436,7 +572,9 @@ export default function StoriesComponent() {
 
       {/* Story View Dialog */}
       {viewDialogOpen && selectedStory && (
-        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-6">
+        <div
+          className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-6"
+        >
           <div className="bg-white w-full max-w-3xl h-[85vh] overflow-hidden rounded-none">
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
@@ -472,21 +610,71 @@ export default function StoriesComponent() {
               <div className="space-y-4">
                 {authorSequence.length > 0 ? (
                   <>
+                    {/* Segmented progress bar */}
+                    <div className="w-full flex items-center gap-1 mb-2" aria-label="Story Fortschrittsanzeige">
+                      {authorSequence.map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 bg-gray-200 overflow-hidden`}
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={authorSequence.length}
+                          aria-valuenow={seqIndex + 1}
+                        >
+                          <div
+                            className={`h-full ${i <= seqIndex ? 'bg-pink-500' : 'bg-transparent'}`}
+                            style={{ width: i < seqIndex ? '100%' : i === seqIndex ? `${progress}%` : '0%' }}
+                          />
+                        </div>
+                      ))}
+                    </div>
                     {(authorSequence[seqIndex].image || authorSequence[seqIndex].video) && (
-                      authorSequence[seqIndex].image ? (
-                        <img
-                          src={authorSequence[seqIndex].image!}
-                          alt="Story"
-                          className="w-full h-[60vh] md:h-[65vh] object-cover rounded-none"
-                        />
-                      ) : (
-                        <video
-                          src={authorSequence[seqIndex].video!}
-                          className="w-full h-[60vh] md:h-[65vh] object-cover rounded-none"
-                          controls
-                          autoPlay
-                        />
-                      )
+                      <div
+                        className="w-full"
+                        onMouseEnter={() => setAutoAdvancePaused(true)}
+                        onMouseLeave={() => setAutoAdvancePaused(false)}
+                      >
+                        {authorSequence[seqIndex].image ? (
+                          <img
+                            src={authorSequence[seqIndex].image!}
+                            alt="Story"
+                            className="w-full h-[60vh] md:h-[65vh] object-cover rounded-none"
+                          />
+                        ) : (
+                          <video
+                            src={authorSequence[seqIndex].video!}
+                            className="w-full h-[60vh] md:h-[65vh] object-cover rounded-none"
+                            controls
+                            autoPlay
+                            muted
+                            playsInline
+                            onLoadedMetadata={(e) => {
+                              const el = e.currentTarget
+                              if (el.duration && isFinite(el.duration)) {
+                                setProgress((el.currentTime / el.duration) * 100)
+                              } else {
+                                setProgress(0)
+                              }
+                            }}
+                            onTimeUpdate={(e) => {
+                              const el = e.currentTarget
+                              if (el.duration && isFinite(el.duration)) {
+                                setProgress((el.currentTime / el.duration) * 100)
+                              }
+                            }}
+                            onEnded={() => {
+                              setSeqIndex((i) => {
+                                const next = i + 1
+                                if (next >= authorSequence.length) {
+                                  setViewDialogOpen(false)
+                                  return i
+                                }
+                                return next
+                              })
+                            }}
+                          />
+                        )}
+                      </div>
                     )}
                     <p className="text-sm font-light tracking-wide text-gray-700 leading-relaxed">
                       {authorSequence[seqIndex].content}
@@ -534,6 +722,8 @@ export default function StoriesComponent() {
                         className="w-full h-[60vh] md:h-[65vh] object-cover rounded-none"
                         controls
                         autoPlay
+                        muted
+                        playsInline
                       />
                     ) : null}
                     <p className="text-sm font-light tracking-wide text-gray-700 leading-relaxed">

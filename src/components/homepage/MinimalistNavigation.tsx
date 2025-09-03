@@ -39,11 +39,11 @@ export default function MinimalistNavigation() {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link href="#about" className="relative group transition-colors">
-              ABOUT
+              AGENTUREN
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link href="#contact" className="relative group transition-colors">
-              CONTACT
+              CLUB & STUDIO
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </div>

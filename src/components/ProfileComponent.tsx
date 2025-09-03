@@ -286,10 +286,10 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto space-y-8 px-6">
+      <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 overflow-x-hidden">
       {/* Profile Header */}
       <div className="bg-white border border-gray-100 rounded-none">
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Avatar and Basic Info */}
             <div className="flex flex-col items-center lg:items-start space-y-6">
@@ -452,12 +452,12 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
       
       {/* Profile Tabs */}
       <div className="bg-white border border-gray-100 rounded-none">
-        <div className="border-b border-gray-100">
-          <div className="flex">
+        <div className="border-b border-gray-100 overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 sm:gap-0 min-w-max">
             {['about', 'posts', 'gallery', 'contact'].map((tab) => (
               <button 
                 key={tab}
-                className={`flex-1 py-4 px-6 text-xs font-light tracking-widest uppercase transition-colors ${
+                className={`shrink-0 sm:flex-1 sm:text-center py-3 sm:py-4 px-4 sm:px-6 text-xs font-light tracking-widest uppercase transition-colors ${
                   activeTab === tab 
                     ? 'text-pink-500 border-b-2 border-pink-500' 
                     : 'text-gray-600 hover:text-pink-500'
@@ -473,7 +473,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         </div>
         
         {/* Tab Content */}
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
           {activeTab === 'about' && (
             <div className="space-y-6">
               {/* Escort Specific Info */}
@@ -511,7 +511,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
             <div className="space-y-6">
               {user.posts.length > 0 ? (
                 user.posts.map((post: any) => (
-                  <div key={post.id} className="bg-gray-50 p-6">
+                  <div key={post.id} className="bg-gray-50 p-4 sm:p-6">
                     <div className="flex items-start space-x-4">
                       <div className="h-12 w-12 bg-gray-200 flex items-center justify-center">
                         {profile?.avatar ? (

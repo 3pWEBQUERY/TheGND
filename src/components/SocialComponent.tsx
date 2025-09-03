@@ -190,9 +190,9 @@ export default function SocialComponent() {
   }
 
   const UserCard = ({ user, showFollowButton = true }: { user: User, showFollowButton?: boolean }) => (
-    <div className="bg-white border border-gray-100 p-6 hover:border-pink-200 transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+    <div className="bg-white border border-gray-100 p-4 sm:p-6 hover:border-pink-200 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start sm:items-center space-x-3">
           <div className="h-12 w-12 bg-gray-100 flex items-center justify-center">
             {user.profile?.avatar ? (
               <img 
@@ -206,11 +206,11 @@ export default function SocialComponent() {
               </span>
             )}
           </div>
-          <div className="flex-1">
-            <div className="text-sm font-light tracking-wide text-gray-800">
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-light tracking-wide text-gray-800 truncate">
               {user.profile?.displayName || user.email}
             </div>
-            <div className="flex items-center space-x-3 mt-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
               <span className="text-xs font-light tracking-widest text-pink-500 uppercase px-2 py-1 border border-pink-200">
                 {getUserTypeDisplayName(user.userType as any)}
               </span>
@@ -229,10 +229,11 @@ export default function SocialComponent() {
         </div>
         
         {showFollowButton && user.id !== session?.user?.id && (
-          <div className="flex items-center space-x-2">
+          <div className="mt-4 sm:mt-0 w-full sm:w-auto flex items-center">
             {user.isFollowing ? (
               <button 
-                className="border border-gray-300 text-gray-600 hover:border-pink-500 hover:text-pink-500 text-xs font-light tracking-widest px-4 py-2 transition-colors uppercase flex items-center space-x-2"
+                aria-label="Entfolgen"
+                className="w-full sm:w-auto justify-center border border-gray-300 text-gray-600 hover:border-pink-500 hover:text-pink-500 text-xs font-light tracking-widest px-4 py-2 transition-colors uppercase flex items-center space-x-2 whitespace-nowrap"
                 onClick={() => handleUnfollow(user.id)}
               >
                 <UserMinus className="h-3 w-3" />
@@ -240,7 +241,8 @@ export default function SocialComponent() {
               </button>
             ) : (
               <button 
-                className="bg-pink-500 hover:bg-pink-600 text-white text-xs font-light tracking-widest px-4 py-2 transition-colors uppercase flex items-center space-x-2"
+                aria-label="Folgen"
+                className="w-full sm:w-auto justify-center bg-pink-500 hover:bg-pink-600 text-white text-xs font-light tracking-widest px-4 py-2 transition-colors uppercase flex items-center space-x-2 whitespace-nowrap"
                 onClick={() => handleFollow(user.id)}
               >
                 <UserPlus className="h-3 w-3" />

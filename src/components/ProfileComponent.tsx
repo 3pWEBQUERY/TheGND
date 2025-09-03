@@ -535,13 +535,23 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
                         </div>
                         <p className="text-sm font-light tracking-wide text-gray-700 leading-relaxed mb-4">{post.content}</p>
                         <div className="flex items-center space-x-6 text-xs font-light tracking-wide text-gray-500">
-                          <button className="flex items-center space-x-2 hover:text-pink-500 transition-colors">
+                          <button 
+                            aria-label="Gefällt mir"
+                            className="flex items-center space-x-2 hover:text-pink-500 transition-colors">
                             <Heart className="h-4 w-4" />
-                            <span>{post.likes.length} GEFÄLLT MIR</span>
+                            <span className="flex items-center gap-1">
+                              <span>{post.likes.length}</span>
+                              <span className="hidden sm:inline">GEFÄLLT MIR</span>
+                            </span>
                           </button>
-                          <button className="flex items-center space-x-2 hover:text-pink-500 transition-colors">
+                          <button 
+                            aria-label="Kommentare"
+                            className="flex items-center space-x-2 hover:text-pink-500 transition-colors">
                             <MessageCircle className="h-4 w-4" />
-                            <span>{post.comments.length} KOMMENTARE</span>
+                            <span className="flex items-center gap-1">
+                              <span>{post.comments.length}</span>
+                              <span className="hidden sm:inline">KOMMENTARE</span>
+                            </span>
                           </button>
                         </div>
                       </div>

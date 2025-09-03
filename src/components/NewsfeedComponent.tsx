@@ -308,10 +308,10 @@ export default function NewsfeedComponent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 px-6" onClickCapture={() => setShareMenuFor(null)}>
+    <div className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6" onClickCapture={() => setShareMenuFor(null)}>
       {/* Create Post */}
       <div className="bg-white border border-gray-100 rounded-none">
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
           {!showCreatePost ? (
             <div className="flex items-center space-x-6">
               <Avatar className="h-12 w-12">
@@ -375,7 +375,7 @@ export default function NewsfeedComponent() {
                 <div className="text-xs font-light tracking-wide text-pink-600 mt-2">{uploadError}</div>
               )}
               {filePreviews.length > 0 && (
-                <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {filePreviews.map((url, idx) => (
                     <div key={idx} className="relative border border-gray-200 p-1">
                       <img src={url} alt={`Ausgewähltes Bild ${idx + 1}`} className="w-full h-20 object-cover" />
@@ -436,7 +436,7 @@ export default function NewsfeedComponent() {
           
           return (
             <div key={post.id} id={`post-${post.id}`} className="bg-white border border-gray-100 rounded-none">
-              <div className="p-8">
+              <div className="p-4 sm:p-8">
                 {/* Post Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center space-x-4">
@@ -472,7 +472,7 @@ export default function NewsfeedComponent() {
                   
                   {/* Post Images */}
                   {post.images && post.images.length > 0 && (
-                    <div className="mt-6 grid grid-cols-2 gap-3">
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {post.images.map((image, index) => (
                         <div 
                           key={index} 
@@ -497,8 +497,9 @@ export default function NewsfeedComponent() {
                 </div>
                 
                 {/* Post Actions */}
-                <div className="flex items-center space-x-8">
+                <div className="flex items-center space-x-4 sm:space-x-8">
                   <button 
+                    aria-label="Gefällt mir"
                     onClick={() => toggleLike(post.id)}
                     className={`flex items-center space-x-2 text-xs font-light tracking-widest transition-colors ${
                       post.isLikedByUser 
@@ -509,16 +510,19 @@ export default function NewsfeedComponent() {
                     <Heart 
                       className={`h-4 w-4 ${post.isLikedByUser ? 'fill-current' : ''}`} 
                     />
-                    <span>GEFÄLLT MIR</span>
+                    <span className="hidden sm:inline">GEFÄLLT MIR</span>
                   </button>
                   
-                  <button className="flex items-center space-x-2 text-xs font-light tracking-widest text-gray-400 hover:text-gray-600 transition-colors">
+                  <button 
+                    aria-label="Kommentieren"
+                    className="flex items-center space-x-2 text-xs font-light tracking-widest text-gray-400 hover:text-gray-600 transition-colors">
                     <MessageCircle className="h-4 w-4" />
-                    <span>KOMMENTIEREN</span>
+                    <span className="hidden sm:inline">KOMMENTIEREN</span>
                   </button>
                   
                   <div className="relative" onClick={(e) => e.stopPropagation()}>
                     <button 
+                      aria-label="Teilen"
                       className="flex items-center space-x-2 text-xs font-light tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation()
@@ -526,7 +530,7 @@ export default function NewsfeedComponent() {
                       }}
                     >
                       <Share className="h-4 w-4" />
-                      <span>TEILEN</span>
+                      <span className="hidden sm:inline">TEILEN</span>
                     </button>
                     {shareMenuFor === post.id && (
                       <div 

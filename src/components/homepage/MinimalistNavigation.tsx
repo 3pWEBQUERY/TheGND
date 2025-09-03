@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Search } from 'lucide-react'
+ 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -49,7 +49,6 @@ export default function MinimalistNavigation() {
           </div>
           
           <div className="flex items-center space-x-6">
-            <Search className="h-5 w-5 text-white cursor-pointer hover:text-pink-500 transition-colors" />
             {session?.user ? (
               <Link href="/dashboard" className="hidden md:flex items-center">
                 <Avatar className="size-8 bg-white/10 ring-1 ring-white/30">

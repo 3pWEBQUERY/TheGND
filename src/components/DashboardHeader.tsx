@@ -224,7 +224,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                 )}
               </button>
               {notifOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 shadow-lg z-50">
+                <div className="absolute mt-2 w-80 max-w-[calc(100vw-2rem)] left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 bg-white border border-gray-200 shadow-lg z-50">
                   <div className="p-4 border-b border-gray-100">
                     <div className="text-sm font-thin tracking-wider text-gray-800">BENACHRICHTIGUNGEN</div>
                   </div>

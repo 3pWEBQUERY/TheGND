@@ -2,6 +2,7 @@ import Link from 'next/link'
 import CreateUserForm from '@/components/admin/CreateUserForm'
 import { ActionButton } from '@/components/admin/ActionButton'
 import { prisma } from '@/lib/prisma'
+import AdminSelect from '@/components/admin/AdminSelect'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,16 +68,24 @@ export default async function AdminUsersPage({
           placeholder="Suche (Email)"
           className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
         />
-        <select name="type" defaultValue={type} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-          <option value="">Alle Typen</option>
-          <option value="USER">USER</option>
-          <option value="ESCORT">ESCORT</option>
-        </select>
-        <select name="active" defaultValue={activeParam} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-          <option value="">Aktiv-Status: alle</option>
-          <option value="true">Nur aktive</option>
-          <option value="false">Nur gesperrte</option>
-        </select>
+        <AdminSelect
+          name="type"
+          defaultValue={type}
+          options={[
+            { value: '', label: 'Alle Typen' },
+            { value: 'USER', label: 'USER' },
+            { value: 'ESCORT', label: 'ESCORT' },
+          ]}
+        />
+        <AdminSelect
+          name="active"
+          defaultValue={activeParam}
+          options={[
+            { value: '', label: 'Aktiv-Status: alle' },
+            { value: 'true', label: 'Nur aktive' },
+            { value: 'false', label: 'Nur gesperrte' },
+          ]}
+        />
         <button className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
       </form>
 

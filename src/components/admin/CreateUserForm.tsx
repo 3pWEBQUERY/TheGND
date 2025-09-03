@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import AdminSelect from '@/components/admin/AdminSelect'
 
 export default function CreateUserForm({ defaultType = 'MEMBER' }: { defaultType?: 'MEMBER' | 'ESCORT' | 'AGENCY' | 'CLUB' | 'STUDIO' }) {
   const [email, setEmail] = useState('')
@@ -51,17 +52,18 @@ export default function CreateUserForm({ defaultType = 'MEMBER' }: { defaultType
           onChange={(e) => setPassword(e.target.value)}
           className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
         />
-        <select
+        <AdminSelect
+          name="userType"
           value={userType}
-          onChange={(e) => setUserType(e.target.value as any)}
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
-        >
-          <option value="MEMBER">MEMBER</option>
-          <option value="ESCORT">ESCORT</option>
-          <option value="AGENCY">AGENCY</option>
-          <option value="CLUB">CLUB</option>
-          <option value="STUDIO">STUDIO</option>
-        </select>
+          onChange={(v) => setUserType(v as any)}
+          options={[
+            { value: 'MEMBER', label: 'MEMBER' },
+            { value: 'ESCORT', label: 'ESCORT' },
+            { value: 'AGENCY', label: 'AGENCY' },
+            { value: 'CLUB', label: 'CLUB' },
+            { value: 'STUDIO', label: 'STUDIO' },
+          ]}
+        />
       </div>
       <button type="submit" disabled={loading} className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
         {loading ? 'Erstellen...' : 'Erstellen'}

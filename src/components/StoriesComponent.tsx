@@ -600,10 +600,11 @@ export default function StoriesComponent() {
                   </div>
                 </div>
                 <button 
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-500 hover:text-white transition-colors p-2 rounded-full hover:bg-[var(--brand-pink)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40"
                   onClick={() => setViewDialogOpen(false)}
+                  aria-label="Viewer schließen"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-6 w-6" />
                 </button>
               </div>
               

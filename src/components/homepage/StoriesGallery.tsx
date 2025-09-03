@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
-import { Play } from 'lucide-react'
+import { Play, X } from 'lucide-react'
 
 type StoryItem = {
   id: string
@@ -491,11 +491,11 @@ export default function StoriesGallery() {
                     </div>
                   </div>
                   <button
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-500 hover:text-white transition-colors p-2 rounded-full hover:bg-[var(--brand-pink)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40"
                     onClick={() => setViewDialogOpen(false)}
                     aria-label="Viewer schließen"
                   >
-                    ✕
+                    <X className="h-6 w-6" />
                   </button>
                 </div>
 

@@ -10,7 +10,8 @@ import {
   Check, 
   CheckCheck,
   Search,
-  Users
+  Users,
+  ArrowLeft
 } from 'lucide-react'
 import { getUserTypeDisplayName } from '@/lib/validations'
 
@@ -263,9 +264,9 @@ export default function MessagingComponent() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 px-6">
+    <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6">
       <div className="bg-white border border-gray-100 rounded-none">
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-thin tracking-wider text-gray-800 mb-2">NACHRICHTEN</h2>
             <div className="w-12 h-px bg-pink-500 mx-auto mb-4"></div>
@@ -276,7 +277,169 @@ export default function MessagingComponent() {
         </div>
       </div>
       
-      <div className="h-[600px] flex bg-white border border-gray-100 rounded-none">
+      {/* Mobile layout: single-pane flow */}
+      <div className="bg-white border border-gray-100 rounded-none sm:hidden">
+        {!selectedConversation ? (
+          <div className="h-[70vh] flex flex-col">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-base font-thin tracking-wider text-gray-800">NACHRICHTEN</h2>
+              <button 
+                className="text-xs font-light tracking-widest text-pink-500 hover:text-pink-600 transition-colors uppercase"
+                onClick={() => setNewConversationOpen(true)}
+              >
+                + NEU
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {conversations.map(conversation => {
+                const isSelected = selectedConversation === (
+                  conversation.senderId === session?.user?.id 
+                    ? conversation.receiverId 
+                    : conversation.senderId
+                )
+                return (
+                  <div
+                    key={conversation.id}
+                    className={`p-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      isSelected ? 'bg-pink-50 border-pink-100' : ''
+                    }`}
+                    onClick={() => setSelectedConversation(
+                      conversation.senderId === session?.user?.id 
+                        ? conversation.receiverId 
+                        : conversation.senderId
+                    )}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="h-10 w-10 bg-gray-100 flex items-center justify-center">
+                        {conversation.partner_avatar ? (
+                          <img 
+                            src={conversation.partner_avatar} 
+                            alt="Avatar" 
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs font-light tracking-widest text-gray-600">
+                            {conversation.partner_email.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-sm font-light tracking-wide text-gray-800 truncate">
+                            {conversation.partner_display_name || conversation.partner_email}
+                          </div>
+                          <div className="text-xs font-light tracking-wide text-gray-400">
+                            {formatTime(conversation.createdAt)}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-light tracking-wide text-gray-600 truncate">
+                            {conversation.content}
+                          </p>
+                          {conversation.unread_count > 0 && (
+                            <div className="bg-pink-500 text-white text-xs font-light tracking-widest px-2 py-1 rounded-full ml-2">
+                              {conversation.unread_count}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+              {conversations.length === 0 && (
+                <div className="text-center py-12">
+                  <MessageCircle className="h-16 w-16 mx-auto mb-6 opacity-30 text-gray-400" />
+                  <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">KEINE UNTERHALTUNGEN</h3>
+                  <div className="w-12 h-px bg-pink-500 mx-auto mb-4"></div>
+                  <p className="text-sm font-light tracking-wide text-gray-500">Starten Sie eine neue Unterhaltung</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col h-[75vh]">
+            <div className="p-4 border-b border-gray-100 bg-white flex items-center">
+              <button
+                onClick={() => setSelectedConversation(null)}
+                aria-label="Zurück"
+                className="mr-2 text-gray-600"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              {(() => {
+                const info = getSelectedConversationInfo()
+                return info ? (
+                  <div className="flex items-center space-x-3">
+                    <div className="h-9 w-9 bg-gray-100 flex items-center justify-center">
+                      {info.avatar ? (
+                        <img src={info.avatar} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-light tracking-widest text-gray-600">
+                          {info.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-sm font-light tracking-wide text-gray-800">{info.name}</div>
+                      <div className="text-[10px] font-light tracking-widest text-gray-500 uppercase">
+                        {getUserTypeDisplayName(info.userType as any)}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm font-light tracking-wide text-gray-800">KONVERSATION</div>
+                )
+              })()}
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto">
+              <div className="space-y-3">
+                {messages.map(message => {
+                  const isOwnMessage = message.senderId === session?.user?.id
+                  return (
+                    <div key={message.id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] px-3 py-2 rounded-none ${isOwnMessage ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                        <p className="text-sm font-light tracking-wide">{message.content}</p>
+                        <div className={`flex items-center justify-end mt-1 space-x-1 text-[11px] font-light tracking-wide ${isOwnMessage ? 'text-pink-100' : 'text-gray-500'}`}>
+                          <span>{formatTime(message.createdAt)}</span>
+                          {isOwnMessage && (message.isRead ? (<CheckCheck className="h-3 w-3" />) : (<Check className="h-3 w-3" />))}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-white sticky bottom-0">
+              <div className="flex space-x-3">
+                <textarea
+                  placeholder="Gebe deine Nachricht ein..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      sendMessage()
+                    }
+                  }}
+                  ref={textareaRef}
+                  className="flex-1 min-h-[40px] max-h-[120px] resize-none border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 text-sm font-light focus:border-pink-500 focus:outline-none bg-transparent"
+                />
+                <button 
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim() || sending}
+                  className="bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white p-3 transition-colors"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <div className="hidden sm:flex h-[600px] bg-white border border-gray-100 rounded-none">
       {/* Conversations Sidebar */}
       <div className="w-1/3 border-r border-gray-100">
         <div className="h-full">

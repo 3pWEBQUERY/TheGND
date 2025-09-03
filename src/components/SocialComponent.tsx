@@ -294,9 +294,9 @@ export default function SocialComponent() {
       {/* Tabs */}
       <div className="bg-white border border-gray-100 rounded-none">
         <div className="border-b border-gray-100">
-          <div className="flex">
+          <div className="flex overflow-x-auto no-scrollbar">
             <button 
-              className={`flex-1 py-4 px-6 text-xs font-light tracking-widest uppercase transition-colors ${
+              className={`shrink-0 whitespace-nowrap sm:flex-1 py-4 px-6 text-xs font-light tracking-widest uppercase transition-colors ${
                 activeTab === 'discover' 
                   ? 'text-pink-500 border-b-2 border-pink-500' 
                   : 'text-gray-600 hover:text-pink-500'
@@ -306,7 +306,7 @@ export default function SocialComponent() {
               ENTDECKEN
             </button>
             <button 
-              className={`flex-1 py-4 px-6 text-xs font-light tracking-widest uppercase transition-colors ${
+              className={`shrink-0 whitespace-nowrap sm:flex-1 py-4 px-6 text-xs font-light tracking-widest uppercase transition-colors ${
                 activeTab === 'followers' 
                   ? 'text-pink-500 border-b-2 border-pink-500' 
                   : 'text-gray-600 hover:text-pink-500'
@@ -316,7 +316,7 @@ export default function SocialComponent() {
               FOLLOWER
             </button>
             <button 
-              className={`flex-1 py-4 px-6 text-xs font-light tracking-widest uppercase transition-colors ${
+              className={`shrink-0 whitespace-nowrap sm:flex-1 py-4 px-6 text-xs font-light tracking-widest uppercase transition-colors ${
                 activeTab === 'following' 
                   ? 'text-pink-500 border-b-2 border-pink-500' 
                   : 'text-gray-600 hover:text-pink-500'

@@ -89,8 +89,12 @@ export default function OnboardingPage() {
       router.push('/onboarding/member')
     } else if (userType === 'ESCORT') {
       router.push('/onboarding/escort/step-1')
-    } else if (['AGENCY', 'CLUB', 'STUDIO'].includes(userType)) {
-      router.push('/onboarding/business')
+    } else if (userType === 'AGENCY') {
+      router.push('/onboarding/agency/step-1')
+    } else if (userType === 'CLUB') {
+      router.push('/onboarding/club/step-1')
+    } else if (userType === 'STUDIO') {
+      router.push('/onboarding/studio/step-1')
     }
   }
 
@@ -194,7 +198,7 @@ export default function OnboardingPage() {
             <h1 className="text-5xl font-thin tracking-wider text-gray-800 mb-6">WILLKOMMEN</h1>
             <div className="w-24 h-px bg-pink-500 mx-auto mb-8"></div>
             <p className="text-lg font-light tracking-wide text-gray-600 mb-4">
-              Vervollständige die Einrichtung deines {userTypeDisplay.toLowerCase()}-Profils
+              Vervollständige die Einrichtung deines {userTypeDisplay}-Profils
             </p>
             <p className="text-sm font-light text-gray-500">
               Erstelle ein herausragendes Profil, um in unserer exklusiven Community hervorzustechen
@@ -257,137 +261,147 @@ export default function OnboardingPage() {
                 </>
               )}
             
-              {session.user.userType === 'ESCORT' && (
-                <>
-                  {/* Schritt 1 */}
-                  <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep1Completed ? 'border-pink-500' : 'border-gray-200'}`}>
-                    {escortStep1Completed ? (
-                      <Check className="h-5 w-5 text-pink-500" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-light tracking-wide text-gray-800">Professionelles Profil</h3>
-                      <p className="text-sm font-light text-gray-600">Anzeigename, Slogan und Basisangaben</p>
-                    </div>
-                    <Link href="/onboarding/escort/step-1" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                  </div>
-
-                  {/* Schritt 2 */}
-                  <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep2Completed ? 'border-pink-500' : 'border-gray-200'}`}>
-                    {escortStep2Completed ? (
-                      <Check className="h-5 w-5 text-pink-500" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-light tracking-wide text-gray-800">Körperliche Beschreibung</h3>
-                      <p className="text-sm font-light text-gray-600">Aussehen und Merkmale</p>
-                    </div>
-                    <Link href="/onboarding/escort/step-2" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                  </div>
-
-                  {/* Schritt 3 */}
-                  <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep3Completed ? 'border-pink-500' : 'border-gray-200'}`}>
-                    {escortStep3Completed ? (
-                      <Check className="h-5 w-5 text-pink-500" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-light tracking-wide text-gray-800">Beschreibung</h3>
-                      <p className="text-sm font-light text-gray-600">Über dich, Persönlichkeit, Vorlieben</p>
-                    </div>
-                    <Link href="/onboarding/escort/step-3" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                  </div>
-
-                  {/* Schritt 4 */}
-                  <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep4Completed ? 'border-pink-500' : 'border-gray-200'}`}>
-                    {escortStep4Completed ? (
-                      <Check className="h-5 w-5 text-pink-500" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-light tracking-wide text-gray-800">Galerie</h3>
-                      <p className="text-sm font-light text-gray-600">Fotos & Medien</p>
-                    </div>
-                    <Link href="/onboarding/escort/step-4" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                  </div>
-
-                  {/* Schritt 5 */}
-                  <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep5Completed ? 'border-pink-500' : 'border-gray-200'}`}>
-                    {escortStep5Completed ? (
-                      <Check className="h-5 w-5 text-pink-500" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-light tracking-wide text-gray-800">Services</h3>
-                      <p className="text-sm font-light text-gray-600">Leistungen & Pakete</p>
-                    </div>
-                    <Link href="/onboarding/escort/step-5" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                  </div>
-
-                  {/* Schritt 6 */}
-                  <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep6Completed ? 'border-pink-500' : 'border-gray-200'}`}>
-                    {escortStep6Completed ? (
-                      <Check className="h-5 w-5 text-pink-500" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-light tracking-wide text-gray-800">Kontakt</h3>
-                      <p className="text-sm font-light text-gray-600">Telefon, Website & Social</p>
-                    </div>
-                    <Link href="/onboarding/escort/step-6" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                  </div>
-
-                  {/* Schritt 7 */}
-                  <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep7Completed ? 'border-pink-500' : 'border-gray-200'}`}>
-                    {escortStep7Completed ? (
-                      <Check className="h-5 w-5 text-pink-500" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-light tracking-wide text-gray-800">Standort</h3>
-                      <p className="text-sm font-light text-gray-600">Adresse, Stadt, Land</p>
-                    </div>
-                    <Link href="/onboarding/escort/step-7" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                  </div>
-                </>
-              )}
             
-              {['AGENCY', 'CLUB', 'STUDIO'].includes(session.user.userType) && (
-                <>
-                  <div className="flex items-center space-x-4 p-4 border-l-2 border-pink-500">
+          
+            {session.user.userType === 'ESCORT' && (
+              <>
+                {/* Schritt 1 */}
+                <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep1Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                  {escortStep1Completed ? (
                     <Check className="h-5 w-5 text-pink-500" />
-                    <div>
-                      <h3 className="font-light tracking-wide text-gray-800">Unternehmensinformationen</h3>
-                      <p className="text-sm font-light text-gray-600">Firmendaten und Geschäftstyp</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
+                  ) : (
                     <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    <div>
-                      <h3 className="font-light tracking-wide text-gray-800">Standort & Kontakt</h3>
-                      <p className="text-sm font-light text-gray-600">Adresse und Kontaktinformationen</p>
-                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-light tracking-wide text-gray-800">Professionelles Profil</h3>
+                    <p className="text-sm font-light text-gray-600">Anzeigename, Slogan und Basisangaben</p>
                   </div>
-                  <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
+                  <Link href="/onboarding/escort/step-1" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                </div>
+
+                {/* Schritt 2 */}
+                <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep2Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                  {escortStep2Completed ? (
+                    <Check className="h-5 w-5 text-pink-500" />
+                  ) : (
                     <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    <div>
-                      <h3 className="font-light tracking-wide text-gray-800">Leistungen & Portfolio</h3>
-                      <p className="text-sm font-light text-gray-600">Unternehmensbeschreibung und Galerie</p>
-                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-light tracking-wide text-gray-800">Körperliche Beschreibung</h3>
+                    <p className="text-sm font-light text-gray-600">Aussehen und Merkmale</p>
                   </div>
-                </>
-              )}
+                  <Link href="/onboarding/escort/step-2" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                </div>
+
+                {/* Schritt 3 */}
+                <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep3Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                  {escortStep3Completed ? (
+                    <Check className="h-5 w-5 text-pink-500" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-light tracking-wide text-gray-800">Beschreibung</h3>
+                  <p className="text-sm font-light text-gray-600">Über dich, Persönlichkeit, Vorlieben</p>
+                  </div>
+                  <Link href="/onboarding/escort/step-3" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                </div>
+
+                {/* Schritt 4 */}
+                <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep4Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                  {escortStep4Completed ? (
+                    <Check className="h-5 w-5 text-pink-500" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-light tracking-wide text-gray-800">Galerie</h3>
+                    <p className="text-sm font-light text-gray-600">Fotos & Medien</p>
+                  </div>
+                  <Link href="/onboarding/escort/step-4" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                </div>
+
+                {/* Schritt 5 */}
+                <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep5Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                  {escortStep5Completed ? (
+                    <Check className="h-5 w-5 text-pink-500" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-light tracking-wide text-gray-800">Services</h3>
+                    <p className="text-sm font-light text-gray-600">Leistungen & Pakete</p>
+                  </div>
+                  <Link href="/onboarding/escort/step-5" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                </div>
+
+                {/* Schritt 6 */}
+                <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep6Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                  {escortStep6Completed ? (
+                    <Check className="h-5 w-5 text-pink-500" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-light tracking-wide text-gray-800">Kontakt</h3>
+                    <p className="text-sm font-light text-gray-600">Telefon, Website & Social</p>
+                  </div>
+                  <Link href="/onboarding/escort/step-6" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                </div>
+
+                {/* Schritt 7 */}
+                <div className={`flex items-center space-x-4 p-4 border-l-2 ${escortStep7Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                  {escortStep7Completed ? (
+                    <Check className="h-5 w-5 text-pink-500" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-light tracking-wide text-gray-800">Standort</h3>
+                    <p className="text-sm font-light text-gray-600">Adresse, Stadt, Land</p>
+                  </div>
+                  <Link href="/onboarding/escort/step-7" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                </div>
+              </>
+            )}
+          
+            {['AGENCY', 'CLUB', 'STUDIO'].includes(session.user.userType) && (
+              (() => {
+                const base = session.user.userType === 'AGENCY' ? 'agency' : session.user.userType === 'CLUB' ? 'club' : 'studio'
+                return (
+                  <>
+                    <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
+                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                      <div className="flex-1">
+                        <h3 className="font-light tracking-wide text-gray-800">Unternehmensinformationen</h3>
+                        <p className="text-sm font-light text-gray-600">Firmendaten und Geschäftstyp</p>
+                      </div>
+                      <Link href={`/onboarding/${base}/step-1`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                    </div>
+                    <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
+                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                      <div className="flex-1">
+                        <h3 className="font-light tracking-wide text-gray-800">Standort & Kontakt</h3>
+                        <p className="text-sm font-light text-gray-600">Adresse und Kontaktinformationen</p>
+                      </div>
+                      <Link href={`/onboarding/${base}/step-2`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                    </div>
+                    <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
+                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                      <div className="flex-1">
+                        <h3 className="font-light tracking-wide text-gray-800">Leistungen & Portfolio</h3>
+                        <p className="text-sm font-light text-gray-600">Unternehmensbeschreibung und Galerie</p>
+                      </div>
+                      <Link href={`/onboarding/${base}/step-3`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                    </div>
+                  </>
+                )
+              })()
+            )}
+          
             </div>
           </div>
-        
-          {/* Call to Action */}
+
           <div className="text-center space-y-8">
             <div className="p-6 bg-gray-50 border">
               {session.user.userType === 'MEMBER' && isPersonalDetailsCompleted ? (
@@ -500,10 +514,10 @@ export default function OnboardingPage() {
                   </Button>
                 </>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  </div>
+</div>
+</div>
+</div>
+</div>
   )
 }

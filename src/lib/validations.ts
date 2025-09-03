@@ -155,6 +155,27 @@ export const businessOnboardingSchema = z.object({
   established: z.date().optional()
 })
 
+// Business step-by-step variants used by AGENCY/CLUB/STUDIO
+export const businessOnboardingStep1Schema = z.object({
+  companyName: z.string().min(2, 'Firmenname ist erforderlich'),
+  businessType: z.string().min(2, 'Geschäftstyp ist erforderlich'),
+})
+
+export const businessOnboardingStep2Schema = z.object({
+  address: z.string().min(5, 'Adresse ist erforderlich'),
+  city: z.string().min(2, 'Stadt ist erforderlich'),
+  country: z.string().min(2, 'Land ist erforderlich'),
+  phone: z
+    .string()
+    .refine((v) => phoneRegex.test(normalizePhone(v)), {
+      message: 'Bitte gib eine gültige internationale Telefonnummer an (z. B. +491701234567).'
+    }),
+})
+
+export const businessOnboardingStep3Schema = z.object({
+  description: z.string().min(50, 'Beschreibung muss mindestens 50 Zeichen haben'),
+})
+
 // Post Schema
 export const createPostSchema = z
   .object({

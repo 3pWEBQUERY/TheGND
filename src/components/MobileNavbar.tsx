@@ -59,13 +59,15 @@ export default function MobileNavbar() {
   }, [session?.user?.id])
 
   const baseItemClass =
-    "flex flex-col items-center justify-center gap-1 px-3 py-2 text-[10px] font-medium tracking-widest uppercase"
+    "flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-2 text-[10px] font-medium tracking-widest uppercase"
 
   const iconClass = (active: boolean) =>
     `h-5 w-5 ${active ? "text-pink-500" : "text-white"}`
 
   const labelClass = (active: boolean) =>
-    `text-[10px] ${active ? "text-pink-500" : "text-white/80"}`
+    `text-[10px] leading-none whitespace-nowrap overflow-hidden text-ellipsis tracking-normal ${
+      active ? "text-pink-500" : "text-white/80"
+    }`
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"

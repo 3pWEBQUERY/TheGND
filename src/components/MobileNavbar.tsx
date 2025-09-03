@@ -59,15 +59,10 @@ export default function MobileNavbar() {
   }, [session?.user?.id])
 
   const baseItemClass =
-    "flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-2 text-[10px] font-medium tracking-widest uppercase"
+    "flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-2"
 
   const iconClass = (active: boolean) =>
     `h-5 w-5 ${active ? "text-pink-500" : "text-white"}`
-
-  const labelClass = (active: boolean) =>
-    `text-[10px] leading-none whitespace-nowrap overflow-hidden text-ellipsis tracking-normal ${
-      active ? "text-pink-500" : "text-white/80"
-    }`
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
@@ -84,15 +79,13 @@ export default function MobileNavbar() {
       >
         <div className="grid grid-cols-5 items-stretch">
           {/* HOME */}
-          <Link href="/" className={`${baseItemClass} rounded-l-2xl`}>
+          <Link href="/" aria-label="Home" className={`${baseItemClass} rounded-l-2xl`}>
             <Home className={iconClass(isActive("/"))} />
-            <span className={labelClass(isActive("/"))}>HOME</span>
           </Link>
 
           {/* ESCORT */}
-          <Link href="/escorts" className={baseItemClass}>
+          <Link href="/escorts" aria-label="Escort" className={baseItemClass}>
             <Users2 className={iconClass(isActive("/escorts"))} />
-            <span className={labelClass(isActive("/escorts"))}>ESCORT</span>
           </Link>
 
           {/* LOGIN or USER MENU in the middle */}
@@ -104,6 +97,7 @@ export default function MobileNavbar() {
               aria-haspopup="menu"
               aria-expanded={openMenu === "user"}
               aria-controls="user-menu"
+              aria-label="Mein Bereich"
             >
               <div className="flex flex-col items-center justify-center">
                 <Avatar className="size-5 mb-1 bg-white/10 ring-1 ring-white/30">
@@ -113,7 +107,6 @@ export default function MobileNavbar() {
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <span className={labelClass(false)}>MEIN BEREICH</span>
             </button>
           ) : (
             <button
@@ -123,22 +116,20 @@ export default function MobileNavbar() {
               aria-haspopup="menu"
               aria-expanded={openMenu === "login"}
               aria-controls="login-menu"
+              aria-label="Login"
             >
               <LogIn className={iconClass(false)} />
-              <span className={labelClass(false)}>LOGIN</span>
             </button>
           )}
 
           {/* NACHRICHTEN */}
-          <Link href="/notifications" className={baseItemClass}>
+          <Link href="/notifications" aria-label="Nachrichten" className={baseItemClass}>
             <MessageSquare className={iconClass(isActive("/notifications"))} />
-            <span className={labelClass(isActive("/notifications"))}>NACHRICHTEN</span>
           </Link>
 
           {/* EINSTELLUNGEN */}
-          <Link href="/settings" className={`${baseItemClass} rounded-r-2xl`}>
+          <Link href="/settings" aria-label="Einstellungen" className={`${baseItemClass} rounded-r-2xl`}>
             <Settings className={iconClass(isActive("/settings"))} />
-            <span className={labelClass(isActive("/settings"))}>EINSTELLUNGEN</span>
           </Link>
         </div>
 

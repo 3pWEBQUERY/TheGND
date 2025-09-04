@@ -216,11 +216,11 @@ export default function OnboardingPage() {
       </nav>
 
       {/* Main Content */}
-      <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="min-h-screen flex items-center justify-center px-6 pt-24 sm:pt-28">
         <div className="w-full max-w-2xl">
           {/* Header */}
           <div className="text-center mb-16">
-            <h1 className="text-5xl font-thin tracking-wider text-gray-800 mb-6">WILLKOMMEN</h1>
+            <h1 className="text-4xl sm:text-5xl font-thin tracking-wide sm:tracking-wider leading-tight sm:leading-snug text-gray-800 mb-6">WILLKOMMEN</h1>
             <div className="w-24 h-px bg-pink-500 mx-auto mb-8"></div>
             <p className="text-lg font-light tracking-wide text-gray-600 mb-4">
               Vervollständige die Einrichtung deines {userTypeDisplay}-Profils

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export default function AgencyStep1Page() {
   const router = useRouter();
@@ -53,7 +54,11 @@ export default function AgencyStep1Page() {
       <div className="min-h-screen flex items-center justify-center px-6 pt-24">
         <div className="w-full max-w-2xl">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-thin tracking-wider text-gray-800 mb-2">Unternehmensinformationen</h1>
+            <h1 className="text-3xl font-thin tracking-wider text-gray-800 mb-2">
+              <span className="sm:hidden">Unternehmens-</span>
+              <span className="hidden sm:inline">Unternehmens</span>
+              <span className="block sm:inline">informationen</span>
+            </h1>
             <p className="text-sm font-light text-gray-500">Firmendaten und Geschäftstyp</p>
           </div>
 
@@ -67,7 +72,19 @@ export default function AgencyStep1Page() {
             </div>
             <div>
               <label className="block text-sm font-light text-gray-700 mb-1">Geschäftstyp</label>
-              <input value={businessType} onChange={(e)=>setBusinessType(e.target.value)} className="w-full border px-3 py-2 text-sm" placeholder="z.B. Agentur" />
+              <Select value={businessType} onValueChange={setBusinessType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Bitte auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Agentur">Agentur</SelectItem>
+                  <SelectItem value="Einzelunternehmen">Einzelunternehmen</SelectItem>
+                  <SelectItem value="GmbH">GmbH</SelectItem>
+                  <SelectItem value="UG (haftungsbeschränkt)">UG (haftungsbeschränkt)</SelectItem>
+                  <SelectItem value="AG">AG</SelectItem>
+                  <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex justify-between pt-4">

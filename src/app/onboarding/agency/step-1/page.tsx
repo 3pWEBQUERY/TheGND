@@ -31,7 +31,7 @@ export default function AgencyStep1Page() {
         setError(data.error || "Ein Fehler ist aufgetreten.");
         return;
       }
-      router.push("/onboarding/agency/step-2");
+      router.push("/onboarding/agency/step-3");
     } catch (err) {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -45,7 +45,7 @@ export default function AgencyStep1Page() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
             <Link href="/onboarding" className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
-            <div className="text-sm font-light tracking-widest text-gray-600">AGENTUR • Schritt 1/3</div>
+            <div className="text-sm font-light tracking-widest text-gray-600">AGENTUR • Schritt 1/7</div>
           </div>
         </div>
       </nav>

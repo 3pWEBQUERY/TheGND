@@ -30,7 +30,7 @@ export default function AgencyStep3Page() {
         setError(data.error || "Ein Fehler ist aufgetreten.");
         return;
       }
-      router.push("/onboarding");
+      router.push("/onboarding/agency/step-4");
     } catch (err) {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -44,7 +44,7 @@ export default function AgencyStep3Page() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
             <Link href="/onboarding" className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
-            <div className="text-sm font-light tracking-widest text-gray-600">AGENTUR • Schritt 3/3</div>
+            <div className="text-sm font-light tracking-widest text-gray-600">AGENTUR • Schritt 3/7</div>
           </div>
         </div>
       </nav>
@@ -52,8 +52,8 @@ export default function AgencyStep3Page() {
       <div className="min-h-screen flex items-center justify-center px-6 pt-24">
         <div className="w-full max-w-2xl">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-thin tracking-wider text-gray-800 mb-2">Leistungen & Portfolio</h1>
-            <p className="text-sm font-light text-gray-500">Unternehmensbeschreibung und Galerie</p>
+            <h1 className="text-3xl font-thin tracking-wider text-gray-800 mb-2">Beschreibung</h1>
+            <p className="text-sm font-light text-gray-500">Unternehmensbeschreibung</p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-6 border p-6 bg-gray-50">
@@ -67,8 +67,8 @@ export default function AgencyStep3Page() {
             {/* TODO: Galerie Upload */}
 
             <div className="flex justify-between pt-4">
-              <Link href="/onboarding/agency/step-2" className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
-              <button type="submit" disabled={isLoading} className="bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-light tracking-widest px-8 py-2 text-sm uppercase">{isLoading ? "Speichern..." : "Fertig"}</button>
+              <Link href="/onboarding/agency/step-1" className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
+              <button type="submit" disabled={isLoading} className="bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-light tracking-widest px-8 py-2 text-sm uppercase">{isLoading ? "Speichern..." : "Weiter"}</button>
             </div>
           </form>
         </div>

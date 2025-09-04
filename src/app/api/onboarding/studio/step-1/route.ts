@@ -4,6 +4,31 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { businessOnboardingStep1Schema } from '@/lib/validations'
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+    if (!user || user.userType !== 'STUDIO') {
+      return NextResponse.json({ error: 'Nur Studios können dieses Onboarding verwenden' }, { status: 403 })
+    }
+
+    const profile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
+    const result: Record<string, string> = {}
+    if (typeof profile?.companyName === 'string') result.companyName = profile.companyName
+    if (typeof profile?.businessType === 'string') result.businessType = profile.businessType
+
+    return NextResponse.json(result, { status: 200 })
+  } catch (error) {
+    console.error('Studio step 1 GET error:', error)
+    return NextResponse.json({ error: 'Server Fehler beim Laden' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

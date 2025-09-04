@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { getUserTypeDisplayName } from '@/lib/validations'
@@ -15,6 +15,9 @@ export default function OnboardingPage() {
   const [isSkipping, setIsSkipping] = useState(false)
   const [profileData, setProfileData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
 
   // Fetch profile data to check completion status
   useEffect(() => {
@@ -75,10 +78,10 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
-    } else if (session?.user?.onboardingStatus === 'COMPLETED' || session?.user?.onboardingStatus === 'SKIPPED') {
+    } else if (!isEditMode && (session?.user?.onboardingStatus === 'COMPLETED' || session?.user?.onboardingStatus === 'SKIPPED')) {
       router.push('/dashboard')
     }
-  }, [session, status, router])
+  }, [session, status, router, isEditMode])
 
   const handleStartOnboarding = () => {
     if (!session?.user?.userType) return
@@ -301,7 +304,7 @@ export default function OnboardingPage() {
                     <h3 className="font-light tracking-wide text-gray-800">Professionelles Profil</h3>
                     <p className="text-sm font-light text-gray-600">Anzeigename, Slogan und Basisangaben</p>
                   </div>
-                  <Link href="/onboarding/escort/step-1" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                  <Link href={addEditParam('/onboarding/escort/step-1')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                 </div>
 
                 {/* Schritt 2 */}
@@ -315,7 +318,7 @@ export default function OnboardingPage() {
                     <h3 className="font-light tracking-wide text-gray-800">Körperliche Beschreibung</h3>
                     <p className="text-sm font-light text-gray-600">Aussehen und Merkmale</p>
                   </div>
-                  <Link href="/onboarding/escort/step-2" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                  <Link href={addEditParam('/onboarding/escort/step-2')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                 </div>
 
                 {/* Schritt 3 */}
@@ -329,7 +332,7 @@ export default function OnboardingPage() {
                     <h3 className="font-light tracking-wide text-gray-800">Beschreibung</h3>
                   <p className="text-sm font-light text-gray-600">Über dich, Persönlichkeit, Vorlieben</p>
                   </div>
-                  <Link href="/onboarding/escort/step-3" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                  <Link href={addEditParam('/onboarding/escort/step-3')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                 </div>
 
                 {/* Schritt 4 */}
@@ -343,7 +346,7 @@ export default function OnboardingPage() {
                     <h3 className="font-light tracking-wide text-gray-800">Galerie</h3>
                     <p className="text-sm font-light text-gray-600">Fotos & Medien</p>
                   </div>
-                  <Link href="/onboarding/escort/step-4" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                  <Link href={addEditParam('/onboarding/escort/step-4')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                 </div>
 
                 {/* Schritt 5 */}
@@ -357,7 +360,7 @@ export default function OnboardingPage() {
                     <h3 className="font-light tracking-wide text-gray-800">Services</h3>
                     <p className="text-sm font-light text-gray-600">Leistungen & Pakete</p>
                   </div>
-                  <Link href="/onboarding/escort/step-5" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                  <Link href={addEditParam('/onboarding/escort/step-5')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                 </div>
 
                 {/* Schritt 6 */}
@@ -371,7 +374,7 @@ export default function OnboardingPage() {
                     <h3 className="font-light tracking-wide text-gray-800">Kontakt</h3>
                     <p className="text-sm font-light text-gray-600">Telefon, Website & Social</p>
                   </div>
-                  <Link href="/onboarding/escort/step-6" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                  <Link href={addEditParam('/onboarding/escort/step-6')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                 </div>
 
                 {/* Schritt 7 */}
@@ -385,7 +388,7 @@ export default function OnboardingPage() {
                     <h3 className="font-light tracking-wide text-gray-800">Standort</h3>
                     <p className="text-sm font-light text-gray-600">Adresse, Stadt, Land</p>
                   </div>
-                  <Link href="/onboarding/escort/step-7" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                  <Link href={addEditParam('/onboarding/escort/step-7')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                 </div>
               </>
             )}
@@ -401,7 +404,7 @@ export default function OnboardingPage() {
                         <h3 className="font-light tracking-wide text-gray-800">Unternehmensinformationen</h3>
                         <p className="text-sm font-light text-gray-600">Firmendaten und Geschäftstyp</p>
                       </div>
-                      <Link href={`/onboarding/${base}/step-1`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                      <Link href={addEditParam(`/onboarding/${base}/step-1`)} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                     </div>
                     {base !== 'agency' && (
                       <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
@@ -410,7 +413,7 @@ export default function OnboardingPage() {
                           <h3 className="font-light tracking-wide text-gray-800">Standort & Kontakt</h3>
                           <p className="text-sm font-light text-gray-600">Adresse und Kontaktinformationen</p>
                         </div>
-                        <Link href={`/onboarding/${base}/step-2`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                        <Link href={addEditParam(`/onboarding/${base}/step-2`)} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                       </div>
                     )}
                     <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
@@ -419,7 +422,7 @@ export default function OnboardingPage() {
                         <h3 className="font-light tracking-wide text-gray-800">{base === 'agency' ? 'Beschreibung' : 'Leistungen & Portfolio'}</h3>
                         <p className="text-sm font-light text-gray-600">{base === 'agency' ? 'Unternehmensbeschreibung' : 'Unternehmensbeschreibung und Galerie'}</p>
                       </div>
-                      <Link href={base === 'agency' ? `/onboarding/${base}/step-2` : `/onboarding/${base}/step-3`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                      <Link href={addEditParam(base === 'agency' ? `/onboarding/${base}/step-2` : `/onboarding/${base}/step-3`)} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                     </div>
                     {base === 'agency' && (
                       <>
@@ -434,7 +437,7 @@ export default function OnboardingPage() {
                             <h3 className="font-light tracking-wide text-gray-800">Medien</h3>
                             <p className="text-sm font-light text-gray-600">Logo & Galerie</p>
                           </div>
-                          <Link href="/onboarding/agency/step-4" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                          <Link href={addEditParam('/onboarding/agency/step-4')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                         </div>
 
                         {/* Schritt 5 */}
@@ -448,7 +451,7 @@ export default function OnboardingPage() {
                             <h3 className="font-light tracking-wide text-gray-800">Leistungen</h3>
                             <p className="text-sm font-light text-gray-600">Services auswählen</p>
                           </div>
-                          <Link href="/onboarding/agency/step-5" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                          <Link href={addEditParam('/onboarding/agency/step-5')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                         </div>
 
                         {/* Schritt 6 */}
@@ -462,7 +465,7 @@ export default function OnboardingPage() {
                             <h3 className="font-light tracking-wide text-gray-800">Kontakt</h3>
                             <p className="text-sm font-light text-gray-600">Telefon, Website & Social</p>
                           </div>
-                          <Link href="/onboarding/agency/step-6" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                          <Link href={addEditParam('/onboarding/agency/step-6')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                         </div>
 
                         {/* Schritt 7 */}
@@ -476,7 +479,7 @@ export default function OnboardingPage() {
                             <h3 className="font-light tracking-wide text-gray-800">Standort</h3>
                             <p className="text-sm font-light text-gray-600">Adresse, Stadt, Land</p>
                           </div>
-                          <Link href="/onboarding/agency/step-7" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                          <Link href={addEditParam('/onboarding/agency/step-7')} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                         </div>
                       </>
                     )}
@@ -488,122 +491,124 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          <div className="text-center space-y-8">
-            <div className="p-6 bg-gray-50 border">
-              {session.user.userType === 'MEMBER' && isPersonalDetailsCompleted ? (
-                <p className="text-sm font-light text-gray-600 mb-4">
-                  Super! Deine persönlichen Angaben sind vollständig. Du kannst jetzt Profil‑Medien hinzufügen oder die Einrichtung abschließen.
-                </p>
-              ) : (
-                <p className="text-sm font-light text-gray-600 mb-4">
-                  Du kannst die Einrichtung überspringen und später fortsetzen. Ein vollständiges Profil erhöht jedoch 
-                  deine Sichtbarkeit und Networking‑Möglichkeiten deutlich.
-                </p>
-              )}
+          {!isEditMode && (
+            <div className="text-center space-y-8">
+              <div className="p-6 bg-gray-50 border">
+                {session.user.userType === 'MEMBER' && isPersonalDetailsCompleted ? (
+                  <p className="text-sm font-light text-gray-600 mb-4">
+                    Super! Deine persönlichen Angaben sind vollständig. Du kannst jetzt Profil‑Medien hinzufügen oder die Einrichtung abschließen.
+                  </p>
+                ) : (
+                  <p className="text-sm font-light text-gray-600 mb-4">
+                    Du kannst die Einrichtung überspringen und später fortsetzen. Ein vollständiges Profil erhöht jedoch 
+                    deine Sichtbarkeit und Networking‑Möglichkeiten deutlich.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                {session.user.userType === 'ESCORT' && escortAllCompleted ? (
+                  <>
+                    <Button 
+                      type="button"
+                      onClick={handleCompleteOnboarding}
+                      className="bg-green-500 hover:bg-green-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
+                    >
+                      Einrichtung abschließen
+                    </Button>
+                    <Button 
+                      type="button"
+                      onClick={handleSkipOnboarding}
+                      variant="outline"
+                      disabled={isSkipping}
+                      className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
+                    >
+                      {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
+                    </Button>
+                  </>
+                ) : session.user.userType === 'MEMBER' ? (
+                  <>
+                    {isPersonalDetailsCompleted ? (
+                      <>
+                        {!isProfileMediaCompleted ? (
+                          <>
+                            <Button 
+                              type="button"
+                              onClick={handleContinueToMedia}
+                              className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
+                            >
+                              Medien hinzufügen
+                            </Button>
+                            <Button 
+                              type="button"
+                              onClick={handleSkipOnboarding}
+                              variant="outline"
+                              disabled={isSkipping}
+                              className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
+                            >
+                              {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button 
+                              type="button"
+                              onClick={handleCompleteOnboarding}
+                              className="bg-green-500 hover:bg-green-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
+                            >
+                              Einrichtung abschließen
+                            </Button>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Button 
+                          type="button"
+                          onClick={handleStartOnboarding} 
+                          className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
+                        >
+                          Einrichtung starten
+                        </Button>
+
+                        <Button 
+                          type="button"
+                          onClick={handleSkipOnboarding}
+                          variant="outline"
+                          disabled={isSkipping}
+                          className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
+                        >
+                          {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
+                        </Button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      type="button"
+                      onClick={handleStartOnboarding} 
+                      className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
+                    >
+                      Einrichtung starten
+                    </Button>
+
+                    <Button 
+                      type="button"
+                      onClick={handleSkipOnboarding}
+                      variant="outline"
+                      disabled={isSkipping}
+                      className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
+                    >
+                      {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              {session.user.userType === 'ESCORT' && escortAllCompleted ? (
-                <>
-                  <Button 
-                    type="button"
-                    onClick={handleCompleteOnboarding}
-                    className="bg-green-500 hover:bg-green-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
-                  >
-                    Einrichtung abschließen
-                  </Button>
-                  <Button 
-                    type="button"
-                    onClick={handleSkipOnboarding}
-                    variant="outline"
-                    disabled={isSkipping}
-                    className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
-                  >
-                    {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
-                  </Button>
-                </>
-              ) : session.user.userType === 'MEMBER' ? (
-                <>
-                  {isPersonalDetailsCompleted ? (
-                    <>
-                      {!isProfileMediaCompleted ? (
-                        <>
-                          <Button 
-                            type="button"
-                            onClick={handleContinueToMedia}
-                            className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
-                          >
-                            Medien hinzufügen
-                          </Button>
-                          <Button 
-                            type="button"
-                            onClick={handleSkipOnboarding}
-                            variant="outline"
-                            disabled={isSkipping}
-                            className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
-                          >
-                            {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button 
-                            type="button"
-                            onClick={handleCompleteOnboarding}
-                            className="bg-green-500 hover:bg-green-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
-                          >
-                            Einrichtung abschließen
-                          </Button>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Button 
-                        type="button"
-                        onClick={handleStartOnboarding} 
-                        className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
-                      >
-                        Einrichtung starten
-                      </Button>
-                      
-                      <Button 
-                        type="button"
-                        onClick={handleSkipOnboarding}
-                        variant="outline"
-                        disabled={isSkipping}
-                        className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
-                      >
-                        {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
-                      </Button>
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Button 
-                    type="button"
-                    onClick={handleStartOnboarding} 
-                    className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest px-12 py-3 text-sm uppercase rounded-none"
-                  >
-                    Einrichtung starten
-                  </Button>
-                  
-                  <Button 
-                    type="button"
-                    onClick={handleSkipOnboarding}
-                    variant="outline"
-                    disabled={isSkipping}
-                    className="font-light tracking-widest px-12 py-3 text-sm uppercase border-gray-300 hover:border-pink-500 rounded-none"
-                  >
-                    {isSkipping ? 'Wird übersprungen...' : 'Jetzt überspringen'}
-                  </Button>
-                </>
-              )}
-  </div>
-</div>
-</div>
-</div>
-</div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,9 @@ import { uploadFiles } from '@/utils/uploadthing'
 
 export default function AgencyOnboardingStep4() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
 
   // Logo state
   const logoInputRef = useRef<HTMLInputElement | null>(null)
@@ -34,13 +37,16 @@ export default function AgencyOnboardingStep4() {
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
   }
 
-  // Prefill from server
+  // Prefill from server (edit mode only)
   useEffect(() => {
-    (async () => {
+    if (!isEditMode) return
+    let active = true
+    ;(async () => {
       try {
         const res = await fetch('/api/onboarding/agency/step-4')
         if (!res.ok) return
         const data = await res.json()
+        if (!active) return
         if (typeof data.logo === 'string' && data.logo.length) {
           setLogoUrl(data.logo)
         }
@@ -58,7 +64,8 @@ export default function AgencyOnboardingStep4() {
         }
       } catch {}
     })()
-  }, [])
+    return () => { active = false }
+  }, [isEditMode])
 
   // Logo handlers
   const onPickLogo = () => logoInputRef.current?.click()
@@ -178,7 +185,7 @@ export default function AgencyOnboardingStep4() {
   const saveAndNext = async () => {
     // If nothing provided, just continue (server schema would reject empty payload otherwise)
     if (!logoUrl && uploaded.length === 0) {
-      router.push('/onboarding/agency/step-5')
+      router.push(addEditParam('/onboarding/agency/step-5'))
       return
     }
 
@@ -199,7 +206,7 @@ export default function AgencyOnboardingStep4() {
         setErrors([out.error || 'Speichern fehlgeschlagen'])
         return
       }
-      router.push('/onboarding/agency/step-5')
+      router.push(addEditParam('/onboarding/agency/step-5'))
     } catch {
       setErrors(['Speichern fehlgeschlagen'])
     } finally {
@@ -213,7 +220,7 @@ export default function AgencyOnboardingStep4() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
+            <Link href={addEditParam('/onboarding')} className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               ZURÜCK ZUM ONBOARDING
             </Link>
@@ -357,7 +364,7 @@ export default function AgencyOnboardingStep4() {
             <Button 
               type="button"
               variant="outline"
-              onClick={() => router.push('/onboarding')}
+              onClick={() => router.push(addEditParam('/onboarding'))}
               className="flex-1 border-gray-300 text-gray-600 font-light tracking-widest py-4 text-sm uppercase hover:border-pink-500 hover:text-pink-500 rounded-none"
             >
               Zurück

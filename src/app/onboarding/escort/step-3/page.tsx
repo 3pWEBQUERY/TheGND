@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft } from 'lucide-react'
@@ -10,21 +10,43 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { escortOnboardingStep3Schema } from '@/lib/validations'
 import RichTextEditor from '@/components/ui/rich-text-editor'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type EscortStep3Form = z.infer<typeof escortOnboardingStep3Schema>
 
 export default function EscortOnboardingStep3() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { control, handleSubmit, formState: { errors } } = useForm<EscortStep3Form>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<EscortStep3Form>({
     resolver: zodResolver(escortOnboardingStep3Schema),
     defaultValues: {
       description: ''
     }
   })
+
+  // Prefill in edit mode
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      if (!isEditMode) return
+      try {
+        const res = await fetch('/api/onboarding/escort/step-3')
+        if (!res.ok) return
+        const data = await res.json()
+        if (!active) return
+        reset({ description: data?.description || '' })
+      } catch {
+        // optional prefill
+      }
+    }
+    load()
+    return () => { active = false }
+  }, [isEditMode, reset])
 
   const onSubmit = async (data: EscortStep3Form) => {
     setIsLoading(true)
@@ -40,7 +62,7 @@ export default function EscortOnboardingStep3() {
         setError(result.error || 'Ein Fehler ist aufgetreten')
         return
       }
-      router.push('/onboarding/escort/step-4')
+      router.push(addEditParam('/onboarding/escort/step-4'))
     } catch (e) {
       setError('Ein Fehler ist aufgetreten')
     } finally {
@@ -54,7 +76,7 @@ export default function EscortOnboardingStep3() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
+            <Link href={addEditParam('/onboarding')} className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               ZURÜCK ZUM ONBOARDING
             </Link>
@@ -111,7 +133,7 @@ export default function EscortOnboardingStep3() {
               <Button 
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/onboarding')}
+                onClick={() => router.push(addEditParam('/onboarding'))}
                 className="flex-1 border-gray-300 text-gray-600 font-light tracking-widest py-4 text-sm uppercase hover:border-pink-500 hover:text-pink-500 rounded-none"
               >
                 Zurück

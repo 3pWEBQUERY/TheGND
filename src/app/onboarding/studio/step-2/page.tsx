@@ -1,11 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function StudioStep2Page() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get("edit") === "1";
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href);
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
@@ -13,6 +16,30 @@ export default function StudioStep2Page() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill fields in edit mode
+  useEffect(() => {
+    if (!isEditMode) return;
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/onboarding/studio/step-2");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        if (typeof data?.address === "string") setAddress(data.address);
+        if (typeof data?.city === "string") setCity(data.city);
+        if (typeof data?.country === "string") setCountry(data.country);
+        if (typeof data?.phone === "string") setPhone(data.phone);
+        if (typeof data?.email === "string") setEmail(data.email);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [isEditMode]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +60,7 @@ export default function StudioStep2Page() {
         setError(data.error || "Ein Fehler ist aufgetreten.");
         return;
       }
-      router.push("/onboarding/studio/step-3");
+      router.push(addEditParam("/onboarding/studio/step-3"));
     } catch (err) {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -46,7 +73,7 @@ export default function StudioStep2Page() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
+            <Link href={addEditParam("/onboarding")} className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
             <div className="text-sm font-light tracking-widest text-gray-600">STUDIO • Schritt 2/3</div>
           </div>
         </div>
@@ -89,7 +116,7 @@ export default function StudioStep2Page() {
             </div>
 
             <div className="flex justify-between pt-4">
-              <Link href="/onboarding/studio/step-1" className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
+              <Link href={addEditParam("/onboarding/studio/step-1")} className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
               <button type="submit" disabled={isLoading} className="bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-light tracking-widest px-8 py-2 text-sm uppercase">{isLoading ? "Speichern..." : "Weiter"}</button>
             </div>
           </form>

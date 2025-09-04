@@ -9,12 +9,6 @@ export default async function OnboardingLayout({ children }: { children: React.R
     redirect('/auth/signin')
   }
 
-  // Prevent accessing onboarding when already completed or skipped
-  const status = (session.user as any)?.onboardingStatus
-  if (status === 'COMPLETED' || status === 'SKIPPED') {
-    redirect('/dashboard')
-  }
-
   return (
     <div className="min-h-screen bg-white">
       {children}

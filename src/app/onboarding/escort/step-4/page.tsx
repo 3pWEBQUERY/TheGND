@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft } from 'lucide-react'
@@ -10,6 +10,9 @@ import { uploadFiles } from '@/utils/uploadthing'
 
 export default function EscortOnboardingStep4() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [errors, setErrors] = useState<string[]>([])
@@ -24,8 +27,9 @@ export default function EscortOnboardingStep4() {
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
   }
 
-  // Prefill from server
+  // Prefill from server (edit mode)
   useEffect(() => {
+    if (!isEditMode) return
     (async () => {
       try {
         const res = await fetch('/api/onboarding/escort/step-4')
@@ -45,11 +49,11 @@ export default function EscortOnboardingStep4() {
         }
       } catch {}
     })()
-  }, [])
+  }, [isEditMode])
 
   const saveAndNext = async () => {
     if (uploaded.length === 0) {
-      router.push('/onboarding/escort/step-5')
+      router.push(addEditParam('/onboarding/escort/step-5'))
       return
     }
     setIsSaving(true)
@@ -65,7 +69,7 @@ export default function EscortOnboardingStep4() {
         setErrors([out.error || 'Speichern fehlgeschlagen'])
         return
       }
-      router.push('/onboarding/escort/step-5')
+      router.push(addEditParam('/onboarding/escort/step-5'))
     } catch (e) {
       setErrors(['Speichern fehlgeschlagen'])
     } finally {
@@ -156,7 +160,7 @@ export default function EscortOnboardingStep4() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
+            <Link href={addEditParam('/onboarding')} className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               ZURÜCK ZUM ONBOARDING
             </Link>
@@ -254,7 +258,7 @@ export default function EscortOnboardingStep4() {
             <Button 
               type="button"
               variant="outline"
-              onClick={() => router.push('/onboarding')}
+              onClick={() => router.push(addEditParam('/onboarding'))}
               className="flex-1 border-gray-300 text-gray-600 font-light tracking-widest py-4 text-sm uppercase hover:border-pink-500 hover:text-pink-500 rounded-none"
             >
               Zurück

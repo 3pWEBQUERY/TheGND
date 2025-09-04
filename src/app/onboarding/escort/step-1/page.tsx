@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,6 +32,9 @@ const genderOptions = [
 export default function EscortOnboardingStep1() {
   const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -39,6 +42,7 @@ export default function EscortOnboardingStep1() {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors }
   } = useForm<EscortStep1Form>({
     resolver: zodResolver(escortOnboardingStep1Schema),
@@ -47,6 +51,45 @@ export default function EscortOnboardingStep1() {
       nationality: []
     }
   })
+
+  // Prefill in edit mode
+  useEffect(() => {
+    let ignore = false
+    const prefill = async () => {
+      if (!isEditMode) return
+      try {
+        const res = await fetch('/api/profile')
+        if (!res.ok) return
+        const data = await res.json()
+        const p = data?.user?.profile || {}
+        if (ignore) return
+        // Safely extract values
+        const defaults: Partial<EscortStep1Form> = {
+          displayName: p.displayName || '',
+          slogan: p.slogan || '',
+          age: typeof p.age === 'number' ? p.age : undefined,
+          gender: p.gender || undefined,
+          languages: Array.isArray(p.languages) ? p.languages : [],
+          nationality: Array.isArray(p.nationality)
+            ? p.nationality
+            : (typeof p.nationality === 'string' && p.nationality ? [p.nationality] : [])
+        }
+        // Use individual setters to avoid wiping other defaults
+        Object.entries(defaults).forEach(([key, value]) => {
+          if (value !== undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ;(setValue as any)(key, value)
+          }
+        })
+      } catch {
+        // ignore
+      }
+    }
+    prefill()
+    return () => {
+      ignore = true
+    }
+  }, [isEditMode])
 
   const onSubmit = async (data: EscortStep1Form) => {
     setIsLoading(true)
@@ -68,7 +111,7 @@ export default function EscortOnboardingStep1() {
       }
 
       // Continue to step 2
-      router.push('/onboarding/escort/step-2')
+      router.push(addEditParam('/onboarding/escort/step-2'))
     } catch (error) {
       setError('Ein Fehler ist aufgetreten')
     } finally {
@@ -82,7 +125,7 @@ export default function EscortOnboardingStep1() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
+            <Link href={addEditParam('/onboarding')} className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               ZURÜCK ZUM ONBOARDING
             </Link>
@@ -241,7 +284,7 @@ export default function EscortOnboardingStep1() {
               <Button 
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/onboarding')}
+                onClick={() => router.push(addEditParam('/onboarding'))}
                 className="flex-1 border-gray-300 text-gray-600 font-light tracking-widest py-4 text-sm uppercase hover:border-pink-500 hover:text-pink-500 rounded-none"
               >
                 Zurück

@@ -318,7 +318,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
               {isOwnProfile && (
                 <button 
                   ref={editBtnRef}
-                  onClick={() => router.push('/profile/edit')}
+                  onClick={() => router.push('/onboarding?edit=1')}
                   className="bg-pink-500 hover:bg-pink-600 text-white text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center space-x-2"
                 >
                   <Edit className="h-4 w-4" />

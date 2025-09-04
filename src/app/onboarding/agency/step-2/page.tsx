@@ -1,14 +1,37 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AgencyStep2Page() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get('edit') === '1';
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href);
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill in edit mode
+  useEffect(() => {
+    if (!isEditMode) return;
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/onboarding/agency/step-2');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        if (typeof data?.description === 'string') {
+          setDescription(data.description);
+        }
+      } catch {
+        // ignore prefill errors
+      }
+    })();
+    return () => { active = false };
+  }, [isEditMode]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +53,7 @@ export default function AgencyStep2Page() {
         setError(data.error || "Ein Fehler ist aufgetreten.");
         return;
       }
-      router.push("/onboarding/agency/step-4");
+      router.push(addEditParam("/onboarding/agency/step-4"));
     } catch (err) {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -43,7 +66,7 @@ export default function AgencyStep2Page() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
+            <Link href={addEditParam("/onboarding")} className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
             <div className="text-sm font-light tracking-widest text-gray-600">AGENTUR • Schritt 2/7</div>
           </div>
         </div>
@@ -67,7 +90,7 @@ export default function AgencyStep2Page() {
             {/* TODO: Galerie Upload */}
 
             <div className="flex justify-between pt-4">
-              <Link href="/onboarding/agency/step-1" className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
+              <Link href={addEditParam("/onboarding/agency/step-1")} className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
               <button type="submit" disabled={isLoading} className="bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-light tracking-widest px-8 py-2 text-sm uppercase">{isLoading ? "Speichern..." : "Weiter"}</button>
             </div>
           </form>
@@ -76,4 +99,5 @@ export default function AgencyStep2Page() {
     </div>
   );
 }
+
 

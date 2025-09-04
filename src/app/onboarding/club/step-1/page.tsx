@@ -1,15 +1,39 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ClubStep1Page() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get("edit") === "1";
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href);
   const [companyName, setCompanyName] = useState("");
   const [businessType, setBusinessType] = useState("Club");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill existing data in edit mode
+  useEffect(() => {
+    if (!isEditMode) return;
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/onboarding/club/step-1");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        if (typeof data?.companyName === "string") setCompanyName(data.companyName);
+        if (typeof data?.businessType === "string") setBusinessType(data.businessType);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [isEditMode]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +54,7 @@ export default function ClubStep1Page() {
         setError(data.error || "Ein Fehler ist aufgetreten.");
         return;
       }
-      router.push("/onboarding/club/step-2");
+      router.push(addEditParam("/onboarding/club/step-2"));
     } catch (err) {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -43,7 +67,7 @@ export default function ClubStep1Page() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
+            <Link href={addEditParam("/onboarding")} className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
             <div className="text-sm font-light tracking-widest text-gray-600">CLUB • Schritt 1/3</div>
           </div>
         </div>
@@ -70,7 +94,7 @@ export default function ClubStep1Page() {
             </div>
 
             <div className="flex justify-between pt-4">
-              <Link href="/onboarding" className="text-sm font-light text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
+              <Link href={addEditParam("/onboarding")} className="text-sm font-light text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
               <button type="submit" disabled={isLoading} className="bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-light tracking-widest px-8 py-2 text-sm uppercase">{isLoading ? "Speichern..." : "Weiter"}</button>
             </div>
           </form>

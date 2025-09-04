@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Script from 'next/script'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,6 +18,9 @@ type Step7Form = z.infer<typeof businessOnboardingStep7Schema>
 
 export default function AgencyOnboardingStep7() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -42,8 +45,9 @@ export default function AgencyOnboardingStep7() {
   const autocompleteRef = useRef<any>(null)
   const addressInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Load existing data
+  // Load existing data (only in edit mode)
   useEffect(() => {
+    if (!isEditMode) return
     let active = true
     ;(async () => {
       try {
@@ -69,7 +73,7 @@ export default function AgencyOnboardingStep7() {
       }
     })()
     return () => { active = false }
-  }, [reset, mapsReady])
+  }, [reset, mapsReady, isEditMode])
 
   // Initialize Maps after script loaded
   const onMapsLoaded = () => {
@@ -166,7 +170,7 @@ export default function AgencyOnboardingStep7() {
         const data = await res.json().catch(() => ({}))
         throw new Error(data?.error || 'Speichern fehlgeschlagen')
       }
-      router.push('/onboarding')
+      router.push(addEditParam('/onboarding'))
     } catch (e: any) {
       setError(e.message || 'Unbekannter Fehler')
     } finally {
@@ -188,7 +192,7 @@ export default function AgencyOnboardingStep7() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
+            <Link href={addEditParam('/onboarding')} className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               ZURÜCK ZUM ONBOARDING
             </Link>
@@ -273,7 +277,7 @@ export default function AgencyOnboardingStep7() {
             <Button 
               type="button"
               variant="outline"
-              onClick={() => router.push('/onboarding')}
+              onClick={() => router.push(addEditParam('/onboarding'))}
               className="flex-1 border-gray-300 text-gray-600 font-light tracking-widest py-4 text-sm uppercase hover:border-pink-500 hover:text-pink-500 rounded-none"
             >
               Zur Übersicht

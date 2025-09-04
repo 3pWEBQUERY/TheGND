@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -105,16 +105,54 @@ const shoeSizeOptions = Array.from({ length: 12 }).map((_, i) => {
 
 export default function EscortOnboardingStep2() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<EscortStep2Form>({
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<EscortStep2Form>({
     resolver: zodResolver(escortOnboardingStep2Schema),
     defaultValues: {
       piercings: [],
       tattoos: []
     }
   })
+
+  // Prefill existing values in edit mode
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      if (!isEditMode) return
+      try {
+        const res = await fetch('/api/onboarding/escort/step-2')
+        if (!res.ok) return
+        const data = await res.json()
+        if (!active || !data) return
+        const defaults: Partial<EscortStep2Form> = {
+          height: data.height ?? undefined,
+          weight: data.weight ?? undefined,
+          bodyType: data.bodyType ?? undefined,
+          hairColor: data.hairColor ?? undefined,
+          hairLength: data.hairLength ?? undefined,
+          eyeColor: data.eyeColor ?? undefined,
+          breastType: data.breastType ?? undefined,
+          breastSize: data.breastSize ?? undefined,
+          intimateArea: data.intimateArea ?? undefined,
+          piercings: Array.isArray(data.piercings) ? data.piercings : [],
+          tattoos: Array.isArray(data.tattoos) ? data.tattoos : [],
+          clothingStyle: data.clothingStyle ?? undefined,
+          clothingSize: data.clothingSize ?? undefined,
+          shoeSize: data.shoeSize ?? undefined
+        }
+        reset(defaults)
+      } catch {
+        // ignore optional prefill
+      }
+    }
+    load()
+    return () => { active = false }
+  }, [isEditMode, reset])
 
   const onSubmit = async (data: EscortStep2Form) => {
     setIsLoading(true)
@@ -132,7 +170,7 @@ export default function EscortOnboardingStep2() {
         return
       }
 
-      router.push('/onboarding/escort/step-3')
+      router.push(addEditParam('/onboarding/escort/step-3'))
     } catch (e) {
       setError('Ein Fehler ist aufgetreten')
     } finally {
@@ -146,7 +184,7 @@ export default function EscortOnboardingStep2() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
+            <Link href={addEditParam('/onboarding')} className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               ZURÜCK ZUM ONBOARDING
             </Link>
@@ -447,7 +485,7 @@ export default function EscortOnboardingStep2() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/onboarding')}
+                onClick={() => router.push(addEditParam('/onboarding'))}
                 className="flex-1 border-gray-300 text-gray-600 font-light tracking-widest py-4 text-sm uppercase hover:border-pink-500 hover:text-pink-500 rounded-none"
               >
                 Zurück

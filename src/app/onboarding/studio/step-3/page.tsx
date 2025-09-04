@@ -60,6 +60,33 @@ export default function StudioStep3Page() {
     }
   }
 
+  // Edit-mode only: Save and return to dashboard
+  async function onSaveAndReturn() {
+    setError(null);
+    if (description.trim().length < 50) {
+      setError("Beschreibung muss mindestens 50 Zeichen haben.");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/onboarding/studio/step-3", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: description.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Ein Fehler ist aufgetreten.");
+        return;
+      }
+      router.push("/profile");
+    } catch (err) {
+      setError("Netzwerkfehler. Bitte erneut versuchen.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <nav className="absolute top-0 w-full z-50 bg-transparent">
@@ -90,6 +117,16 @@ export default function StudioStep3Page() {
 
             <div className="flex justify-between pt-4">
               <Link href={addEditParam("/onboarding/studio/step-2")} className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
+              {isEditMode && (
+                <button
+                  type="button"
+                  onClick={onSaveAndReturn}
+                  disabled={isLoading}
+                  className="bg-gray-200 hover:bg-gray-300 disabled:opacity-60 text-gray-800 font-light tracking-widest px-4 py-2 text-sm uppercase mr-2"
+                >
+                  {isLoading ? "Speichern..." : "Speichern und zurück zum Dashboard"}
+                </button>
+              )}
               <button type="submit" disabled={isLoading} className="bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-light tracking-widest px-8 py-2 text-sm uppercase">{isLoading ? "Speichern..." : "Fertig"}</button>
             </div>
           </form>

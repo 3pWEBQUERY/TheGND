@@ -68,6 +68,33 @@ export default function StudioStep2Page() {
     }
   }
 
+  // Edit-mode only: Save and return to dashboard
+  async function onSaveAndReturn() {
+    setError(null);
+    if (address.trim().length < 5 || city.trim().length < 2 || country.trim().length < 2 || phone.trim().length < 5) {
+      setError("Bitte alle Pflichtfelder korrekt ausfüllen.");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/onboarding/studio/step-2", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: address.trim(), city: city.trim(), country: country.trim(), phone: phone.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Ein Fehler ist aufgetreten.");
+        return;
+      }
+      router.push("/profile");
+    } catch (err) {
+      setError("Netzwerkfehler. Bitte erneut versuchen.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <nav className="absolute top-0 w-full z-50 bg-transparent">
@@ -117,6 +144,16 @@ export default function StudioStep2Page() {
 
             <div className="flex justify-between pt-4">
               <Link href={addEditParam("/onboarding/studio/step-1")} className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>
+              {isEditMode && (
+                <button
+                  type="button"
+                  onClick={onSaveAndReturn}
+                  disabled={isLoading}
+                  className="bg-gray-200 hover:bg-gray-300 disabled:opacity-60 text-gray-800 font-light tracking-widest px-4 py-2 text-sm uppercase mr-2"
+                >
+                  {isLoading ? "Speichern..." : "Speichern und zurück zum Dashboard"}
+                </button>
+              )}
               <button type="submit" disabled={isLoading} className="bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-light tracking-widest px-8 py-2 text-sm uppercase">{isLoading ? "Speichern..." : "Weiter"}</button>
             </div>
           </form>

@@ -6,34 +6,31 @@ import { useState } from "react";
 
 export default function AgencyStep2Page() {
   const router = useRouter();
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (address.trim().length < 5 || city.trim().length < 2 || country.trim().length < 2 || phone.trim().length < 5) {
-      setError("Bitte alle Pflichtfelder korrekt ausfüllen.");
+    if (description.trim().length < 50) {
+      setError("Beschreibung muss mindestens 50 Zeichen haben.");
       return;
     }
+
     try {
       setIsLoading(true);
       const res = await fetch("/api/onboarding/agency/step-2", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: address.trim(), city: city.trim(), country: country.trim(), phone: phone.trim() }),
+        body: JSON.stringify({ description: description.trim() }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error || "Ein Fehler ist aufgetreten.");
         return;
       }
-      router.push("/onboarding/agency/step-3");
+      router.push("/onboarding/agency/step-4");
     } catch (err) {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -47,7 +44,7 @@ export default function AgencyStep2Page() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
             <Link href="/onboarding" className="text-sm font-light tracking-widest text-gray-600 hover:text-pink-500">Zur Übersicht</Link>
-            <div className="text-sm font-light tracking-widest text-gray-600">AGENTUR • Schritt 2/3</div>
+            <div className="text-sm font-light tracking-widest text-gray-600">AGENTUR • Schritt 2/7</div>
           </div>
         </div>
       </nav>
@@ -55,8 +52,8 @@ export default function AgencyStep2Page() {
       <div className="min-h-screen flex items-center justify-center px-6 pt-24">
         <div className="w-full max-w-2xl">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-thin tracking-wider text-gray-800 mb-2">Standort & Kontakt</h1>
-            <p className="text-sm font-light text-gray-500">Adresse und Kontaktinformationen</p>
+            <h1 className="text-3xl font-thin tracking-wider text-gray-800 mb-2">Beschreibung</h1>
+            <p className="text-sm font-light text-gray-500">Unternehmensbeschreibung</p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-6 border p-6 bg-gray-50">
@@ -64,29 +61,10 @@ export default function AgencyStep2Page() {
               <div className="p-3 text-sm font-light text-red-700 bg-red-50 border border-red-200">{error}</div>
             )}
             <div>
-              <label className="block text-sm font-light text-gray-700 mb-1">Adresse</label>
-              <input value={address} onChange={(e)=>setAddress(e.target.value)} className="w-full border px-3 py-2 text-sm" />
+              <label className="block text-sm font-light text-gray-700 mb-1">Beschreibung</label>
+              <textarea value={description} onChange={(e)=>setDescription(e.target.value)} className="w-full border px-3 py-2 text-sm min-h-[120px]" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-light text-gray-700 mb-1">Stadt</label>
-                <input value={city} onChange={(e)=>setCity(e.target.value)} className="w-full border px-3 py-2 text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-light text-gray-700 mb-1">Land</label>
-                <input value={country} onChange={(e)=>setCountry(e.target.value)} className="w-full border px-3 py-2 text-sm" />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-light text-gray-700 mb-1">Telefon</label>
-                <input value={phone} onChange={(e)=>setPhone(e.target.value)} className="w-full border px-3 py-2 text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-light text-gray-700 mb-1">E‑Mail</label>
-                <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full border px-3 py-2 text-sm" />
-              </div>
-            </div>
+            {/* TODO: Galerie Upload */}
 
             <div className="flex justify-between pt-4">
               <Link href="/onboarding/agency/step-1" className="text-sm font-light text-gray-600 hover:text-pink-500">Zurück</Link>

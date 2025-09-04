@@ -31,7 +31,7 @@ export default function AgencyStep1Page() {
         setError(data.error || "Ein Fehler ist aufgetreten.");
         return;
       }
-      router.push("/onboarding/agency/step-3");
+      router.push("/onboarding/agency/step-2");
     } catch (err) {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {

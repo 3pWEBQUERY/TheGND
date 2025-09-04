@@ -419,7 +419,7 @@ export default function OnboardingPage() {
                         <h3 className="font-light tracking-wide text-gray-800">{base === 'agency' ? 'Beschreibung' : 'Leistungen & Portfolio'}</h3>
                         <p className="text-sm font-light text-gray-600">{base === 'agency' ? 'Unternehmensbeschreibung' : 'Unternehmensbeschreibung und Galerie'}</p>
                       </div>
-                      <Link href={`/onboarding/${base}/step-3`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                      <Link href={base === 'agency' ? `/onboarding/${base}/step-2` : `/onboarding/${base}/step-3`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                     </div>
                     {base === 'agency' && (
                       <>

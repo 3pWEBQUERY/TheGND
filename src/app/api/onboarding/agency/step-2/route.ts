@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { businessOnboardingStep2Schema } from '@/lib/validations'
+import { businessOnboardingStep3Schema } from '@/lib/validations'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,22 +18,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validated = businessOnboardingStep2Schema.parse(body)
+    const validated = businessOnboardingStep3Schema.parse(body)
 
     const profile = await prisma.profile.upsert({
       where: { userId: session.user.id },
       update: {
-        address: validated.address,
-        city: validated.city,
-        country: validated.country,
-        phone: validated.phone,
+        description: validated.description,
       },
       create: {
         userId: session.user.id,
-        address: validated.address,
-        city: validated.city,
-        country: validated.country,
-        phone: validated.phone,
+        description: validated.description,
       },
     })
 

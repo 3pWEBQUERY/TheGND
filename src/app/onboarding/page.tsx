@@ -24,7 +24,7 @@ export default function OnboardingPage() {
     const fetchProfileData = async () => {
       if (session?.user?.id) {
         try {
-          const response = await fetch('/api/profile')
+          const response = await fetch('/api/profile', { cache: 'no-store' })
           if (response.ok) {
             const data = await response.json()
             setProfileData(data)
@@ -178,6 +178,13 @@ export default function OnboardingPage() {
 
   // Compute Agency completion states (steps 4–7)
   const agencyProfile = profileData?.user?.profile as any
+  // New: agency steps 1–2 completion states
+  const agencyStep1Completed = !!(
+    agencyProfile?.companyName && agencyProfile?.businessType
+  )
+  const agencyStep2Completed = !!(
+    agencyProfile?.description && String(agencyProfile.description).trim().length > 0
+  )
   const agencyStep4Completed = !!(
     agencyProfile?.avatar ||
     (Array.isArray(agencyProfile?.gallery) && agencyProfile.gallery.length > 0) ||
@@ -398,8 +405,16 @@ export default function OnboardingPage() {
                 const base = session.user.userType === 'AGENCY' ? 'agency' : session.user.userType === 'CLUB' ? 'club' : 'studio'
                 return (
                   <>
-                    <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                    <div className={`flex items-center space-x-4 p-4 border-l-2 ${base === 'agency' && agencyStep1Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                      {base === 'agency' ? (
+                        agencyStep1Completed ? (
+                          <Check className="h-5 w-5 text-pink-500" />
+                        ) : (
+                          <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                        )
+                      ) : (
+                        <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                      )}
                       <div className="flex-1">
                         <h3 className="font-light tracking-wide text-gray-800">Unternehmensinformationen</h3>
                         <p className="text-sm font-light text-gray-600">Firmendaten und Geschäftstyp</p>
@@ -416,8 +431,16 @@ export default function OnboardingPage() {
                         <Link href={addEditParam(`/onboarding/${base}/step-2`)} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                       </div>
                     )}
-                    <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                    <div className={`flex items-center space-x-4 p-4 border-l-2 ${base === 'agency' && agencyStep2Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                      {base === 'agency' ? (
+                        agencyStep2Completed ? (
+                          <Check className="h-5 w-5 text-pink-500" />
+                        ) : (
+                          <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                        )
+                      ) : (
+                        <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                      )}
                       <div className="flex-1">
                         <h3 className="font-light tracking-wide text-gray-800">{base === 'agency' ? 'Beschreibung' : 'Leistungen & Portfolio'}</h3>
                         <p className="text-sm font-light text-gray-600">{base === 'agency' ? 'Unternehmensbeschreibung' : 'Unternehmensbeschreibung und Galerie'}</p>

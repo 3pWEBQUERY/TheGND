@@ -15,19 +15,17 @@ export default function AgencyStep1Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Prefill existing data in edit mode
+  // Prefill existing data on mount
   useEffect(() => {
     let ignore = false;
     const prefill = async () => {
-      if (!isEditMode) return;
       try {
-        const res = await fetch('/api/profile');
+        const res = await fetch('/api/onboarding/agency/step-1', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
-        const profile = data?.user?.profile || {};
         if (!ignore) {
-          setCompanyName(profile.companyName || "");
-          setBusinessType(profile.businessType || "");
+          setCompanyName(data?.companyName || "");
+          setBusinessType(data?.businessType || "");
         }
       } catch {}
     };

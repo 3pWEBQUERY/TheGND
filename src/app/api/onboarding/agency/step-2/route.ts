@@ -4,6 +4,30 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { businessOnboardingStep3Schema } from '@/lib/validations'
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+    if (!user || user.userType !== 'AGENCY') {
+      return NextResponse.json({ error: 'Nur Agenturen können dieses Onboarding verwenden' }, { status: 403 })
+    }
+
+    const profile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
+
+    return NextResponse.json({
+      description: profile?.description || '',
+    })
+  } catch (error) {
+    console.error('Agency step 2 onboarding GET error:', error)
+    return NextResponse.json({ error: 'Server Fehler beim Onboarding' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -42,3 +66,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Server Fehler beim Onboarding' }, { status: 500 })
   }
 }
+

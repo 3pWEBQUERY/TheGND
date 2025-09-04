@@ -13,13 +13,12 @@ export default function AgencyStep2Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Prefill in edit mode
+  // Prefill on mount
   useEffect(() => {
-    if (!isEditMode) return;
     let active = true;
     (async () => {
       try {
-        const res = await fetch('/api/onboarding/agency/step-2');
+        const res = await fetch('/api/onboarding/agency/step-2', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
         if (!active) return;

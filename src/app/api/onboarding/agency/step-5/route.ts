@@ -4,6 +4,48 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { businessOnboardingStep5Schema } from '@/lib/validations'
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Nicht autorisiert' },
+        { status: 401 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+    if (!user || user.userType !== 'AGENCY') {
+      return NextResponse.json(
+        { error: 'Nur Agenturen können dieses Onboarding verwenden' },
+        { status: 403 }
+      )
+    }
+
+    const profile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
+    let services: string[] = []
+    if (profile?.services) {
+      try {
+        const parsed = typeof profile.services === 'string' ? JSON.parse(profile.services) : profile.services
+        if (Array.isArray(parsed)) {
+          services = parsed.filter((v) => typeof v === 'string')
+        }
+      } catch {
+        // ignore invalid JSON, fallback to []
+      }
+    }
+
+    return NextResponse.json({ services })
+  } catch (error) {
+    console.error('Agency step 5 onboarding GET error:', error)
+    return NextResponse.json(
+      { error: 'Server Fehler beim Onboarding' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -46,3 +88,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+

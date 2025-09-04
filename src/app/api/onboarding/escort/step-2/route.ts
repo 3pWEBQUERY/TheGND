@@ -4,6 +4,65 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { escortOnboardingStep2Schema } from '@/lib/validations'
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Nicht autorisiert' },
+        { status: 401 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+    if (!user || user.userType !== 'ESCORT') {
+      return NextResponse.json(
+        { error: 'Nur Escorts können dieses Onboarding verwenden' },
+        { status: 403 }
+      )
+    }
+
+    const profile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
+
+    let piercings: string[] = []
+    let tattoos: string[] = []
+
+    if ((profile as any)?.piercings) {
+      try { piercings = JSON.parse((profile as any).piercings) } catch { piercings = [] }
+    }
+    if ((profile as any)?.tattoos) {
+      try { tattoos = JSON.parse((profile as any).tattoos) } catch { tattoos = [] }
+    }
+
+    return NextResponse.json(
+      {
+        height: profile?.height ?? null,
+        weight: profile?.weight ?? null,
+        bodyType: profile?.bodyType ?? null,
+        hairColor: profile?.hairColor ?? null,
+        hairLength: (profile as any)?.hairLength ?? null,
+        breastType: (profile as any)?.breastType ?? null,
+        breastSize: (profile as any)?.breastSize ?? null,
+        intimateArea: (profile as any)?.intimateArea ?? null,
+        piercings,
+        tattoos,
+        clothingStyle: (profile as any)?.clothingStyle ?? null,
+        clothingSize: (profile as any)?.clothingSize ?? null,
+        shoeSize: (profile as any)?.shoeSize ?? null,
+        eyeColor: profile?.eyeColor ?? null,
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Escort step 2 GET error:', error)
+    return NextResponse.json(
+      { error: 'Server Fehler beim Laden' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

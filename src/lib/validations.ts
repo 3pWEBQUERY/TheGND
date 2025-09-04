@@ -176,6 +176,85 @@ export const businessOnboardingStep3Schema = z.object({
   description: z.string().min(50, 'Beschreibung muss mindestens 50 Zeichen haben'),
 })
 
+// Business/Agency/Club/Studio Step 4–7 Schemas (mirror escort where applicable)
+// Accept absolute http(s) URLs or site-relative paths for logo and gallery/media
+export const businessOnboardingStep4Schema = z.object({
+  logo: urlOrPath.optional(),
+  gallery: z.array(urlOrPath).max(30, 'Maximal 30 Medien erlaubt').optional(),
+  media: z.array(z.object({
+    url: urlOrPath,
+    filename: z.string(),
+    type: z.string(),
+    mediaType: z.enum(['image','video']),
+    size: z.number().nonnegative(),
+  })).max(30, 'Maximal 30 Medien erlaubt').optional(),
+}).refine((data) => !!data.logo || !!(data.gallery && data.gallery.length) || !!(data.media && data.media.length), {
+  message: 'Bitte füge mindestens ein Logo oder ein Medium hinzu.'
+})
+
+export const businessOnboardingStep5Schema = z.object({
+  services: z.array(z.string()).min(1, 'Wähle mindestens einen Service')
+})
+
+export const businessOnboardingStep6Schema = z.object({
+  phone: z
+    .string()
+    .refine((v) => phoneRegex.test(normalizePhone(v)), {
+      message: 'Bitte gib eine gültige internationale Telefonnummer an (z. B. +491701234567).'
+    }),
+  website: z.string().url('Ungültige Website URL').optional(),
+  socialMedia: z
+    .record(z.string(), z.string())
+    .superRefine((val, ctx) => {
+      const entries = Object.entries(val)
+      if (entries.length > 10) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Maximal 10 Social-Links erlaubt.'
+        })
+      }
+      for (const [key, raw] of entries) {
+        if (key.toLowerCase() === 'whatsapp') {
+          const cleaned = normalizePhone(raw)
+          if (!phoneRegex.test(cleaned)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [key],
+              message: 'WhatsApp erfordert eine gültige Telefonnummer (z. B. +491701234567), keine URL.'
+            })
+          }
+        } else {
+          try {
+            // eslint-disable-next-line no-new
+            new URL(raw)
+          } catch {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [key],
+              message: 'Bitte gib eine gültige URL an.'
+            })
+          }
+        }
+      }
+    })
+    .optional()
+})
+
+export const businessOnboardingStep7Schema = z.object({
+  address: z.string().min(5, 'Adresse ist erforderlich'),
+  city: z.string().min(2, 'Stadt ist erforderlich'),
+  country: z.string().min(2, 'Land ist erforderlich'),
+  zipCode: z.string().min(2, 'PLZ ist erforderlich').max(20).optional(),
+  location: z
+    .object({
+      lat: z.number(),
+      lng: z.number(),
+      placeId: z.string().optional(),
+      formattedAddress: z.string().optional(),
+    })
+    .optional(),
+})
+
 // Post Schema
 export const createPostSchema = z
   .object({

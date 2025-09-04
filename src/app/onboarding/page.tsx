@@ -173,6 +173,31 @@ export default function OnboardingPage() {
     escortStep7Completed
   )
 
+  // Compute Agency completion states (steps 4–7)
+  const agencyProfile = profileData?.user?.profile as any
+  const agencyStep4Completed = !!(
+    agencyProfile?.avatar ||
+    (Array.isArray(agencyProfile?.gallery) && agencyProfile.gallery.length > 0) ||
+    (Array.isArray(agencyProfile?.media) && agencyProfile.media.length > 0)
+  )
+  const agencyStep5Completed = !!(
+    Array.isArray(agencyProfile?.services) && agencyProfile.services.length > 0
+  )
+  const agencyHasAnySocial = (() => {
+    const sm = agencyProfile?.socialMedia
+    if (!sm || typeof sm !== 'object') return false
+    return Object.values(sm).some((v: any) => !!v)
+  })()
+  const agencyStep6Completed = !!(
+    agencyProfile?.phone || agencyProfile?.website || agencyHasAnySocial
+  )
+  const agencyStep7Completed = !!(
+    (agencyProfile?.latitude != null && agencyProfile?.longitude != null) ||
+    (agencyProfile?.address && agencyProfile?.city && agencyProfile?.country)
+  )
+  // Note: We intentionally avoid computing an overall completion flag for agencies here
+  // because steps 1–3 completion logic isn't implemented on this page yet.
+
   return (
     <div className="min-h-screen bg-white">
       {/* Minimalist Navigation */}
@@ -378,22 +403,83 @@ export default function OnboardingPage() {
                       </div>
                       <Link href={`/onboarding/${base}/step-1`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                     </div>
-                    <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                      <div className="flex-1">
-                        <h3 className="font-light tracking-wide text-gray-800">Standort & Kontakt</h3>
-                        <p className="text-sm font-light text-gray-600">Adresse und Kontaktinformationen</p>
+                    {base !== 'agency' && (
+                      <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
+                        <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                        <div className="flex-1">
+                          <h3 className="font-light tracking-wide text-gray-800">Standort & Kontakt</h3>
+                          <p className="text-sm font-light text-gray-600">Adresse und Kontaktinformationen</p>
+                        </div>
+                        <Link href={`/onboarding/${base}/step-2`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                       </div>
-                      <Link href={`/onboarding/${base}/step-2`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
-                    </div>
+                    )}
                     <div className="flex items-center space-x-4 p-4 border-l-2 border-gray-200">
                       <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
                       <div className="flex-1">
-                        <h3 className="font-light tracking-wide text-gray-800">Leistungen & Portfolio</h3>
-                        <p className="text-sm font-light text-gray-600">Unternehmensbeschreibung und Galerie</p>
+                        <h3 className="font-light tracking-wide text-gray-800">{base === 'agency' ? 'Beschreibung' : 'Leistungen & Portfolio'}</h3>
+                        <p className="text-sm font-light text-gray-600">{base === 'agency' ? 'Unternehmensbeschreibung' : 'Unternehmensbeschreibung und Galerie'}</p>
                       </div>
                       <Link href={`/onboarding/${base}/step-3`} className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
                     </div>
+                    {base === 'agency' && (
+                      <>
+                        {/* Schritt 4 */}
+                        <div className={`flex items-center space-x-4 p-4 border-l-2 ${agencyStep4Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                          {agencyStep4Completed ? (
+                            <Check className="h-5 w-5 text-pink-500" />
+                          ) : (
+                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-light tracking-wide text-gray-800">Medien</h3>
+                            <p className="text-sm font-light text-gray-600">Logo & Galerie</p>
+                          </div>
+                          <Link href="/onboarding/agency/step-4" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                        </div>
+
+                        {/* Schritt 5 */}
+                        <div className={`flex items-center space-x-4 p-4 border-l-2 ${agencyStep5Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                          {agencyStep5Completed ? (
+                            <Check className="h-5 w-5 text-pink-500" />
+                          ) : (
+                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-light tracking-wide text-gray-800">Leistungen</h3>
+                            <p className="text-sm font-light text-gray-600">Services auswählen</p>
+                          </div>
+                          <Link href="/onboarding/agency/step-5" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                        </div>
+
+                        {/* Schritt 6 */}
+                        <div className={`flex items-center space-x-4 p-4 border-l-2 ${agencyStep6Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                          {agencyStep6Completed ? (
+                            <Check className="h-5 w-5 text-pink-500" />
+                          ) : (
+                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-light tracking-wide text-gray-800">Kontakt</h3>
+                            <p className="text-sm font-light text-gray-600">Telefon, Website & Social</p>
+                          </div>
+                          <Link href="/onboarding/agency/step-6" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                        </div>
+
+                        {/* Schritt 7 */}
+                        <div className={`flex items-center space-x-4 p-4 border-l-2 ${agencyStep7Completed ? 'border-pink-500' : 'border-gray-200'}`}>
+                          {agencyStep7Completed ? (
+                            <Check className="h-5 w-5 text-pink-500" />
+                          ) : (
+                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-light tracking-wide text-gray-800">Standort</h3>
+                            <p className="text-sm font-light text-gray-600">Adresse, Stadt, Land</p>
+                          </div>
+                          <Link href="/onboarding/agency/step-7" className="text-xs font-light text-pink-600 hover:underline">Öffnen</Link>
+                        </div>
+                      </>
+                    )}
                   </>
                 )
               })()

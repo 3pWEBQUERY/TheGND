@@ -1,4 +1,5 @@
 import type { AgencyItem } from '@/types/agency'
+import Link from 'next/link'
 
 type Props = {
   items: AgencyItem[] | null
@@ -38,8 +39,9 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
 
           {items?.map((e) => {
             const label = e.name || 'Agentur'
+            const href = `/agency/${e.id}/${slugify(label)}`
             return (
-              <div key={e.id} className="group cursor-default block">
+              <Link key={e.id} href={href} className="group block">
                 <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden mb-3">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   {e.image ? (
@@ -57,7 +59,7 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
                     <p className="text-xs text-gray-500 mt-1">{e.city || e.country}</p>
                   )}
                 </div>
-              </div>
+              </Link>
             )
           })}
 

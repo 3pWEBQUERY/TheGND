@@ -7,12 +7,14 @@ type Props = {
   setQ: (v: string) => void
   location: string
   setLocation: (v: string) => void
+  sort: string
+  setSort: (v: string) => void
   onSubmit: () => void
   loading?: boolean
   error?: string | null
 }
 
-export default function AgencySearch({ q, setQ, location, setLocation, onSubmit, loading, error }: Props) {
+export default function AgencySearch({ q, setQ, location, setLocation, sort, setSort, onSubmit, loading, error }: Props) {
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-6">
@@ -23,7 +25,7 @@ export default function AgencySearch({ q, setQ, location, setLocation, onSubmit,
               onSubmit()
             }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
               <div className="md:col-span-3">
                 <label className="block text-xs tracking-widest text-gray-600 mb-2">SUCHBEGRIFF</label>
                 <div className="relative">
@@ -47,6 +49,17 @@ export default function AgencySearch({ q, setQ, location, setLocation, onSubmit,
                     className="pl-9 rounded-none border-gray-300 focus-visible:ring-pink-500/30"
                   />
                 </div>
+              </div>
+              <div className="md:col-span-1">
+                <label className="block text-xs tracking-widest text-gray-600 mb-2">SORTIEREN</label>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="w-full border border-gray-300 bg-white px-3 py-2 text-sm rounded-none focus:outline-none focus:ring-1 focus:ring-pink-500/30"
+                >
+                  <option value="newest">Neueste zuerst</option>
+                  <option value="name">Name A–Z</option>
+                </select>
               </div>
               <div className="md:col-span-1">
                 <Button

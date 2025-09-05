@@ -1,121 +1,86 @@
-'use client'
-
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
-import Footer from '@/components/homepage/Footer'
-import StoriesGallery from '@/components/homepage/StoriesGallery'
-import AgencyHero from '@/components/homepage/AgencyHero'
-import AgencySearch from '@/components/agency/AgencySearch'
-import AgencyResultsGrid from '@/components/agency/AgencyResultsGrid'
 import type { AgencyItem } from '@/types/agency'
+import { prisma } from '@/lib/prisma'
+import AgencyPageClient from './AgencyPageClient'
 
-export default function AgencyPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-white"><MinimalistNavigation /><div className="max-w-5xl mx-auto px-6 py-10">Laden...</div><Footer /></div>}>
-      <AgencyPageInner />
-    </Suspense>
-  )
+export const revalidate = 60
+
+function getPrimaryImage(profile: any): string | null {
+  if (profile?.avatar) return profile.avatar
+  try {
+    if (profile?.media) {
+      const media = JSON.parse(profile.media)
+      const firstImage = Array.isArray(media)
+        ? media.find((m: any) => (m?.type?.toLowerCase?.() ?? '').includes('image'))
+        : null
+      if (firstImage?.url) return firstImage.url
+    }
+  } catch {}
+  try {
+    if (profile?.gallery) {
+      const gallery = JSON.parse(profile.gallery)
+      if (Array.isArray(gallery) && gallery[0]) return gallery[0]
+    }
+  } catch {}
+  return null
 }
 
-function AgencyPageInner() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [q, setQ] = useState('')
-  const [location, setLocation] = useState('')
-  const [items, setItems] = useState<AgencyItem[] | null>(null)
-  const [total, setTotal] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const initializedRef = useRef(false)
+export default async function AgencyPage({ searchParams }: { searchParams: Promise<{ q?: string; location?: string; sort?: string }> }) {
+  const sp = await searchParams
+  const q = sp?.q?.trim() || ''
+  const location = sp?.location?.trim() || ''
+  const sort = ((sp?.sort?.trim()?.toLowerCase() as 'newest' | 'name') || 'newest') as 'newest' | 'name'
 
-  const queryString = useMemo(() => {
-    const params = new URLSearchParams()
-    if (q.trim()) params.set('q', q.trim())
-    if (location.trim()) params.set('location', location.trim())
-    params.set('take', '60')
-    return params.toString()
-  }, [q, location])
-
-  async function fetchAgencies() {
-    setLoading(true)
-    setError(null)
-    try {
-      router.replace(`/agency?${queryString}`)
-      const res = await fetch(`/api/agency/search?${queryString}`, { cache: 'no-store' })
-      if (!res.ok) throw new Error('Fehler beim Laden')
-      const data = await res.json()
-      setItems(data.items)
-      setTotal(data.total)
-    } catch (e: any) {
-      setError(e.message || 'Unbekannter Fehler')
-    } finally {
-      setLoading(false)
-    }
+  const and: any[] = []
+  if (q) {
+    and.push({
+      OR: [
+        { profile: { is: { companyName: { contains: q, mode: 'insensitive' } } } },
+        { profile: { is: { description: { contains: q, mode: 'insensitive' } } } },
+      ],
+    })
+  }
+  if (location) {
+    and.push({
+      OR: [
+        { profile: { is: { city: { contains: location, mode: 'insensitive' } } } },
+        { profile: { is: { country: { contains: location, mode: 'insensitive' } } } },
+        { profile: { is: { locationFormatted: { contains: location, mode: 'insensitive' } } } },
+      ],
+    })
   }
 
-  useEffect(() => {
-    // Initialize state from URL on first mount
-    const sp = searchParams
-    if (!sp) {
-      fetchAgencies()
-      initializedRef.current = true
-      return
-    }
-    const initialQ = sp.get('q')?.trim() || ''
-    const initialLocation = sp.get('location')?.trim() || ''
-    setQ(initialQ)
-    setLocation(initialLocation)
+  const where: any = {
+    userType: 'AGENCY',
+    isActive: true,
+    profile: { isNot: null },
+    ...(and.length ? { AND: and } : {}),
+  }
 
-    // Fetch with these initial params immediately
-    const p = new URLSearchParams()
-    if (initialQ) p.set('q', initialQ)
-    if (initialLocation) p.set('location', initialLocation)
-    p.set('take', '60')
-    ;(async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await fetch(`/api/agency/search?${p.toString()}`, { cache: 'no-store' })
-        if (!res.ok) throw new Error('Fehler beim Laden')
-        const data = await res.json()
-        setItems(data.items)
-        setTotal(data.total)
-      } catch (e: any) {
-        setError(e.message || 'Unbekannter Fehler')
-      } finally {
-        setLoading(false)
-        initializedRef.current = true
-      }
-    })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const orderBy: any = sort === 'name' ? { profile: { companyName: 'asc' } } : { createdAt: 'desc' }
 
-  // Auto search with small debounce
-  useEffect(() => {
-    if (!initializedRef.current) return
-    const t = setTimeout(() => {
-      fetchAgencies()
-    }, 300)
-    return () => clearTimeout(t)
-  }, [q, location])
+  const take = 60
+  const skip = 0
+
+  const [total, users] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({ where, include: { profile: true }, orderBy, take, skip }),
+  ])
+
+  const initialItems: AgencyItem[] = users.map((u) => ({
+    id: u.id,
+    name: u.profile?.companyName ?? u.profile?.displayName ?? null,
+    city: u.profile?.city ?? null,
+    country: u.profile?.country ?? null,
+    image: getPrimaryImage(u.profile) ?? null,
+  }))
 
   return (
-    <div className="min-h-screen bg-white">
-      <MinimalistNavigation />
-      <AgencyHero />
-      <StoriesGallery />
-      <AgencySearch
-        q={q}
-        setQ={setQ}
-        location={location}
-        setLocation={setLocation}
-        onSubmit={fetchAgencies}
-        loading={loading}
-        error={error}
-      />
-      <AgencyResultsGrid items={items} loading={loading} total={total} />
-      <Footer />
-    </div>
+    <AgencyPageClient
+      initialItems={initialItems}
+      initialTotal={total}
+      initialQ={q}
+      initialLocation={location}
+      initialSort={sort}
+    />
   )
 }

@@ -27,6 +27,7 @@ export async function GET(request: Request) {
   const location = searchParams.get('location')?.trim() || ''
   const take = Math.min(Number(searchParams.get('take') || '60'), 100)
   const skip = Math.max(Number(searchParams.get('skip') || '0'), 0)
+  const sort = (searchParams.get('sort') || 'newest').toLowerCase()
 
   const and: any[] = []
   if (q) {
@@ -54,12 +55,17 @@ export async function GET(request: Request) {
     ...(and.length ? { AND: and } : {}),
   }
 
+  const orderBy: any =
+    sort === 'name'
+      ? { profile: { companyName: 'asc' } }
+      : { createdAt: 'desc' }
+
   const [total, users] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
       include: { profile: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       skip,
       take,
     }),

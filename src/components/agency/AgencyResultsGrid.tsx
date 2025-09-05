@@ -27,11 +27,11 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {loading && !items &&
             Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="group">
-                <div className="aspect-[3/4] bg-gray-200 animate-pulse" />
+                <div className="aspect-[2/1] bg-gray-200 animate-pulse" />
                 <div className="h-3 w-3/4 bg-gray-200 mt-2 animate-pulse" />
                 <div className="h-2 w-1/2 bg-gray-100 mt-1 animate-pulse" />
               </div>
@@ -41,8 +41,8 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
             const label = e.name || 'Agentur'
             const href = `/agency/${e.id}/${slugify(label)}`
             return (
-              <Link key={e.id} href={href} className="group block">
-                <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden mb-3">
+              <Link href={href} key={e.id} className="group cursor-pointer block">
+                <div className="aspect-[2/1] bg-gray-200 relative overflow-hidden mb-2">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   {e.image ? (
                     // eslint-disable-next-line @next/next/no-img-element

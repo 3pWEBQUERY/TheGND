@@ -72,6 +72,8 @@ export default async function AgencyPage({ searchParams }: { searchParams: Promi
     city: u.profile?.city ?? null,
     country: u.profile?.country ?? null,
     image: getPrimaryImage(u.profile) ?? null,
+    description: u.profile?.description ?? null,
+    businessType: u.profile?.businessType ?? null,
   }))
 
   return (

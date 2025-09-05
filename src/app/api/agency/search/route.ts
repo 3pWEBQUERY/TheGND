@@ -77,6 +77,8 @@ export async function GET(request: Request) {
     city: u.profile?.city ?? null,
     country: u.profile?.country ?? null,
     image: getPrimaryImage(u.profile) ?? null,
+    description: u.profile?.description ?? null,
+    businessType: u.profile?.businessType ?? null,
   }))
 
   return NextResponse.json({ total, items })

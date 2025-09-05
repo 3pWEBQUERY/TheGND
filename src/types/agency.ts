@@ -4,4 +4,6 @@ export type AgencyItem = {
   city: string | null
   country: string | null
   image: string | null
+  description?: string | null
+  businessType?: string | null
 }

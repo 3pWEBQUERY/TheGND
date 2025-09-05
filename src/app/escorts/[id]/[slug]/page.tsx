@@ -7,6 +7,9 @@ import MessageButton from '@/components/MessageButton'
 import GalleryGrid from '@/components/GalleryGrid'
 import Tabs from '@/components/Tabs'
 import ProfileFeed from '@/components/ProfileFeed'
+import ServiceTag from '@/components/ServiceTag'
+import ServiceLegend from '@/components/ServiceLegend'
+import { SERVICES_DE } from '@/data/services.de'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -321,14 +324,26 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
               {
                 id: 'services',
                 label: 'Services',
-                content: services.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {services.map((s) => (
-                      <span key={s} className="px-2 py-1 text-xs border border-gray-300 text-gray-700">{s}</span>
-                    ))}
+                content: (
+                  <div>
+                    <div className="mb-3">
+                      <ServiceLegend />
+                    </div>
+                    {services.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {services.map((s) => {
+                          const found = SERVICES_DE.find((o) => o.value === s)
+                          const label = found?.label || s
+                            .replace(/[-_]/g, ' ')
+                            .replace(/\s+/g, ' ')
+                            .replace(/\b\w/g, (c) => c.toUpperCase())
+                          return <ServiceTag key={s} value={s} label={label} />
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">Keine Services angegeben.</div>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-sm text-gray-500">Keine Services angegeben.</div>
                 ),
               },
               {

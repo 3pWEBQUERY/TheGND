@@ -7,6 +7,9 @@ import Footer from '@/components/homepage/Footer'
 import MessageButton from '@/components/MessageButton'
 import GalleryGrid from '@/components/GalleryGrid'
 import Tabs from '@/components/Tabs'
+import ProfileFeed from '@/components/ProfileFeed'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -86,6 +89,7 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
     latitude: user.profile.latitude || null,
     longitude: user.profile.longitude || null,
     formatted: user.profile.locationFormatted || null,
+    zipCode: user.profile.zipCode || null,
     placeId: user.profile.locationPlaceId || null,
   }
   // Parse services (JSON array of strings)
@@ -106,13 +110,33 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
   } catch {}
   const phone = user.profile.phone || null
   const website = user.profile.website || null
-  // Fetch recent posts for FEED tab
+  // Fetch recent posts for FEED tab with author and counts
+  const session = await getServerSession(authOptions)
+  const include: any = {
+    author: { select: { email: true, userType: true, profile: { select: { displayName: true, avatar: true } } } },
+    _count: { select: { likes: true, comments: true } },
+    comments: {
+      include: {
+        author: {
+          select: {
+            email: true,
+            profile: { select: { displayName: true, avatar: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    },
+  }
+  if (session?.user?.id) {
+    include.likes = { where: { userId: session.user.id }, select: { id: true } }
+  }
   const rawPosts = await prisma.post.findMany({
     where: { authorId: user.id, isActive: true },
     orderBy: { createdAt: 'desc' },
     take: 20,
-  })
-  const posts = rawPosts.map((p) => {
+    include,
+  }) as any[]
+  const postsForFeed = rawPosts.map((p: any) => {
     let imgs: string[] = []
     try {
       if (p.images) {
@@ -120,7 +144,28 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
         if (Array.isArray(arr)) imgs = arr.filter((x: any) => typeof x === 'string')
       }
     } catch {}
-    return { id: p.id, content: p.content, images: imgs, createdAt: p.createdAt }
+    return {
+      id: p.id,
+      content: p.content,
+      images: imgs,
+      createdAt: p.createdAt,
+      isLikedByUser: !!(p.likes && p.likes.length > 0),
+      _count: { likes: p._count?.likes ?? 0, comments: p._count?.comments ?? 0 },
+      author: {
+        email: p.author?.email,
+        userType: p.author?.userType,
+        profile: { displayName: p.author?.profile?.displayName, avatar: p.author?.profile?.avatar },
+      },
+      comments: (p.comments || []).map((c: any) => ({
+        id: c.id,
+        content: c.content,
+        parentId: c.parentId ?? null,
+        author: {
+          email: c.author?.email,
+          profile: { displayName: c.author?.profile?.displayName, avatar: c.author?.profile?.avatar },
+        },
+      })),
+    }
   })
 
   return (
@@ -276,39 +321,28 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
               {
                 id: 'feed',
                 label: 'Feed',
-                content: posts.length > 0 ? (
-                  <div className="space-y-6">
-                    {posts.map((p) => (
-                      <div key={p.id} className="border border-gray-200 p-4">
-                        <p className="text-sm text-gray-800 whitespace-pre-line">{p.content}</p>
-                        {p.images?.length > 0 && (
-                          <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {p.images.map((src: string, idx: number) => (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img key={idx} src={src} alt={`Post Bild ${idx + 1}`} className="w-full h-32 object-cover" />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500">Noch keine Beiträge.</div>
-                ),
+                content: <ProfileFeed posts={postsForFeed} />,
               },
               {
                 id: 'standort',
                 label: 'Standort',
                 content: (
                   <div>
-                    <div className="text-sm text-gray-700 mb-2">
-                      {location.formatted || location.address || city || country || 'Adresse nicht verfügbar.'}
+                    <div className="text-sm text-gray-700 mb-3">
+                      <div>
+                        <span className="text-[10px] tracking-widest text-gray-500 mr-2">STRASSE:</span>
+                        <span className="text-gray-800">{((location.address || location.formatted || '').split(',')[0]) || (city || country) || 'Nicht verfügbar'}</span>
+                      </div>
+                      <div className="mt-1">
+                        <span className="text-[10px] tracking-widest text-gray-500 mr-2">STADT:</span>
+                        <span className="text-gray-800">{(location.zipCode || city) ? `${location.zipCode ? location.zipCode + ' ' : ''}${city || ''}` : (country || 'Nicht verfügbar')}</span>
+                      </div>
                     </div>
                     {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
                       <div className="border border-gray-200">
                         <iframe
                           title="Standort"
-                          className="w-full h-64"
+                          className="w-full h-96"
                           src={
                             location.placeId
                               ? `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=place_id:${location.placeId}`

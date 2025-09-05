@@ -16,6 +16,8 @@ import {
 import { getUserTypeDisplayName, formatTimeAgo } from '@/lib/validations'
 import { UserType } from '@prisma/client'
 import { uploadFiles } from '@/utils/uploadthing'
+import CommentsModal from '@/components/CommentsModal'
+import CommentsThread from '@/components/CommentsThread'
 
 interface Post {
   id: string
@@ -61,6 +63,9 @@ export default function NewsfeedComponent() {
 
   // Share Menu State
   const [shareMenuFor, setShareMenuFor] = useState<string | null>(null)
+  const [openCommentsFor, setOpenCommentsFor] = useState<string | null>(null)
+  const [openCommentsModalFor, setOpenCommentsModalFor] = useState<string | null>(null)
+  const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null)
 
   const openLightbox = (images: string[], index: number) => {
     if (!images || images.length === 0) return
@@ -515,7 +520,9 @@ export default function NewsfeedComponent() {
                   
                   <button 
                     aria-label="Kommentieren"
-                    className="flex items-center space-x-2 text-xs font-light tracking-widest text-gray-400 hover:text-gray-600 transition-colors">
+                    className="flex items-center space-x-2 text-xs font-light tracking-widest text-gray-400 hover:text-gray-600 transition-colors"
+                    onClick={() => { setOpenCommentsModalFor(post.id); setReplyToCommentId(null) }}
+                  >
                     <MessageCircle className="h-4 w-4" />
                     <span className="hidden sm:inline">KOMMENTIEREN</span>
                   </button>
@@ -603,7 +610,7 @@ export default function NewsfeedComponent() {
                   <div className="mt-6 pt-6 border-t border-gray-100">
                     <div className="space-y-4">
                       {post.comments.slice(0, 2).map((comment: any) => (
-                        <div key={comment.id} className="flex items-start space-x-3">
+                        <div key={comment.id} className={`flex items-start space-x-3 ${comment.parentId ? 'pl-8' : ''}`}>
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={normalizeAvatar(comment.author.profile?.avatar)} alt={`Avatar von ${comment.author.profile?.displayName || comment.author.email}`} />
                             <AvatarFallback className="text-xs font-light tracking-widest bg-gray-100">
@@ -617,18 +624,29 @@ export default function NewsfeedComponent() {
                             <span className="text-xs font-light tracking-wide text-gray-600 ml-2">
                               {comment.content}
                             </span>
+                            <div className="mt-1">
+                              <button
+                                type="button"
+                                className="text-[10px] tracking-widest text-gray-500 hover:text-gray-700 uppercase"
+                                onClick={() => { setOpenCommentsModalFor(post.id); setReplyToCommentId(comment.id) }}
+                              >
+                                ANTWORTEN
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
                       
                       {post.comments.length > 2 && (
-                        <button className="text-xs font-light tracking-widest text-gray-500 hover:text-gray-700 transition-colors uppercase">
+                        <button className="text-xs font-light tracking-widest text-gray-500 hover:text-gray-700 transition-colors uppercase" onClick={() => { setOpenCommentsModalFor(post.id); setReplyToCommentId(null) }}>
                           ALLE {post.comments.length} KOMMENTARE ANZEIGEN
                         </button>
                       )}
                     </div>
                   </div>
                 )}
+
+                {/* Full Comments Thread is now rendered via Modal below */}
               </div>
             </div>
           )
@@ -647,6 +665,23 @@ export default function NewsfeedComponent() {
           </div>
         </div>
       )}
+
+      {/* Comments Modal */}
+      <CommentsModal
+        open={!!openCommentsModalFor}
+        onClose={() => { setOpenCommentsModalFor(null); setReplyToCommentId(null) }}
+        title="KOMMENTARE"
+      >
+        {openCommentsModalFor && (
+          <CommentsThread
+            postId={openCommentsModalFor}
+            initialReplyToId={replyToCommentId || undefined}
+            onCountChange={(count) => {
+              setPosts((prev) => prev.map((p) => p.id === openCommentsModalFor ? { ...p, _count: { ...p._count, comments: count } } : p))
+            }}
+          />
+        )}
+      </CommentsModal>
 
       {/* Lightbox Overlay */}
       {lightboxOpen && (

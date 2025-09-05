@@ -209,10 +209,15 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  // Threaded replies
+  parentId  String?
+  parent    Comment? @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Comment[] @relation("CommentToReplies")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("comments")
+  @@index([postId, parentId])
 }
 
 // Messages Model

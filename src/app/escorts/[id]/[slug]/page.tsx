@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import MessageButton from '@/components/MessageButton'
 import GalleryGrid from '@/components/GalleryGrid'
+import Tabs from '@/components/Tabs'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -49,6 +50,7 @@ async function getEscort(id: string) {
   const profile = user.profile
   let gallery: string[] = []
   let mediaImages: string[] = []
+  let services: string[] = []
   try {
     if (profile?.gallery) {
       const g = JSON.parse(profile.gallery)
@@ -65,6 +67,12 @@ async function getEscort(id: string) {
       }
     }
   } catch {}
+  try {
+    if (profile?.services) {
+      const s = JSON.parse(profile.services)
+      if (Array.isArray(s)) services = s.filter((x: any) => typeof x === 'string')
+    }
+  } catch {}
 
   const primaryImage = getPrimaryImage(profile)
 
@@ -78,6 +86,16 @@ async function getEscort(id: string) {
     image: primaryImage,
     gallery,
     mediaImages,
+    services,
+    location: {
+      address: profile?.address ?? null,
+      city: profile?.city ?? null,
+      country: profile?.country ?? null,
+      latitude: profile?.latitude ?? null,
+      longitude: profile?.longitude ?? null,
+      formatted: profile?.locationFormatted ?? null,
+      placeId: profile?.locationPlaceId ?? null,
+    },
     contact: {
       phone: profile?.phone ?? null,
       website: profile?.website ?? null,
@@ -134,8 +152,24 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
     )
   }
 
-  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, contact } = data
+  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, services, contact, location } = data
   const images = [image, ...mediaImages, ...gallery].filter(Boolean) as string[]
+  // Fetch recent posts for FEED tab
+  const rawPosts = await prisma.post.findMany({
+    where: { authorId: escortId, isActive: true },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  })
+  const posts = rawPosts.map((p) => {
+    let imgs: string[] = []
+    try {
+      if (p.images) {
+        const arr = JSON.parse(p.images)
+        if (Array.isArray(arr)) imgs = arr.filter((x: any) => typeof x === 'string')
+      }
+    } catch {}
+    return { id: p.id, content: p.content, images: imgs, createdAt: p.createdAt }
+  })
 
   return (
     <div className="min-h-screen bg-white">
@@ -196,58 +230,129 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
             </div>
           </div>
         </div>
-
-        {/* Details */}
-        {Object.values(details).some(Boolean) && (
-          <div className="mt-8">
-            <h2 className="text-lg font-light tracking-widest text-gray-800">DETAILS</h2>
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-              {details.height && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GRÖSSE</div><div className="text-gray-800">{details.height}</div></div>
-              )}
-              {details.weight && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GEWICHT</div><div className="text-gray-800">{details.weight}</div></div>
-              )}
-              {details.hairColor && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARFARBE</div><div className="text-gray-800">{details.hairColor}</div></div>
-              )}
-              {details.hairLength && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARLÄNGE</div><div className="text-gray-800">{details.hairLength}</div></div>
-              )}
-              {details.eyeColor && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">AUGENFARBE</div><div className="text-gray-800">{details.eyeColor}</div></div>
-              )}
-              {details.breastType && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">BRUSTTYP</div><div className="text-gray-800">{details.breastType}</div></div>
-              )}
-              {details.breastSize && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">BRUSTGRÖSSE</div><div className="text-gray-800">{details.breastSize}</div></div>
-              )}
-              {details.clothingStyle && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDUNGSSTIL</div><div className="text-gray-800">{details.clothingStyle}</div></div>
-              )}
-              {details.clothingSize && (
-                <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDERGRÖSSE</div><div className="text-gray-800">{details.clothingSize}</div></div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Beschreibung */}
-        {description && (
-          <div className="mt-8">
-            <h2 className="text-lg font-light tracking-widest text-gray-800">BESCHREIBUNG</h2>
-            <p className="text-sm text-gray-700 mt-3 whitespace-pre-line">{description}</p>
-          </div>
-        )}
-
-        {/* Galerie */}
-        {images.length > 0 && (
-          <div className="mt-10">
-            <h2 className="text-lg font-light tracking-widest text-gray-800">GALERIE</h2>
-            <GalleryGrid images={images} altBase={name ?? ''} className="mt-4" />
-          </div>
-        )}
+        {/* Tabs */}
+        <div className="mt-10">
+          <Tabs
+            tabs={[
+              {
+                id: 'details',
+                label: 'Details & Beschreibung',
+                content: (
+                  <div>
+                    {Object.values(details).some(Boolean) && (
+                      <div>
+                        <h2 className="text-lg font-light tracking-widest text-gray-800">DETAILS</h2>
+                        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {details.height && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GRÖSSE</div><div className="text-gray-800">{details.height}</div></div>)}
+                          {details.weight && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GEWICHT</div><div className="text-gray-800">{details.weight}</div></div>)}
+                          {details.hairColor && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARFARBE</div><div className="text-gray-800">{details.hairColor}</div></div>)}
+                          {details.hairLength && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARLÄNGE</div><div className="text-gray-800">{details.hairLength}</div></div>)}
+                          {details.eyeColor && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">AUGENFARBE</div><div className="text-gray-800">{details.eyeColor}</div></div>)}
+                          {details.breastType && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">BRUSTTYP</div><div className="text-gray-800">{details.breastType}</div></div>)}
+                          {details.breastSize && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">BRUSTGRÖSSE</div><div className="text-gray-800">{details.breastSize}</div></div>)}
+                          {details.clothingStyle && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDUNGSSTIL</div><div className="text-gray-800">{details.clothingStyle}</div></div>)}
+                          {details.clothingSize && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDERGRÖSSE</div><div className="text-gray-800">{details.clothingSize}</div></div>)}
+                        </div>
+                      </div>
+                    )}
+                    {description && (
+                      <div className="mt-8">
+                        <h2 className="text-lg font-light tracking-widest text-gray-800">BESCHREIBUNG</h2>
+                        <p className="text-sm text-gray-700 mt-3 whitespace-pre-line">{description}</p>
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                id: 'galerie',
+                label: 'Galerie',
+                content: images.length > 0 ? (
+                  <GalleryGrid images={images} altBase={name ?? ''} className="mt-2" />
+                ) : (
+                  <div className="text-sm text-gray-500">Keine Bilder vorhanden.</div>
+                ),
+              },
+              {
+                id: 'services',
+                label: 'Services',
+                content: services.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {services.map((s) => (
+                      <span key={s} className="px-2 py-1 text-xs border border-gray-300 text-gray-700">{s}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">Keine Services angegeben.</div>
+                ),
+              },
+              {
+                id: 'feed',
+                label: 'Feed',
+                content: posts.length > 0 ? (
+                  <div className="space-y-6">
+                    {posts.map((p) => (
+                      <div key={p.id} className="border border-gray-200 p-4">
+                        <p className="text-sm text-gray-800 whitespace-pre-line">{p.content}</p>
+                        {p.images?.length > 0 && (
+                          <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {p.images.map((src: string, idx: number) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img key={idx} src={src} alt={`Post Bild ${idx + 1}`} className="w-full h-32 object-cover" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">Noch keine Beiträge.</div>
+                ),
+              },
+              {
+                id: 'standort',
+                label: 'Standort',
+                content: (
+                  <div>
+                    <div className="text-sm text-gray-700 mb-2">
+                      {location?.formatted || location?.address || city || country || 'Adresse nicht verfügbar.'}
+                    </div>
+                    {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+                      <div className="border border-gray-200">
+                        <iframe
+                          title="Standort"
+                          className="w-full h-64"
+                          src={
+                            location?.placeId
+                              ? `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=place_id:${location.placeId}`
+                              : (location?.latitude && location?.longitude)
+                                ? `https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=${location.latitude},${location.longitude}&zoom=14&maptype=roadmap`
+                                : `https://www.google.com/maps/embed/v1/search?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(location?.formatted || location?.address || `${city || ''} ${country || ''}`)}`
+                          }
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-sm text-amber-600">Google Maps API Key fehlt. Bitte setze NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.</div>
+                    )}
+                    {(city || country) && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location?.formatted || location?.address || `${city || ''} ${country || ''}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-2 text-sm underline"
+                      >
+                        Auf Karte öffnen
+                      </a>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
       </div>
       <Footer />
     </div>

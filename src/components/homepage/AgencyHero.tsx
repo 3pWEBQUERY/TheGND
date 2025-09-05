@@ -5,7 +5,7 @@ export default function AgencyHero() {
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/2.jpg"
+          src="/agentur.jpg"
           alt="Agencies Hero"
           className="h-full w-full object-cover"
         />

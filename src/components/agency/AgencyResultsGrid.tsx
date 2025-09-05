@@ -31,7 +31,7 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
           {loading && !items &&
             Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="group">
-                <div className="aspect-[2/1] bg-gray-200 animate-pulse" />
+                <div className="h-48 sm:h-56 md:h-64 lg:h-72 bg-gray-200 animate-pulse" />
                 <div className="h-3 w-3/4 bg-gray-200 mt-2 animate-pulse" />
                 <div className="h-2 w-1/2 bg-gray-100 mt-1 animate-pulse" />
               </div>
@@ -42,13 +42,13 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
             const href = `/agency/${e.id}/${slugify(label)}`
             return (
               <Link href={href} key={e.id} className="group cursor-pointer block">
-                <div className="aspect-[2/1] bg-gray-200 relative overflow-hidden mb-2">
+                <div className="h-44 sm:h-48 md:h-56 lg:h-64 bg-gray-200 relative overflow-hidden mb-2">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   {e.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={e.image} alt={label} className="h-full w-full object-cover" />
+                    <img src={e.image} alt={label} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="h-full w-full bg-gray-300" />
+                    <div className="w-full h-full bg-gray-300" />
                   )}
                 </div>
                 <div className="text-center">

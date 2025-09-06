@@ -79,6 +79,8 @@ export async function GET(request: Request) {
     image: getPrimaryImage(u.profile) ?? null,
     description: u.profile?.description ?? null,
     businessType: u.profile?.businessType ?? null,
+    visibility: u.profile?.visibility ?? null,
+    isVerified: u.profile?.visibility === 'VERIFIED',
   }))
 
   return NextResponse.json({ total, items })

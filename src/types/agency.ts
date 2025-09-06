@@ -6,4 +6,6 @@ export type AgencyItem = {
   image: string | null
   description?: string | null
   businessType?: string | null
+  visibility?: 'PUBLIC' | 'VERIFIED' | 'PRIVATE'
+  isVerified?: boolean
 }

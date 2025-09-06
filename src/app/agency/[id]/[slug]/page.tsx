@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
-import { Globe, Phone } from 'lucide-react'
+import { Globe, Phone, BadgeCheck } from 'lucide-react'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import RatingDonut from '@/components/RatingDonut'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
@@ -99,6 +99,7 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
   const city = user.profile.city || null
   const country = user.profile.country || null
   const image = getPrimaryImage(user.profile)
+  const isVerified = (user.profile as any)?.visibility === 'VERIFIED'
   const description = user.profile.description || null
   // Collect gallery/media images similar to escorts page
   let gallery: string[] = []
@@ -274,7 +275,14 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
         {/* Centered content */}
         <div className="relative z-10 h-full flex items-center justify-center text-center px-6">
           <div>
-            <h1 className="text-5xl md:text-6xl font-thin tracking-wider text-white mb-2">{name ? (name.toUpperCase?.() ?? name) : 'AGENTUR'}</h1>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h1 className="text-5xl md:text-6xl font-thin tracking-wider text-white">{name ? (name.toUpperCase?.() ?? name) : 'AGENTUR'}</h1>
+              {isVerified && (
+                <span title="Profil verifiziert" className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50/90 text-emerald-800 border-emerald-200">
+                  <BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT
+                </span>
+              )}
+            </div>
             {(city || country) && (
               <p className="text-sm text-gray-200">{city || country}</p>
             )}
@@ -294,7 +302,16 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
           )}
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              {name && <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>}
+              {name && (
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>
+                  {isVerified && (
+                    <span title="Profil verifiziert" className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50 text-emerald-800 border-emerald-200">
+                      <BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT
+                    </span>
+                  )}
+                </div>
+              )}
               {ratingCount > 0 && (
                 <div className="flex items-center gap-2">
                   <RatingDonut value={ratingAvg} size={32} strokeWidth={6} showValue={false} />

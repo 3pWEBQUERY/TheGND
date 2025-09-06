@@ -1,4 +1,5 @@
 import type { AgencyItem } from '@/types/agency'
+import { BadgeCheck } from 'lucide-react'
 import Link from 'next/link'
 
 type Props = {
@@ -49,6 +50,13 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
                     <img src={e.image} alt={label} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gray-300" />
+                  )}
+                  {e.isVerified && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                        <BadgeCheck className="h-4 w-4" />
+                      </span>
+                    </div>
                   )}
                 </div>
                 <div className="text-center">

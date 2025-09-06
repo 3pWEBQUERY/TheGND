@@ -15,6 +15,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Globe } from 'lucide-react'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
+import RatingDonut from '@/components/RatingDonut'
+import type React from 'react'
+import ProfileComments from '@/components/ProfileComments'
 
 // Helpers for formatting (aligned with ProfileComponent)
 const toStr = (v: any) => (v === null || v === undefined) ? '' : String(v).trim()
@@ -25,6 +28,20 @@ const withUnit = (v: any, unit: string) => {
   if (low.includes(unit.toLowerCase())) return s
   if (/^\d+(?:[\.,]\d+)?$/.test(s)) return `${s.replace(',', '.')} ${unit}`
   return s
+}
+// Brand colors per social platform
+const brandColor = (key: string): string => {
+  const k = key.toLowerCase()
+  if (k === 'whatsapp') return '#25D366'
+  if (k === 'instagram') return '#E4405F'
+  if (k === 'facebook') return '#1877F2'
+  if (k === 'twitter' || k === 'x') return '#1DA1F2'
+  if (k === 'youtube') return '#FF0000'
+  if (k === 'linkedin') return '#0A66C2'
+  if (k === 'telegram') return '#26A5E4'
+  if (k === 'tiktok') return '#000000'
+  if (k === 'snapchat') return '#FFFC00'
+  return '#6B7280' // gray-500 fallback
 }
 const formatHeight = (v: any) => withUnit(v, 'cm')
 const formatWeight = (v: any) => withUnit(v, 'kg')
@@ -246,11 +263,36 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
   const images = [image, ...mediaImages, ...gallery].filter(Boolean) as string[]
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
+  // Profile rating (average of visible root comments)
+  const ratingAgg: any = await (prisma as any).comment.aggregate({
+    where: { targetUserId: escortId, isVisible: true, parentId: null, NOT: { rating: null } },
+    _avg: { rating: true },
+    _count: true,
+  })
+  const ratingAvg = Number(ratingAgg?._avg?.rating ?? 0)
+  const ratingRounded = Math.round(ratingAvg)
+  const ratingCount = Number(ratingAgg?._count ?? 0)
+  // Distribution per rating 1..5
+  const ratingGroups: any[] = await (prisma as any).comment.groupBy({
+    by: ['rating'],
+    where: { targetUserId: escortId, isVisible: true, parentId: null, NOT: { rating: null } },
+    _count: { _all: true },
+  })
+  const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  for (const g of ratingGroups) {
+    const r = Number(g.rating || 0)
+    if (r >= 1 && r <= 5) dist[r] = Number(g._count?._all ?? g._count ?? 0)
+  }
+  const distTotal = Object.values(dist).reduce((a, b) => a + b, 0) || 1
   const include: any = {
     author: { select: { email: true, userType: true, profile: { select: { displayName: true, avatar: true } } } },
     _count: { select: { likes: true, comments: true } },
     comments: {
-      include: {
+      select: {
+        id: true,
+        content: true,
+        parentId: true,
+        createdAt: true,
         author: {
           select: {
             email: true,
@@ -339,7 +381,15 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
             </div>
           )}
           <div className="flex-1">
-            {name && <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>}
+            <div className="flex items-center justify-between">
+              {name && <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>}
+              {ratingCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <RatingDonut value={ratingAvg} size={32} strokeWidth={6} showValue={false} />
+                  <div className="text-xs text-gray-700">{ratingAvg.toFixed(1)} / 5 <span className="text-gray-500">({ratingCount})</span></div>
+                </div>
+              )}
+            </div>
             {(city || country) && (
               <p className="text-sm text-gray-500 mt-1">{city || country}</p>
             )}
@@ -384,13 +434,15 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
                       key === 'tiktok' ? FaTiktok :
                       key === 'snapchat' ? FaSnapchat :
                       null
+                    const color = brandColor(key)
                     return (
                       <a
                         key={rawKey}
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3 py-1 border text-xs rounded-none border-[#25D366] text-[#25D366] hover:text-white hover:bg-[#25D366] hover:border-[#25D366]"
+                        className="inline-flex items-center gap-2 px-3 py-1 border text-xs rounded-none transition-colors border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white hover:border-[var(--brand)]"
+                        style={{ ['--brand' as any]: color }}
                         title={rawKey}
                       >
                         {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
@@ -506,6 +558,33 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
                 id: 'feed',
                 label: 'Feed',
                 content: <ProfileFeed posts={postsForFeed} />,
+              },
+              {
+                id: 'kommentare',
+                label: 'Kommentare',
+                content: (
+                  <div>
+                    {ratingCount > 0 && (
+                      <div className="mb-4 space-y-1">
+                        {[5,4,3,2,1].map((r) => {
+                          const c = dist[r] || 0
+                          const pct = Math.round((c / distTotal) * 100)
+                          const barColor = r <= 2 ? 'var(--rating-low)' : (r < 4 ? 'var(--rating-mid)' : 'var(--rating-high)')
+                          return (
+                            <div key={r} className="flex items-center gap-3 text-xs">
+                              <div className="w-24 whitespace-nowrap text-gray-600">{r} Sterne</div>
+                              <div className="flex-1 h-2" style={{ backgroundColor: 'var(--rating-track)' }}>
+                                <div className="h-2" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                              </div>
+                              <div className="w-12 text-right text-gray-600">{pct}%</div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    <ProfileComments targetUserId={escortId} />
+                  </div>
+                ),
               },
               {
                 id: 'standort',

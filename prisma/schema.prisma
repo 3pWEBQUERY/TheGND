@@ -62,7 +62,8 @@ model User {
   posts             Post[]
   stories           Story[]
   storyViews        StoryView[]
-  comments          Comment[]
+  comments          Comment[]        @relation("CommentAuthor")
+  receivedComments  Comment[]        @relation("CommentTargetUser")
   sentMessages      Message[]         @relation("SentMessages")
   receivedMessages  Message[]         @relation("ReceivedMessages")
   following         Follow[]          @relation("Follower")
@@ -206,19 +207,34 @@ model StoryView {
 model Comment {
   id        String   @id @default(cuid())
   content   String
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  // Comment can target either a Post or a User (profile)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  targetUserId String?
+  targetUser   User?   @relation("CommentTargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+  // Author of the comment
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  // Optional rating 1-5
+  rating    Int?
   // Threaded replies
   parentId  String?
   parent    Comment? @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: Cascade)
   children  Comment[] @relation("CommentToReplies")
+  // Moderation & visibility
+  isVisible         Boolean  @default(true)
+  hiddenByOwner     Boolean  @default(false)
+  deletionRequested Boolean  @default(false)
+  deletionRequestMessage String?
+  editRequested     Boolean  @default(false)
+  editRequestMessage String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("comments")
   @@index([postId, parentId])
+  @@index([targetUserId])
 }
 
 // Messages Model

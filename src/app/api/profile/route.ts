@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
           include: {
             likes: true,
             comments: {
-              include: {
+              select: {
+                id: true,
+                content: true,
+                parentId: true,
+                createdAt: true,
                 author: {
                   select: {
                     id: true,

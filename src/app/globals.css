@@ -79,6 +79,11 @@
   /* Brand colors */
   --brand-pink: oklch(0.7 0.25 17);
   --brand-purple: oklch(0.6 0.18 300);
+  /* Rating colors */
+  --rating-low: #EF4444;   /* red-500 */
+  --rating-mid: #F59E0B;   /* amber-500 */
+  --rating-high: #10B981;  /* emerald-500 */
+  --rating-track: #E5E7EB; /* gray-200 */
 }
 
 .dark {
@@ -116,6 +121,11 @@
   /* Brand colors (dark-optimized) */
   --brand-pink: oklch(0.72 0.22 17);
   --brand-purple: oklch(0.65 0.16 300);
+  /* Rating colors (dark can reuse same for contrast) */
+  --rating-low: #EF4444;
+  --rating-mid: #F59E0B;
+  --rating-high: #10B981;
+  --rating-track: #374151; /* gray-700 */
 }
 
 @layer base {

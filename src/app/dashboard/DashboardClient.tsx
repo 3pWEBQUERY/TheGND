@@ -10,6 +10,7 @@ import NewsfeedComponent from '@/components/NewsfeedComponent'
 import StoriesComponent from '@/components/StoriesComponent'
 import SocialComponent from '@/components/SocialComponent'
 import MessagingComponent from '@/components/MessagingComponent'
+import CommentsComponent from '@/components/CommentsComponent'
 import DashboardHeader from '@/components/DashboardHeader'
 import DashboardMobileNavigation from '@/components/DashboardMobileNavigation'
 
@@ -147,6 +148,9 @@ export default function DashboardClient() {
           
           {activeTab === 'messages' && (
             <MessagingComponent />
+          )}
+          {activeTab === 'comments' && (
+            <CommentsComponent />
           )}
           
           {activeTab === 'network' && (

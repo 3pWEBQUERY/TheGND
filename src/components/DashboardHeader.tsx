@@ -150,7 +150,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
             </h1>
             
             {/* Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden md:flex items-center space-x-6">
               <Link 
                 href="/dashboard?tab=dashboard"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
@@ -195,6 +195,15 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
               >
                 NETZWERK
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'network' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+              </Link>
+              <Link 
+                href="/dashboard?tab=comments"
+                className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
+                  activeTab === 'comments' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
+                }`}
+              >
+                KOMMENTARE
+                <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'comments' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
               {canStories && (
                 <Link 

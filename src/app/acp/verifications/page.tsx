@@ -3,8 +3,9 @@ import VerificationsTable, { VerificationItem } from '@/components/admin/Verific
 
 export const dynamic = 'force-dynamic'
 
-export default async function VerificationsACPPage({ searchParams }: { searchParams?: { status?: 'PENDING' | 'APPROVED' | 'REJECTED' } }) {
-  const status = searchParams?.status
+export default async function VerificationsACPPage({ searchParams }: { searchParams: Promise<{ status?: 'PENDING' | 'APPROVED' | 'REJECTED' }> }) {
+  const sp = await searchParams
+  const status = sp?.status
   const hasDelegate = typeof (prisma as any).verificationRequest?.findMany === 'function'
   let rows: any[] = []
   if (hasDelegate) {

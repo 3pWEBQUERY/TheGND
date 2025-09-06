@@ -1,8 +1,6 @@
 "use client";
 
 import { Calendar, Droplets, Eye, Link2, Puzzle, Smile, Waves } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
 type Props = {
   value: string;
@@ -272,24 +270,10 @@ export default function ServiceTag({ value, label }: Props) {
   const category = getCategory(value);
   const classes = getClasses(category);
   const Icon = getIcon(category);
-  const catDesc = getCategoryDescription(category);
-  const svcDesc = SERVICE_DESCRIPTIONS[value];
-  const title = `${label} — ${svcDesc || catDesc}`;
-  const tones = getBubbleTone(category);
   return (
-    <TooltipProvider delayDuration={100}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className={`inline-flex items-center gap-1 px-3 py-1.5 border text-xs font-medium rounded-none ${classes}`}>
-            {Icon}
-            <span>{label}</span>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top" align="center" sideOffset={14} className={cn("rounded-none", tones.bubble)}>
-          <div className={cn("h-0.5 w-full", getAccentBarClass(category))} />
-          <div className="mt-1 text-[11px] sm:text-xs text-gray-800 leading-snug">{svcDesc || catDesc}</div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <span className={`inline-flex items-center gap-1 px-3 py-1.5 border text-xs font-medium rounded-none ${classes}`}>
+      {Icon}
+      <span>{label}</span>
+    </span>
   );
 }

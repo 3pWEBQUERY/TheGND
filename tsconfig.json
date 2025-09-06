@@ -23,8 +23,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "src/components/ui/Tooltip.tsx"
-  ]
+  "exclude": ["node_modules"]
 }

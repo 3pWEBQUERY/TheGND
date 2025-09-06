@@ -1,0 +1,427 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model VerificationRequest {
+  id             String             @id @default(dbgenerated("gen_random_uuid()"))
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName      String
+  lastName       String
+  birthDate      DateTime
+  idNumber       String
+  idPhotoUrl     String
+  selfiePhotoUrl String
+  idVideoUrl     String?
+  status         VerificationStatus @default(PENDING)
+  note           String?
+  reviewedAt     DateTime?
+  reviewedById   String?
+  reviewedBy     User?              @relation("VerificationReviewedBy", fields: [reviewedById], references: [id])
+  createdAt      DateTime           @default(now())
+
+  @@map("verification_requests")
+  @@index([userId, status])
+}
+
+// Verification
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Types Enum
+enum UserType {
+  MEMBER
+  ESCORT
+  AGENCY
+  CLUB
+  STUDIO
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  OTHER
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+// Privacy & Notifications Enums
+enum ProfileVisibility {
+  PUBLIC
+  VERIFIED
+  PRIVATE
+}
+
+enum NotificationPreference {
+  ALL
+  IMPORTANT
+  NONE
+}
+
+// User Authentication Model
+model User {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  password          String
+  userType          UserType
+  onboardingStatus  OnboardingStatus  @default(NOT_STARTED)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  profile           Profile?
+  posts             Post[]
+  stories           Story[]
+  storyViews        StoryView[]
+  comments          Comment[]        @relation("CommentAuthor")
+  receivedComments  Comment[]        @relation("CommentTargetUser")
+  sentMessages      Message[]         @relation("SentMessages")
+  receivedMessages  Message[]         @relation("ReceivedMessages")
+  following         Follow[]          @relation("Follower")
+  followers         Follow[]          @relation("Following")
+  likes             Like[]
+  notifications     Notification[]
+  billingCustomers  BillingCustomer[]
+  verificationRequests VerificationRequest[]
+  reviewedVerifications VerificationRequest[] @relation("VerificationReviewedBy")
+
+  @@map("users")
+}
+
+// Profile Model with different fields based on UserType
+model Profile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Common fields
+  displayName String?
+  bio         String?
+  avatar      String?
+  location    String?
+  
+  // Member specific fields
+  age         Int?
+  gender      Gender?
+  preferences String?   // JSON string for member preferences
+  
+  // Escort specific fields
+  slogan      String?
+  nationality String?
+  languages   String?   // JSON array of languages
+  
+  // Appearance fields (Escort)
+  height      String?
+  weight      String?
+  bodyType    String?
+  hairColor   String?
+  eyeColor    String?
+  // Extended appearance (Escort, step-2)
+  hairLength   String?
+  breastType   String?
+  breastSize   String?
+  intimateArea String?
+  piercings    String?   // JSON array of strings
+  tattoos      String?   // JSON array of strings
+  clothingStyle String?
+  clothingSize String?
+  shoeSize     String?
+  
+  // Description (Escort)
+  description String?
+  services    String?   // JSON array of services
+  
+  // Gallery (Escort)
+  gallery     String?   // JSON array of image URLs
+  media       String?   // JSON array of media objects (images/videos)
+  
+  // Location details (Escort/Agency/Club/Studio)
+  address     String?
+  city        String?
+  country     String?
+  zipCode     String?
+  
+  // Privacy & Notifications
+  visibility             ProfileVisibility       @default(PUBLIC)
+  notificationPreference NotificationPreference  @default(ALL)
+  
+  // Structured geolocation fields
+  latitude    Float?
+  longitude   Float?
+  locationPlaceId   String?
+  locationFormatted String?
+  
+  // Contact information
+  phone       String?
+  website     String?
+  socialMedia String?   // JSON object with social media links
+  openingHours String?  // JSON object with weekly opening hours
+  
+  // Agency/Club/Studio specific
+  companyName String?
+  businessType String?
+  established DateTime?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("profiles")
+  @@index([latitude, longitude])
+}
+
+// Posts Model
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  images    String?  // JSON array of image URLs
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  likes     Like[]
+  comments  Comment[]
+
+  @@map("posts")
+}
+
+// Stories Model (only for non-Member users)
+model Story {
+  id        String   @id @default(cuid())
+  content   String
+  image     String?  // Single image URL
+  video     String?  // Video URL
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  expiresAt DateTime // Stories expire after 24 hours
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  
+  views     StoryView[]
+
+  @@map("stories")
+}
+
+model StoryView {
+  id      String @id @default(cuid())
+  storyId String
+  userId  String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt DateTime @default(now())
+
+  @@unique([storyId, userId])
+  @@map("story_views")
+}
+
+// Comments Model
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  // Comment can target either a Post or a User (profile)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  targetUserId String?
+  targetUser   User?   @relation("CommentTargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+  // Author of the comment
+  authorId  String
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  // Optional rating 1-5
+  rating    Int?
+  // Threaded replies
+  parentId  String?
+  parent    Comment? @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Comment[] @relation("CommentToReplies")
+  // Moderation & visibility
+  isVisible         Boolean  @default(true)
+  hiddenByOwner     Boolean  @default(false)
+  deletionRequested Boolean  @default(false)
+  deletionRequestMessage String?
+  editRequested     Boolean  @default(false)
+  editRequestMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+  @@index([postId, parentId])
+  @@index([targetUserId])
+}
+
+// Messages Model
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@map("messages")
+}
+
+// Follow Model
+model Follow {
+  id          String @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User   @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User   @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// Likes Model
+model Like {
+  id     String @id @default(cuid())
+  userId String
+  postId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+// Notifications Model
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // "follow", "like", "comment", "message"
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// Billing Enums
+enum BillingProvider {
+  STRIPE
+  PADDLE
+  LEMONSQUEEZY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  UNPAID
+}
+
+// Billing Models
+model BillingCustomer {
+  id                   String           @id @default(cuid())
+  userId               String
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider             BillingProvider
+  providerCustomerId   String
+  defaultPaymentMethodId String?        @unique
+  defaultPaymentMethod  PaymentMethod?  @relation("DefaultPaymentMethodOnCustomer", fields: [defaultPaymentMethodId], references: [id])
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  // Relations
+  paymentMethods       PaymentMethod[] @relation("CustomerPaymentMethods")
+  subscriptions        Subscription[]
+  invoices             Invoice[]
+
+  @@unique([userId, provider])
+  @@unique([provider, providerCustomerId])
+  @@map("billing_customers")
+}
+
+model PaymentMethod {
+  id                      String          @id @default(cuid())
+  billingCustomerId       String
+  billingCustomer         BillingCustomer @relation("CustomerPaymentMethods", fields: [billingCustomerId], references: [id], onDelete: Cascade)
+  providerPaymentMethodId String
+  brand                   String
+  last4                   String
+  expMonth                Int
+  expYear                 Int
+  isDefault               Boolean         @default(false)
+  createdAt               DateTime        @default(now())
+  // Back relation for the customer's default payment method
+  defaultForCustomer      BillingCustomer? @relation("DefaultPaymentMethodOnCustomer")
+
+  @@unique([billingCustomerId, providerPaymentMethodId])
+  @@map("billing_payment_methods")
+}
+
+model Subscription {
+  id                     String           @id @default(cuid())
+  billingCustomerId      String
+  billingCustomer        BillingCustomer  @relation(fields: [billingCustomerId], references: [id], onDelete: Cascade)
+  providerSubscriptionId String
+  status                 SubscriptionStatus
+  planName               String?
+  priceId                String?
+  amount                 Int?
+  currency               String?
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAt               DateTime?
+  cancelAtPeriodEnd      Boolean?         @default(false)
+  endedAt                DateTime?
+  trialStart             DateTime?
+  trialEnd               DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  // Relations
+  invoices               Invoice[]
+
+  @@unique([providerSubscriptionId])
+  @@map("billing_subscriptions")
+}
+
+model Invoice {
+  id                 String           @id @default(cuid())
+  billingCustomerId  String
+  billingCustomer    BillingCustomer  @relation(fields: [billingCustomerId], references: [id], onDelete: Cascade)
+  subscriptionId     String?
+  subscription       Subscription?    @relation(fields: [subscriptionId], references: [id])
+  providerInvoiceId  String
+  amount             Int
+  currency           String
+  status             String
+  hostedInvoiceUrl   String?
+  pdf                String?
+  issuedAt           DateTime
+  paidAt             DateTime?
+  createdAt          DateTime        @default(now())
+
+  @@index([subscriptionId])
+  @@unique([providerInvoiceId])
+  @@map("billing_invoices")
+}

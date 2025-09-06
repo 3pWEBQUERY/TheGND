@@ -28,6 +28,18 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
     }),
+
+  // Uploader for Verification documents (images + optional video)
+  verificationDocs: f({
+    image: { maxFileSize: "16MB", maxFileCount: 3 },
+    video: { maxFileSize: "256MB", maxFileCount: 1 },
+  })
+    .middleware(async () => {
+      return {};
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

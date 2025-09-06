@@ -27,6 +27,8 @@ export async function GET(request: Request) {
   const location = searchParams.get('location')?.trim() || ''
   const take = Math.min(Number(searchParams.get('take') || '60'), 100)
   const skip = Math.max(Number(searchParams.get('skip') || '0'), 0)
+  const verifiedOnly = searchParams.get('verifiedOnly') === '1'
+  const ageVerifiedOnly = searchParams.get('ageVerifiedOnly') === '1'
   // Advanced filters
   const height = searchParams.get('height')?.trim() || ''
   const weight = searchParams.get('weight')?.trim() || ''
@@ -75,16 +77,46 @@ export async function GET(request: Request) {
     ...(and.length ? { AND: and } : {}),
   }
 
-  const [total, users] = await Promise.all([
+  // Fetch a superset, then post-filter for ageVerifiedOnly to avoid complex prisma conditions
+  const [totalBase, usersBase] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
       include: { profile: true },
       orderBy: { createdAt: 'desc' },
-      skip,
-      take,
     }),
   ])
+
+  // Determine which users have an approved verification
+  const ids = usersBase.map((u) => u.id)
+  let approvedSet = new Set<string>()
+  if (ids.length > 0) {
+    try {
+      const inList = ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')
+      const rows: Array<{ userId: string }> = await (prisma as any).$queryRawUnsafe(
+        `SELECT DISTINCT "userId" FROM "verification_requests" WHERE "status"::text = 'APPROVED' AND "userId" IN (${inList})`
+      )
+      approvedSet = new Set(rows.map((r) => r.userId))
+    } catch {}
+  }
+
+  // Build enriched array with flags
+  const enriched = usersBase.map((u) => {
+    const isVerified = u.profile?.visibility === 'VERIFIED'
+    const isEscort = u.userType === 'ESCORT'
+    const isAgeVerified = isEscort && approvedSet.has(u.id)
+    return { u, isVerified, isAgeVerified, isEscort }
+  })
+
+  // Apply filters
+  let filtered = enriched
+  if (verifiedOnly) filtered = filtered.filter((x) => x.isVerified)
+  if (ageVerifiedOnly) filtered = filtered.filter((x) => x.isEscort && x.isAgeVerified)
+
+  const total = filtered.length
+  // Pagination after filtering
+  const pageSlice = filtered.slice(skip, skip + take)
+  const users = pageSlice.map((x) => x.u)
 
   const items = users.map((u) => ({
     id: u.id,
@@ -92,6 +124,9 @@ export async function GET(request: Request) {
     city: u.profile?.city ?? null,
     country: u.profile?.country ?? null,
     image: getPrimaryImage(u.profile) ?? null,
+    visibility: u.profile?.visibility ?? null,
+    isVerified: u.profile?.visibility === 'VERIFIED',
+    isAgeVerified: u.userType === 'ESCORT' && approvedSet.has(u.id),
   }))
 
   return NextResponse.json({ total, items })

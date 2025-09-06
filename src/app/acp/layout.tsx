@@ -30,6 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               {navItem('/acp/users', 'User')}
               {navItem('/acp/escorts', 'Escorts')}
               {navItem('/acp/feeds', 'Feeds')}
+              {navItem('/acp/verifications', 'Verifizierungen')}
               {navItem('/acp/messages', 'Nachrichten')}
               {navItem('/acp/network', 'Netzwerk')}
             </nav>

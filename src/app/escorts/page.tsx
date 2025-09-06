@@ -29,6 +29,8 @@ function EscortsPageInner() {
   const [total, setTotal] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [verifiedOnly, setVerifiedOnly] = useState(false)
+  const [ageVerifiedOnly, setAgeVerifiedOnly] = useState(false)
   const [filters, setFilters] = useState<EscortFilters>({
     height: '',
     weight: '',
@@ -52,8 +54,10 @@ function EscortsPageInner() {
       if (v) params.set(key, v)
     })
     params.set('take', '60')
+    if (verifiedOnly) params.set('verifiedOnly', '1')
+    if (ageVerifiedOnly) params.set('ageVerifiedOnly', '1')
     return params.toString()
-  }, [q, location, filters])
+  }, [q, location, filters, verifiedOnly, ageVerifiedOnly])
 
   async function fetchEscorts() {
     setLoading(true)
@@ -97,6 +101,8 @@ function EscortsPageInner() {
     setQ(initialQ)
     setLocation(initialLocation)
     setFilters(initialFilters)
+    setVerifiedOnly(sp.get('verifiedOnly') === '1')
+    setAgeVerifiedOnly(sp.get('ageVerifiedOnly') === '1')
 
     // Fetch with these initial params immediately
     const p = new URLSearchParams()
@@ -155,6 +161,10 @@ function EscortsPageInner() {
         error={error}
         filters={filters}
         onFiltersChange={(f) => setFilters(f)}
+        verifiedOnly={verifiedOnly}
+        setVerifiedOnly={setVerifiedOnly}
+        ageVerifiedOnly={ageVerifiedOnly}
+        setAgeVerifiedOnly={setAgeVerifiedOnly}
       />
 
       {/* Ergebnisse: 5er Grid */}

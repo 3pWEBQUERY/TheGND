@@ -15,6 +15,10 @@ type Props = {
   error?: string | null
   filters: EscortFilters
   onFiltersChange?: (filters: EscortFilters) => void
+  verifiedOnly?: boolean
+  setVerifiedOnly?: (v: boolean) => void
+  ageVerifiedOnly?: boolean
+  setAgeVerifiedOnly?: (v: boolean) => void
 }
 
 // Options analog zur Onboarding-Seite (Werte in EN/UPPERCASE, Labels DE)
@@ -82,7 +86,7 @@ const clothingSizeOptions = [
   { value: '46', label: '46' },
 ]
 
-export default function EscortsSearch({ q, setQ, location, setLocation, onSubmit, loading, error, filters, onFiltersChange }: Props) {
+export default function EscortsSearch({ q, setQ, location, setLocation, onSubmit, loading, error, filters, onFiltersChange, verifiedOnly = false, setVerifiedOnly, ageVerifiedOnly = false, setAgeVerifiedOnly }: Props) {
   const [filtersOpen, setFiltersOpen] = React.useState(false)
   // Key to force remount of Selects to clear internal state reliably on reset
   const [resetKey, setResetKey] = React.useState(0)
@@ -138,7 +142,24 @@ export default function EscortsSearch({ q, setQ, location, setLocation, onSubmit
                 </Button>
               </div>
             </div>
-            <div className="mt-3 flex justify-end gap-2">
+            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+              {/* Verified toggles */}
+              <Button
+                type="button"
+                variant={verifiedOnly ? 'default' : 'outline'}
+                className={verifiedOnly ? 'bg-emerald-600 hover:bg-emerald-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-emerald-500 rounded-none'}
+                onClick={() => setVerifiedOnly?.(!verifiedOnly)}
+              >
+                VERIFIZIERT
+              </Button>
+              <Button
+                type="button"
+                variant={ageVerifiedOnly ? 'default' : 'outline'}
+                className={ageVerifiedOnly ? 'bg-rose-600 hover:bg-rose-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-rose-500 rounded-none'}
+                onClick={() => setAgeVerifiedOnly?.(!ageVerifiedOnly)}
+              >
+                18+
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -158,6 +179,8 @@ export default function EscortsSearch({ q, setQ, location, setLocation, onSubmit
                     clothingStyle: '',
                     clothingSize: '',
                   })
+                  setVerifiedOnly?.(false)
+                  setAgeVerifiedOnly?.(false)
                   // Optional: Filterbereich schließen
                   setFiltersOpen(false)
                   // Force remount of selects to ensure visual reset

@@ -5,6 +5,35 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model VerificationRequest {
+  id             String             @id @default(dbgenerated("gen_random_uuid()"))
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName      String
+  lastName       String
+  birthDate      DateTime
+  idNumber       String
+  idPhotoUrl     String
+  selfiePhotoUrl String
+  idVideoUrl     String?
+  status         VerificationStatus @default(PENDING)
+  note           String?
+  reviewedAt     DateTime?
+  reviewedById   String?
+  reviewedBy     User?              @relation("VerificationReviewedBy", fields: [reviewedById], references: [id])
+  createdAt      DateTime           @default(now())
+
+  @@map("verification_requests")
+  @@index([userId, status])
+}
+
+// Verification
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -71,6 +100,8 @@ model User {
   likes             Like[]
   notifications     Notification[]
   billingCustomers  BillingCustomer[]
+  verificationRequests VerificationRequest[]
+  reviewedVerifications VerificationRequest[] @relation("VerificationReviewedBy")
 
   @@map("users")
 }

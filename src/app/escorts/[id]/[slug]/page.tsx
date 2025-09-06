@@ -13,11 +13,13 @@ import ServiceLegend from '@/components/ServiceLegend'
 import { SERVICES_DE } from '@/data/services.de'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { Globe } from 'lucide-react'
+import { Globe, ShieldCheck, BadgeCheck } from 'lucide-react'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import RatingDonut from '@/components/RatingDonut'
 import type React from 'react'
 import ProfileComments from '@/components/ProfileComments'
+
+export const dynamic = 'force-dynamic'
 
 // Helpers for formatting (aligned with ProfileComponent)
 const toStr = (v: any) => (v === null || v === undefined) ? '' : String(v).trim()
@@ -131,6 +133,7 @@ async function getEscort(id: string) {
       where: { id },
       include: { profile: true },
     })
+
   } catch (e) {
     return null
   }
@@ -180,6 +183,7 @@ async function getEscort(id: string) {
     country: profile?.country ?? null,
     description: profile?.description ?? null,
     image: primaryImage,
+    visibility: profile?.visibility ?? null,
     gallery,
     mediaImages,
     services,
@@ -344,6 +348,20 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
     }
   })
 
+  // Approved verification (age/profile) -> show badges next to name
+  let hasApprovedVerification = (data as any)?.visibility === 'VERIFIED'
+  if (!hasApprovedVerification) {
+    try {
+      const rows = await prisma.$queryRaw<{ exists: boolean }[]>`
+        SELECT EXISTS (
+          SELECT 1 FROM "verification_requests"
+          WHERE "userId" = ${escortId} AND "status"::text = 'APPROVED'
+        ) AS "exists";
+      `
+      hasApprovedVerification = !!rows?.[0]?.exists
+    } catch {}
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
@@ -363,7 +381,19 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
         {/* Content */}
         <div className="relative z-10 h-full flex items-center justify-center text-center px-6">
           <div>
-            <h1 className="text-5xl md:text-6xl font-thin tracking-wider text-white mb-2">{name ? (name.toUpperCase?.() ?? name) : 'ESCORT'}</h1>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h1 className="text-5xl md:text-6xl font-thin tracking-wider text-white">{name ? (name.toUpperCase?.() ?? name) : 'ESCORT'}</h1>
+              {hasApprovedVerification && (
+                <div className="hidden md:flex items-center gap-2">
+                  <span title="Altersverifizierung bestätigt" className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-rose-50/90 text-rose-800 border-rose-200">
+                    <ShieldCheck className="h-3.5 w-3.5" /> ALTERSVERIFIZIERT
+                  </span>
+                  <span title="Profil verifiziert" className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50/90 text-emerald-800 border-emerald-200">
+                    <BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT
+                  </span>
+                </div>
+              )}
+            </div>
             {(city || country) && (
               <p className="text-sm text-gray-200">{city || country}</p>
             )}
@@ -382,7 +412,19 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
           )}
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              {name && <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>}
+              <div className="flex items-center gap-2">
+                {name && <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>}
+                {hasApprovedVerification && (
+                  <>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-rose-50 text-rose-700 border-rose-200">
+                      <ShieldCheck className="h-3.5 w-3.5" /> ALTERSVERIFIZIERT
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50 text-emerald-700 border-emerald-200">
+                      <BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT
+                    </span>
+                  </>
+                )}
+              </div>
               {ratingCount > 0 && (
                 <div className="flex items-center gap-2">
                   <RatingDonut value={ratingAvg} size={32} strokeWidth={6} showValue={false} />

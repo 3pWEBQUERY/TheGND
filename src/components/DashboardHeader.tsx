@@ -303,6 +303,9 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     <Link href="/notifications" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       BENACHRICHTIGUNGEN
                     </Link>
+                    <Link href="/verify" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
+                      VERIFIZIEREN
+                    </Link>
                     <Link href="/settings" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       EINSTELLUNGEN
                     </Link>

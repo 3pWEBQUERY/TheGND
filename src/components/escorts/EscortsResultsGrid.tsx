@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import type { EscortItem } from '@/types/escort'
+import { ShieldCheck, BadgeCheck } from 'lucide-react'
 
 type Props = {
   items: EscortItem[] | null
@@ -50,6 +51,21 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
                   <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full bg-gray-300" />
+                )}
+                {/* Icon-only badges top-right */}
+                {(e.isVerified || e.isAgeVerified) && (
+                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                    {e.isAgeVerified && (
+                      <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
+                        <ShieldCheck className="h-4 w-4" />
+                      </span>
+                    )}
+                    {e.isVerified && (
+                      <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                        <BadgeCheck className="h-4 w-4" />
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="text-center">

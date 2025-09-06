@@ -1,6 +1,7 @@
 'use client'
 
 import DashboardHeader from '@/components/DashboardHeader'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import Tabs from '@/components/Tabs'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ export default function MembershipPage() {
   const [dayDuration, setDayDuration] = useState<'1' | '3' | '7'>('1')
   const [cityDuration, setCityDuration] = useState<'7' | '14' | '30'>('7')
   const [bookingState, setBookingState] = useState<{ type: 'idle' | 'success' | 'error'; message?: string }>({ type: 'idle' })
+  const [bookingLoading, setBookingLoading] = useState(false)
 
   const PRICES = {
     membership: { basis: 19.99, plus: 39.99, premium: 69.99 },
@@ -42,17 +44,42 @@ export default function MembershipPage() {
     } catch {}
   }, [selectedChoice])
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (!selectedChoice) return
+    setBookingLoading(true)
+    setBookingState({ type: 'idle' })
     try {
-      const entry = { ...selectedChoice, bookedAt: new Date().toISOString() }
-      const raw = localStorage.getItem('bookings')
-      const arr = raw ? JSON.parse(raw) : []
-      arr.push(entry)
-      localStorage.setItem('bookings', JSON.stringify(arr))
-      setBookingState({ type: 'success', message: 'Buchung gespeichert. (Lokal, ohne Zahlung)' })
-    } catch (e) {
-      setBookingState({ type: 'error', message: 'Konnte Buchung nicht speichern.' })
+      let payload: any = {}
+      if (selectedChoice.category === 'membership') {
+        const planKey = selectedChoice.name.toUpperCase()
+        payload = { type: 'membership', planKey }
+      } else {
+        const addonKeyMap: Record<string, string> = {
+          day: 'ESCORT_OF_DAY',
+          week: 'ESCORT_OF_WEEK',
+          month: 'ESCORT_OF_MONTH',
+          city: 'CITY_BOOST',
+        }
+        const addonKey = addonKeyMap[selectedChoice.category]
+        let durationDays = selectedChoice.duration ?? 1
+        if (selectedChoice.category === 'week') durationDays = (selectedChoice.duration ?? 1) * 7
+        if (selectedChoice.category === 'month') durationDays = (selectedChoice.duration === 2 ? 60 : 30)
+        // 'day' and 'city' already represent days
+        payload = { type: 'addon', addonKey, durationDays }
+      }
+
+      const res = await fetch('/api/membership/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Fehler bei der Buchung')
+      setBookingState({ type: 'success', message: 'Buchung gespeichert.' })
+    } catch (e: any) {
+      setBookingState({ type: 'error', message: e?.message || 'Konnte Buchung nicht speichern.' })
+    } finally {
+      setBookingLoading(false)
     }
   }
 
@@ -294,8 +321,15 @@ export default function MembershipPage() {
     <>
       <DashboardHeader session={session} activeTab="membership" setActiveTab={() => {}} />
       <div className="max-w-7xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-light tracking-widest text-gray-900">MITGLIEDSCHAFT</h1>
-        <div className="w-24 h-px bg-pink-500 mt-3" />
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-light tracking-widest text-gray-900">MITGLIEDSCHAFT</h1>
+            <div className="w-24 h-px bg-pink-500 mt-3" />
+          </div>
+          <Link href="/bookings" className="inline-block">
+            <Button className="bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-4 py-2 h-auto text-xs uppercase tracking-widest">MEINE BUCHUNGEN</Button>
+          </Link>
+        </div>
         <p className="text-sm text-gray-600 mt-4">Mitgliedschaft abschließen und Zusätze buchen – alles an einem Ort.</p>
 
         <div className="mt-8">
@@ -317,10 +351,10 @@ export default function MembershipPage() {
               }` : ''}
               {` • Preis: ${formatEUR(selectedChoice.price)}`}
             </p>
-            <p className="mt-2 text-xs text-gray-500">Hinweis: Aktuell ist kein Zahlungsdienst angebunden. Deine Auswahl wird lokal gemerkt.</p>
+            <p className="mt-2 text-xs text-gray-500">Hinweis: Aktuell ist kein Zahlungsdienst angebunden. Deine Buchung wird in deinem Konto gespeichert.</p>
             <div className="mt-4 flex items-center gap-3">
-              <Button onClick={handleBook} className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-2 px-4 text-xs uppercase rounded-none">
-                {selectedChoice.category === 'membership' ? 'Mitgliedschaft buchen' : 'Add-on buchen'}
+              <Button onClick={handleBook} disabled={bookingLoading} className="bg-pink-500 hover:bg-pink-600 disabled:opacity-60 text-white font-light tracking-widest py-2 px-4 text-xs uppercase rounded-none">
+                {bookingLoading ? 'Speichere…' : (selectedChoice.category === 'membership' ? 'Mitgliedschaft buchen' : 'Add-on buchen')}
               </Button>
               <Button onClick={() => setSelectedChoice(null)} className="bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-4 py-2 h-auto text-xs uppercase tracking-widest">
                 Auswahl zurücksetzen

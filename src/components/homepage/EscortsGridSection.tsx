@@ -59,16 +59,34 @@ export default function EscortsGridSection() {
           {items?.map((e, index) => {
             const slug = e.name ? slugify(e.name) : 'escort'
             const href = `/escorts/${e.id}/${slug}`
+            const isWeek = Boolean((e as any)?.isEscortOfWeek) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_WEEK'))
+            const isMonth = Boolean((e as any)?.isEscortOfMonth) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_MONTH'))
+            const highlight = isMonth ? 'month' : (isWeek ? 'week' : null)
+            const frameClasses = highlight
+              ? (isMonth
+                  ? 'ring-2 ring-amber-400 shadow-lg shadow-amber-200/60'
+                  : 'ring-2 ring-pink-400 shadow-lg shadow-pink-200/60')
+              : ''
             return (
               <Link href={href} key={`${e.id}-${index}`} className="group cursor-pointer block">
-                <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden mb-3">
+                <div className={`aspect-[3/4] bg-gray-200 relative overflow-hidden mb-3 ${frameClasses}`}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  {highlight && (
+                    <div className={`absolute inset-0 pointer-events-none ${isMonth ? 'bg-gradient-to-b from-amber-100/10 via-transparent to-amber-200/10' : 'bg-gradient-to-b from-pink-100/10 via-transparent to-pink-200/10'}`}></div>
+                  )}
                   {e.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
                   ) : (
                     <div className="h-full w-full bg-gray-300 flex items-center justify-center">
                       <span className="text-gray-500 text-sm">PHOTO</span>
+                    </div>
+                  )}
+                  {highlight && (
+                    <div className="absolute bottom-2 left-2 flex items-center gap-2">
+                      <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'}`}>
+                        {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
+                      </span>
                     </div>
                   )}
                   {(e.isVerified || e.isAgeVerified) && (

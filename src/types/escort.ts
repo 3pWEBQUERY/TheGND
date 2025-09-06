@@ -7,6 +7,10 @@ export type EscortItem = {
   visibility?: 'PUBLIC' | 'VERIFIED' | 'PRIVATE'
   isVerified?: boolean
   isAgeVerified?: boolean
+  // Optional highlight flags for homepage badges
+  isEscortOfWeek?: boolean
+  isEscortOfMonth?: boolean
+  badges?: string[]
 }
 
 export type EscortFilters = {

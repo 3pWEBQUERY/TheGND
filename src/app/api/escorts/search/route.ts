@@ -109,27 +109,78 @@ export async function GET(request: Request) {
     return { u, isVerified, isAgeVerified, isEscort }
   })
 
+  // Determine active highlights (Escort of the Week/Month) for the current set of users
+  let weekSet = new Set<string>()
+  let monthSet = new Set<string>()
+  if (ids.length > 0) {
+    try {
+      const inList = ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')
+      const weekRows: Array<{ userId: string }> = await (prisma as any).$queryRawUnsafe(
+        `SELECT DISTINCT b."userId" FROM "user_addon_bookings" b
+         JOIN "addon_options" o ON o.id = b."addonOptionId"
+         JOIN "addons" a ON a.id = o."addonId"
+         WHERE a.key::text = 'ESCORT_OF_WEEK'
+           AND b.status::text = 'ACTIVE'
+           AND now() BETWEEN b."startsAt" AND b."endsAt"
+           AND b."userId" IN (${inList})`
+      )
+      const monthRows: Array<{ userId: string }> = await (prisma as any).$queryRawUnsafe(
+        `SELECT DISTINCT b."userId" FROM "user_addon_bookings" b
+         JOIN "addon_options" o ON o.id = b."addonOptionId"
+         JOIN "addons" a ON a.id = o."addonId"
+         WHERE a.key::text = 'ESCORT_OF_MONTH'
+           AND b.status::text = 'ACTIVE'
+           AND now() BETWEEN b."startsAt" AND b."endsAt"
+           AND b."userId" IN (${inList})`
+      )
+      weekSet = new Set(weekRows.map((r) => r.userId))
+      monthSet = new Set(monthRows.map((r) => r.userId))
+    } catch {}
+  }
+
   // Apply filters
   let filtered = enriched
   if (verifiedOnly) filtered = filtered.filter((x) => x.isVerified)
   if (ageVerifiedOnly) filtered = filtered.filter((x) => x.isEscort && x.isAgeVerified)
+
+  // Sort by highlight rank (Month > Week > default), then by createdAt desc
+  const rankHighlight = (id: string) => (monthSet.has(id) ? 2 : (weekSet.has(id) ? 1 : 0))
+  filtered.sort((a, b) => {
+    const wDiff = rankHighlight(b.u.id) - rankHighlight(a.u.id)
+    if (wDiff !== 0) return wDiff
+    // fallback by recency
+    const aTime = (a.u as any).createdAt ? new Date((a.u as any).createdAt).getTime() : 0
+    const bTime = (b.u as any).createdAt ? new Date((b.u as any).createdAt).getTime() : 0
+    return bTime - aTime
+  })
 
   const total = filtered.length
   // Pagination after filtering
   const pageSlice = filtered.slice(skip, skip + take)
   const users = pageSlice.map((x) => x.u)
 
-  const items = users.map((u) => ({
-    id: u.id,
-    name: u.profile?.displayName ?? null,
-    city: u.profile?.city ?? null,
-    country: u.profile?.country ?? null,
-    image: getPrimaryImage(u.profile) ?? null,
-    visibility: u.profile?.visibility ?? null,
-    isVerified: u.profile?.visibility === 'VERIFIED',
-    // Reflect the same logic in the serialized item
-    isAgeVerified: u.userType === 'ESCORT' && (approvedSet.has(u.id) || u.profile?.visibility === 'VERIFIED'),
-  }))
+  const items = users.map((u) => {
+    const isWeek = weekSet.has(u.id)
+    const isMonth = monthSet.has(u.id)
+    const badges: string[] = []
+    if (isWeek) badges.push('ESCORT_OF_WEEK')
+    if (isMonth) badges.push('ESCORT_OF_MONTH')
+    return {
+      id: u.id,
+      name: u.profile?.displayName ?? null,
+      city: u.profile?.city ?? null,
+      country: u.profile?.country ?? null,
+      image: getPrimaryImage(u.profile) ?? null,
+      visibility: u.profile?.visibility ?? null,
+      isVerified: u.profile?.visibility === 'VERIFIED',
+      // Reflect the same logic in the serialized item
+      isAgeVerified: u.userType === 'ESCORT' && (approvedSet.has(u.id) || u.profile?.visibility === 'VERIFIED'),
+      // Highlights for homepage/results components
+      isEscortOfWeek: isWeek,
+      isEscortOfMonth: isMonth,
+      badges,
+    }
+  })
 
   return NextResponse.json({ total, items })
 }

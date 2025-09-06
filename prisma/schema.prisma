@@ -80,6 +80,7 @@ enum MembershipPlanKey {
   BASIS
   PLUS
   PREMIUM
+  @@map("membership_plan_key")
 }
 
 enum AddonKey {
@@ -87,6 +88,7 @@ enum AddonKey {
   ESCORT_OF_WEEK
   ESCORT_OF_MONTH
   CITY_BOOST
+  @@map("addon_key")
 }
 
 enum MembershipStatus {
@@ -94,6 +96,7 @@ enum MembershipStatus {
   CANCELED
   PAUSED
   EXPIRED
+  @@map("membership_status")
 }
 
 enum BookingStatus {
@@ -101,6 +104,7 @@ enum BookingStatus {
   ACTIVE
   COMPLETED
   CANCELED
+  @@map("booking_status")
 }
 
 // User Authentication Model

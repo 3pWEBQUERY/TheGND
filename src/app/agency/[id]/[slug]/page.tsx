@@ -269,6 +269,48 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                 </a>
               )}
             </div>
+            {Object.keys(socials).length > 0 && (
+              <div className="mt-3">
+                <div className="text-[10px] tracking-widest text-gray-500 mb-1">SOCIALS</div>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(socials).map(([rawKey, rawVal]) => {
+                    if (!rawVal) return null
+                    const key = rawKey.toLowerCase()
+                    let href = rawVal as string
+                    if (key === 'whatsapp') {
+                      const phone = (rawVal as string).replace(/[^+\d]/g, '')
+                      href = `https://wa.me/${phone}`
+                    } else if (!/^https?:\/\//i.test(rawVal as string)) {
+                      href = `https://${rawVal}`
+                    }
+                    const Icon =
+                      key === 'instagram' ? FaInstagram :
+                      key === 'facebook' ? FaFacebook :
+                      key === 'twitter' || key === 'x' ? FaXTwitter :
+                      key === 'youtube' ? FaYoutube :
+                      key === 'linkedin' ? FaLinkedin :
+                      key === 'whatsapp' ? FaWhatsapp :
+                      key === 'telegram' ? FaTelegram :
+                      key === 'tiktok' ? FaTiktok :
+                      key === 'snapchat' ? FaSnapchat :
+                      null
+                    return (
+                      <a
+                        key={rawKey}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1 border text-xs rounded-none border-[#25D366] text-[#25D366] hover:text-white hover:bg-[#25D366] hover:border-[#25D366]"
+                        title={rawKey}
+                      >
+                        {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+                        <span className="truncate max-w-[180px]">{rawVal}</span>
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -334,48 +376,6 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                                 <div className="text-[10px] tracking-widest text-gray-500">{label.toUpperCase()}</div>
                                 <div className="text-gray-800">{text}</div>
                               </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    {Object.keys(socials).length > 0 && (
-                      <div className="mt-8">
-                        <h2 className="text-lg font-light tracking-widest text-gray-800">SOCIALS</h2>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {Object.entries(socials).map(([rawKey, rawVal]) => {
-                            if (!rawVal) return null
-                            const key = rawKey.toLowerCase()
-                            let href = rawVal
-                            if (key === 'whatsapp') {
-                              const phone = rawVal.replace(/[^+\d]/g, '')
-                              href = `https://wa.me/${phone}`
-                            } else if (!/^https?:\/\//i.test(rawVal)) {
-                              href = `https://${rawVal}`
-                            }
-                            const Icon =
-                              key === 'instagram' ? FaInstagram :
-                              key === 'facebook' ? FaFacebook :
-                              key === 'twitter' || key === 'x' ? FaXTwitter :
-                              key === 'youtube' ? FaYoutube :
-                              key === 'linkedin' ? FaLinkedin :
-                              key === 'whatsapp' ? FaWhatsapp :
-                              key === 'telegram' ? FaTelegram :
-                              key === 'tiktok' ? FaTiktok :
-                              key === 'snapchat' ? FaSnapchat :
-                              null
-                            return (
-                              <a
-                                key={rawKey}
-                                href={href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-1 border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-500 text-xs rounded-none"
-                                title={rawKey}
-                              >
-                                {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-                                <span className="truncate max-w-[180px]">{rawVal}</span>
-                              </a>
                             )
                           })}
                         </div>

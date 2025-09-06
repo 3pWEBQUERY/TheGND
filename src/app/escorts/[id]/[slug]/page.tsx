@@ -13,6 +13,8 @@ import ServiceLegend from '@/components/ServiceLegend'
 import { SERVICES_DE } from '@/data/services.de'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { Globe } from 'lucide-react'
+import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 
 // Helpers for formatting (aligned with ProfileComponent)
 const toStr = (v: any) => (v === null || v === undefined) ? '' : String(v).trim()
@@ -142,6 +144,14 @@ async function getEscort(id: string) {
       if (Array.isArray(s)) services = s.filter((x: any) => typeof x === 'string')
     }
   } catch {}
+  // Parse social media
+  let socials: Record<string, string> = {}
+  try {
+    if (profile?.socialMedia) {
+      const o = JSON.parse(profile.socialMedia)
+      if (o && typeof o === 'object') socials = o
+    }
+  } catch {}
 
   const primaryImage = getPrimaryImage(profile)
 
@@ -156,6 +166,7 @@ async function getEscort(id: string) {
     gallery,
     mediaImages,
     services,
+    socials,
     location: {
       address: profile?.address ?? null,
       city: profile?.city ?? null,
@@ -231,7 +242,7 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
     )
   }
 
-  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, services, contact, location } = data
+  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, services, contact, location, socials } = data
   const images = [image, ...mediaImages, ...gallery].filter(Boolean) as string[]
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
@@ -348,6 +359,48 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
                 </a>
               )}
             </div>
+            {socials && Object.keys(socials).length > 0 && (
+              <div className="mt-3">
+                <div className="text-[10px] tracking-widest text-gray-500 mb-1">SOCIALS</div>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(socials).map(([rawKey, rawVal]) => {
+                    if (!rawVal) return null
+                    const key = rawKey.toLowerCase()
+                    let href = rawVal
+                    if (key === 'whatsapp') {
+                      const phone = rawVal.replace(/[^+\d]/g, '')
+                      href = `https://wa.me/${phone}`
+                    } else if (!/^https?:\/\//i.test(rawVal)) {
+                      href = `https://${rawVal}`
+                    }
+                    const Icon =
+                      key === 'instagram' ? FaInstagram :
+                      key === 'facebook' ? FaFacebook :
+                      key === 'twitter' || key === 'x' ? FaXTwitter :
+                      key === 'youtube' ? FaYoutube :
+                      key === 'linkedin' ? FaLinkedin :
+                      key === 'whatsapp' ? FaWhatsapp :
+                      key === 'telegram' ? FaTelegram :
+                      key === 'tiktok' ? FaTiktok :
+                      key === 'snapchat' ? FaSnapchat :
+                      null
+                    return (
+                      <a
+                        key={rawKey}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1 border text-xs rounded-none border-[#25D366] text-[#25D366] hover:text-white hover:bg-[#25D366] hover:border-[#25D366]"
+                        title={rawKey}
+                      >
+                        {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+                        <span className="truncate max-w-[180px]">{rawVal}</span>
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         {/* Tabs */}

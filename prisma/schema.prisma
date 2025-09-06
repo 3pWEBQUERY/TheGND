@@ -75,6 +75,34 @@ enum NotificationPreference {
   NONE
 }
 
+// Membership & Add-ons
+enum MembershipPlanKey {
+  BASIS
+  PLUS
+  PREMIUM
+}
+
+enum AddonKey {
+  ESCORT_OF_DAY
+  ESCORT_OF_WEEK
+  ESCORT_OF_MONTH
+  CITY_BOOST
+}
+
+enum MembershipStatus {
+  ACTIVE
+  CANCELED
+  PAUSED
+  EXPIRED
+}
+
+enum BookingStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELED
+}
+
 // User Authentication Model
 model User {
   id                String            @id @default(cuid())
@@ -102,6 +130,10 @@ model User {
   billingCustomers  BillingCustomer[]
   verificationRequests VerificationRequest[]
   reviewedVerifications VerificationRequest[] @relation("VerificationReviewedBy")
+
+  // Membership relations
+  memberships       UserMembership[]
+  addonBookings     UserAddonBooking[]
 
   @@map("users")
 }
@@ -424,4 +456,104 @@ model Invoice {
   @@index([subscriptionId])
   @@unique([providerInvoiceId])
   @@map("billing_invoices")
+}
+
+// Admin-configured membership plans
+model MembershipPlan {
+  id          String            @id @default(cuid())
+  key         MembershipPlanKey @unique
+  name        String
+  description String?
+  priceCents  Int               // price per month in cents
+  active      Boolean           @default(true)
+  features    String?           // JSON array of strings
+  sortOrder   Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  userMemberships UserMembership[]
+
+  @@map("membership_plans")
+}
+
+// Admin-configured add-ons (container)
+model Addon {
+  id          String   @id @default(cuid())
+  key         AddonKey @unique
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  options     AddonOption[]
+
+  @@map("addons")
+}
+
+// Specific purchasable options for an addon (duration & price)
+model AddonOption {
+  id           String   @id @default(cuid())
+  addonId      String
+  addon        Addon    @relation(fields: [addonId], references: [id], onDelete: Cascade)
+  durationDays Int
+  priceCents   Int
+  active       Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings     UserAddonBooking[]
+
+  @@unique([addonId, durationDays])
+  @@map("addon_options")
+}
+
+// A user's current or historical membership
+model UserMembership {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        MembershipPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
+  status      MembershipStatus @default(ACTIVE)
+  startedAt   DateTime         @default(now())
+  endedAt     DateTime?
+  cancelAt    DateTime?
+  note        String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([userId, status])
+  @@map("user_memberships")
+}
+
+// Booked add-on instances per user
+model UserAddonBooking {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addonOptionId String
+  addonOption   AddonOption   @relation(fields: [addonOptionId], references: [id], onDelete: Restrict)
+  status        BookingStatus @default(PENDING)
+  startsAt      DateTime
+  endsAt        DateTime
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId, status])
+  @@map("user_addon_bookings")
+}
+
+// General app settings (admin-editable key-value store)
+model AppSetting {
+  key       String   @id
+  value     String   // JSON or plain text
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("app_settings")
 }

@@ -15,6 +15,7 @@ export default function MembershipPage() {
   const [monthDuration, setMonthDuration] = useState<'1' | '2'>('1')
   const [dayDuration, setDayDuration] = useState<'1' | '3' | '7'>('1')
   const [cityDuration, setCityDuration] = useState<'7' | '14' | '30'>('7')
+  const [bookingState, setBookingState] = useState<{ type: 'idle' | 'success' | 'error'; message?: string }>({ type: 'idle' })
 
   const PRICES = {
     membership: { basis: 19.99, plus: 39.99, premium: 69.99 },
@@ -40,6 +41,20 @@ export default function MembershipPage() {
       else localStorage.removeItem('membershipSelection')
     } catch {}
   }, [selectedChoice])
+
+  const handleBook = () => {
+    if (!selectedChoice) return
+    try {
+      const entry = { ...selectedChoice, bookedAt: new Date().toISOString() }
+      const raw = localStorage.getItem('bookings')
+      const arr = raw ? JSON.parse(raw) : []
+      arr.push(entry)
+      localStorage.setItem('bookings', JSON.stringify(arr))
+      setBookingState({ type: 'success', message: 'Buchung gespeichert. (Lokal, ohne Zahlung)' })
+    } catch (e) {
+      setBookingState({ type: 'error', message: 'Konnte Buchung nicht speichern.' })
+    }
+  }
 
   const tabs = [
     {
@@ -118,7 +133,7 @@ export default function MembershipPage() {
         <div>
           <p className="text-sm text-gray-600">Buche das Add-on "Escort of the Day" für schnelle, tagesbasierte Sichtbarkeit.</p>
           <div className={`mt-6 border border-gray-200 p-6 ${selectedChoice?.category === 'day' ? 'border-pink-500 ring-1 ring-pink-300' : ''}`}>
-            <div className="flex items-end justify-between gap-6 flex-wrap">
+            <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
               <div>
                 <span className="text-xs font-light tracking-widest text-gray-800 uppercase">DAUER</span>
                 <div className="mt-2">
@@ -159,7 +174,7 @@ export default function MembershipPage() {
         <div>
           <p className="text-sm text-gray-600">Boost für Stadt-Listings: erhöhe deine Sichtbarkeit in deiner Stadt über einen flexiblen Zeitraum.</p>
           <div className={`mt-6 border border-gray-200 p-6 ${selectedChoice?.category === 'city' ? 'border-pink-500 ring-1 ring-pink-300' : ''}`}>
-            <div className="flex items-end justify-between gap-6 flex-wrap">
+            <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
               <div>
                 <span className="text-xs font-light tracking-widest text-gray-800 uppercase">DAUER</span>
                 <div className="mt-2">
@@ -200,7 +215,7 @@ export default function MembershipPage() {
         <div>
           <p className="text-sm text-gray-600">Buche das Add-on "Escort of the Week" für eine Woche Top-Sichtbarkeit auf der Startseite und in den Suchergebnissen.</p>
           <div className={`mt-6 border border-gray-200 p-6 ${selectedChoice?.category === 'week' ? 'border-pink-500 ring-1 ring-pink-300' : ''}`}>
-            <div className="flex items-end justify-between gap-6 flex-wrap">
+            <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
               <div>
                 <span className="text-xs font-light tracking-widest text-gray-800 uppercase">DAUER</span>
                 <div className="mt-2">
@@ -240,7 +255,7 @@ export default function MembershipPage() {
         <div>
           <p className="text-sm text-gray-600">Buche das Add-on "Escort of the Month" für maximale Sichtbarkeit über einen ganzen Monat.</p>
           <div className={`mt-6 border border-gray-200 p-6 ${selectedChoice?.category === 'month' ? 'border-pink-500 ring-1 ring-pink-300' : ''}`}>
-            <div className="flex items-end justify-between gap-6 flex-wrap">
+            <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
               <div>
                 <span className="text-xs font-light tracking-widest text-gray-800 uppercase">DAUER</span>
                 <div className="mt-2">
@@ -303,9 +318,19 @@ export default function MembershipPage() {
               {` • Preis: ${formatEUR(selectedChoice.price)}`}
             </p>
             <p className="mt-2 text-xs text-gray-500">Hinweis: Aktuell ist kein Zahlungsdienst angebunden. Deine Auswahl wird lokal gemerkt.</p>
-            <div className="mt-4">
-              <Button onClick={() => setSelectedChoice(null)} className="bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-4 py-2 h-auto text-xs uppercase tracking-widest">Auswahl zurücksetzen</Button>
+            <div className="mt-4 flex items-center gap-3">
+              <Button onClick={handleBook} className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-2 px-4 text-xs uppercase rounded-none">
+                {selectedChoice.category === 'membership' ? 'Mitgliedschaft buchen' : 'Add-on buchen'}
+              </Button>
+              <Button onClick={() => setSelectedChoice(null)} className="bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-4 py-2 h-auto text-xs uppercase tracking-widest">
+                Auswahl zurücksetzen
+              </Button>
             </div>
+            {bookingState.type !== 'idle' && (
+              <p className={bookingState.type === 'success' ? 'mt-2 text-xs text-pink-600' : 'mt-2 text-xs text-red-600'} aria-live="polite">
+                {bookingState.message}
+              </p>
+            )}
           </div>
         )}
       </div>

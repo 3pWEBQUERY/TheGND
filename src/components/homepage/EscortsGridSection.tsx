@@ -72,15 +72,15 @@ export default function EscortsGridSection() {
                     </div>
                   )}
                   {(e.isVerified || e.isAgeVerified) && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1">
-                      {e.isAgeVerified && (
-                        <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
-                          <ShieldCheck className="h-4 w-4" />
-                        </span>
-                      )}
+                    <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
                       {e.isVerified && (
                         <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
                           <BadgeCheck className="h-4 w-4" />
+                        </span>
+                      )}
+                      {(e.isAgeVerified || e.isVerified) && (
+                        <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
+                          <ShieldCheck className="h-4 w-4" />
                         </span>
                       )}
                     </div>

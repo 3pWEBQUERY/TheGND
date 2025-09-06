@@ -104,7 +104,8 @@ export async function GET(request: Request) {
   const enriched = usersBase.map((u) => {
     const isVerified = u.profile?.visibility === 'VERIFIED'
     const isEscort = u.userType === 'ESCORT'
-    const isAgeVerified = isEscort && approvedSet.has(u.id)
+    // For escorts, consider VERIFIED visibility as implicitly age-verified (plus approved requests)
+    const isAgeVerified = isEscort && (approvedSet.has(u.id) || isVerified)
     return { u, isVerified, isAgeVerified, isEscort }
   })
 
@@ -126,7 +127,8 @@ export async function GET(request: Request) {
     image: getPrimaryImage(u.profile) ?? null,
     visibility: u.profile?.visibility ?? null,
     isVerified: u.profile?.visibility === 'VERIFIED',
-    isAgeVerified: u.userType === 'ESCORT' && approvedSet.has(u.id),
+    // Reflect the same logic in the serialized item
+    isAgeVerified: u.userType === 'ESCORT' && (approvedSet.has(u.id) || u.profile?.visibility === 'VERIFIED'),
   }))
 
   return NextResponse.json({ total, items })

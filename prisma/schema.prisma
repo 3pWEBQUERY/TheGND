@@ -141,6 +141,7 @@ model Profile {
   phone       String?
   website     String?
   socialMedia String?   // JSON object with social media links
+  openingHours String?  // JSON object with weekly opening hours
   
   // Agency/Club/Studio specific
   companyName String?

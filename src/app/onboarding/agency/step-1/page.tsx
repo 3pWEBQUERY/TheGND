@@ -12,6 +12,7 @@ export default function AgencyStep1Page() {
   const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href);
   const [companyName, setCompanyName] = useState("");
   const [businessType, setBusinessType] = useState("");
+  const [openingHours, setOpeningHours] = useState<Record<string, { from: string; to: string }[]>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ export default function AgencyStep1Page() {
         if (!ignore) {
           setCompanyName(data?.companyName || "");
           setBusinessType(data?.businessType || "");
+          if (data?.openingHours && typeof data.openingHours === 'object') setOpeningHours(data.openingHours);
         }
       } catch {}
     };
@@ -46,7 +48,7 @@ export default function AgencyStep1Page() {
       const res = await fetch("/api/onboarding/agency/step-1", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyName: companyName.trim(), businessType: businessType.trim() }),
+        body: JSON.stringify({ companyName: companyName.trim(), businessType: businessType.trim(), openingHours }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -90,6 +92,55 @@ export default function AgencyStep1Page() {
             <div>
               <label className="block text-sm font-light text-gray-700 mb-1">Firmenname</label>
               <input value={companyName} onChange={(e)=>setCompanyName(e.target.value)} className="w-full border px-3 py-2 text-sm" placeholder="z.B. Example Agency GmbH" />
+            </div>
+            <div>
+              <label className="block text-sm font-light text-gray-700 mb-3">Öffnungszeiten</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { key: 'mon', label: 'Montag' },
+                  { key: 'tue', label: 'Dienstag' },
+                  { key: 'wed', label: 'Mittwoch' },
+                  { key: 'thu', label: 'Donnerstag' },
+                  { key: 'fri', label: 'Freitag' },
+                  { key: 'sat', label: 'Samstag' },
+                  { key: 'sun', label: 'Sonntag' },
+                ].map(({ key, label }) => {
+                  const current = openingHours[key]?.[0] || { from: '', to: '' };
+                  return (
+                    <div key={key} className="border p-3 bg-white">
+                      <div className="text-xs font-light tracking-widest text-gray-600 mb-2">{label.toUpperCase()}</div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="time"
+                          value={current.from}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setOpeningHours((prev) => ({ ...prev, [key]: v || current.to ? [{ from: v, to: current.to }] : [] }));
+                          }}
+                          className="border px-2 py-1 text-sm"
+                        />
+                        <span className="text-xs text-gray-500">bis</span>
+                        <input
+                          type="time"
+                          value={current.to}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setOpeningHours((prev) => ({ ...prev, [key]: current.from || v ? [{ from: current.from, to: v }] : [] }));
+                          }}
+                          className="border px-2 py-1 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setOpeningHours((prev) => ({ ...prev, [key]: [] }))}
+                          className="ml-auto text-xs text-gray-500 hover:text-pink-500"
+                        >
+                          geschlossen
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-light text-gray-700 mb-1">Geschäftstyp</label>

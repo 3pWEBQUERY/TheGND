@@ -79,6 +79,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const [avatarSize, setAvatarSize] = useState<number | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null)
+  const [showFullDesc, setShowFullDesc] = useState(false)
 
   const isOwnProfile = !userId || userId === session?.user?.id
 
@@ -197,6 +198,103 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
     }
     return ''
   })()
+  
+  // Formatting helpers for appearance fields
+  const toStr = (v: any) => (v === null || v === undefined) ? '' : String(v).trim()
+  const withUnit = (v: any, unit: string) => {
+    const s = toStr(v)
+    if (!s) return ''
+    const low = s.toLowerCase()
+    if (low.includes(unit.toLowerCase())) return s
+    if (/^\d+(?:[\.,]\d+)?$/.test(s)) return `${s.replace(',', '.')} ${unit}`
+    return s
+  }
+  const formatHeight = (v: any) => withUnit(v, 'cm')
+  const formatWeight = (v: any) => withUnit(v, 'kg')
+  const formatShoeSize = (v: any) => withUnit(v, 'EU')
+  
+  // Generic label formatters for enum-like or array-like values
+  const capitalizeWords = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
+  const prettifyToken = (v: any): string => {
+    const s = toStr(v)
+    if (!s) return ''
+    // keep single-letter cup sizes uppercase
+    if (/^[a-z]$/i.test(s)) return s.toUpperCase()
+    return capitalizeWords(s.replace(/[\[\]"]+/g, '').replace(/[_-]+/g, ' ').toLowerCase())
+  }
+  const parseJsonish = (s: string): any => {
+    try {
+      const trimmed = s.trim()
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+        return JSON.parse(trimmed)
+      }
+    } catch {}
+    return s
+  }
+  const toArray = (v: any): any[] => {
+    if (v === null || v === undefined) return []
+    if (Array.isArray(v)) return v
+    if (typeof v === 'string') {
+      const parsed = parseJsonish(v)
+      if (Array.isArray(parsed)) return parsed
+      const s = toStr(parsed)
+      if (!s) return []
+      if (s.includes(',')) return s.split(',').map((x) => x.trim()).filter(Boolean)
+      return [s]
+    }
+    return [v]
+  }
+  const formatEnumList = (v: any): string => {
+    const arr = toArray(v)
+    const out = arr.map(prettifyToken).filter(Boolean).join(', ')
+    return out
+  }
+  const formatPiercings = (v: any): string => {
+    if (typeof v === 'boolean') return v ? 'Ja' : 'Nein'
+    return formatEnumList(v)
+  }
+  const formatTattoos = (v: any): string => {
+    if (typeof v === 'boolean') return v ? 'Ja' : 'Nein'
+    return formatEnumList(v)
+  }
+  const formatBreast = (type: any, size: any, cup: any): string => {
+    const parts: string[] = []
+    const typeStr = formatEnumListDE(type)
+    if (typeStr) parts.push(typeStr)
+    const sizeRaw = toStr(size || cup)
+    if (sizeRaw) parts.push(/^[a-z]$/i.test(sizeRaw) ? sizeRaw.toUpperCase() : prettifyToken(sizeRaw))
+    return parts.join(', ')
+  }
+  const formatIntimate = (area: any, pubicHair: any, style: any): string => {
+    const parts = [formatEnumList(area), formatEnumList(pubicHair), formatEnumList(style)].filter(Boolean)
+    return parts.join(', ')
+  }
+  // DE translation for common enum tokens
+  const translateTokenDE = (token: string): string => {
+    const t = token.toLowerCase().replace(/[_\-\s]+/g, '')
+    const map: Record<string, string> = {
+      slim: 'Schlank', petite: 'Zierlich', athletic: 'Athletisch', fit: 'Fit', average: 'Durchschnittlich', curvy: 'Kurvig', bbw: 'Mollig',
+      blonde: 'Blond', blond: 'Blond', brunette: 'Brünett', brown: 'Braun', black: 'Schwarz', red: 'Rot', auburn: 'Kupfer', chestnut: 'Kastanienbraun',
+      darkbrown: 'Dunkelbraun', lightbrown: 'Hellbraun', grey: 'Grau', gray: 'Grau', silver: 'Silber', dyed: 'Gefärbt', highlights: 'Strähnen',
+      short: 'Kurz', medium: 'Mittel', shoulderlength: 'Schulterlang', long: 'Lang', verylong: 'Sehr lang', bob: 'Bob',
+      blue: 'Blau', green: 'Grün', hazel: 'Hasel', amber: 'Bernstein',
+      natural: 'Natürlich', implants: 'Implantat', implant: 'Implantat', enhanced: 'Vergrößert',
+      shaved: 'Rasiert', fullyshaved: 'Komplett rasiert', partiallyshaved: 'Teilrasiert', trimmed: 'Getrimmt', naturalhair: 'Natürlich', landingstrip: 'Landing Strip', brazilian: 'Brasilianisch', waxed: 'Gewaxt',
+      ears: 'Ohren', navel: 'Bauchnabel', nipples: 'Brustwarzen', tongue: 'Zunge', nose: 'Nase', lip: 'Lippe', eyebrow: 'Augenbraue', intimate: 'Intim',
+      arms: 'Arme', legs: 'Beine', back: 'Rücken', chest: 'Brust', neck: 'Nacken', shoulder: 'Schulter', small: 'Klein', large: 'Groß',
+      elegant: 'Elegant', casual: 'Lässig', sexy: 'Sexy', business: 'Business', sporty: 'Sportlich', chic: 'Chic', street: 'Streetwear', classic: 'Klassisch'
+    }
+    return map[t] || capitalizeWords(token.replace(/[_-]+/g, ' ').toLowerCase())
+  }
+  const formatEnumListDE = (v: any): string => toArray(v).map((x) => translateTokenDE(String(x))).filter(Boolean).join(', ')
+  const badgeElementsDE = (v: any) => {
+    const arr = toArray(v)
+    return arr.map((x, i) => (
+      <span key={`${String(x)}-${i}`} className="inline-flex items-center px-2.5 py-1 border border-gray-200 bg-gray-50 text-gray-700 text-xs rounded-none">
+        {translateTokenDE(String(x))}
+      </span>
+    ))
+  }
   // Medien (Bilder/Videos) aus Profile.media und Profile.gallery vereinheitlichen
   const mediaItems = (() => {
     const rawMedia = (profile as any)?.media ?? []
@@ -480,16 +578,137 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
               {userType === 'ESCORT' && profile && (
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Appearance */}
-                  {(profile.height || profile.weight || profile.bodyType || profile.hairColor || profile.eyeColor) && (
+                  {(profile.height || profile.weight || profile.bodyType || profile.hairColor || profile.eyeColor ||
+                    (profile as any)?.hairLength || (profile as any)?.breastType || (profile as any)?.breastSize || (profile as any)?.cupSize ||
+                    (profile as any)?.intimateArea || (profile as any)?.pubicHair || (profile as any)?.intimateStyle ||
+                    (profile as any)?.piercings !== undefined || (profile as any)?.tattoos !== undefined ||
+                    (profile as any)?.clothingStyle || (profile as any)?.dressSize || (profile as any)?.shoeSize) && (
                     <div className="bg-gray-50 p-6">
                       <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">AUSSEHEN</h3>
                       <div className="w-12 h-px bg-pink-500 mb-6"></div>
                       <div className="space-y-3">
-                        {profile.height && <div className="text-sm font-light tracking-wide text-gray-700"><strong>Größe:</strong> {profile.height}</div>}
-                        {profile.weight && <div className="text-sm font-light tracking-wide text-gray-700"><strong>Gewicht:</strong> {profile.weight}</div>}
-                        {profile.bodyType && <div className="text-sm font-light tracking-wide text-gray-700"><strong>Körpertyp:</strong> {profile.bodyType}</div>}
-                        {profile.hairColor && <div className="text-sm font-light tracking-wide text-gray-700"><strong>Haarfarbe:</strong> {profile.hairColor}</div>}
-                        {profile.eyeColor && <div className="text-sm font-light tracking-wide text-gray-700"><strong>Augenfarbe:</strong> {profile.eyeColor}</div>}
+                        {profile.height && (
+                          <div className="text-sm font-light tracking-wide text-gray-700"><strong>Größe:</strong> {formatHeight(profile.height)}</div>
+                        )}
+                        {profile.weight && (
+                          <div className="text-sm font-light tracking-wide text-gray-700"><strong>Gewicht:</strong> {formatWeight(profile.weight)}</div>
+                        )}
+                        {profile.bodyType && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Körpertyp:</strong>{' '}
+                            {toArray(profile.bodyType).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE(profile.bodyType)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE(profile.bodyType)}</span>
+                            )}
+                          </div>
+                        )}
+                        {profile.hairColor && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Haarfarbe:</strong>{' '}
+                            {toArray(profile.hairColor).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE(profile.hairColor)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE(profile.hairColor)}</span>
+                            )}
+                          </div>
+                        )}
+                        {(profile as any)?.hairLength && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Haarlänge:</strong>{' '}
+                            {toArray((profile as any).hairLength).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE((profile as any).hairLength)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE((profile as any).hairLength)}</span>
+                            )}
+                          </div>
+                        )}
+                        {profile.eyeColor && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Augenfarbe:</strong>{' '}
+                            {toArray(profile.eyeColor).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE(profile.eyeColor)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE(profile.eyeColor)}</span>
+                            )}
+                          </div>
+                        )}
+                        {((profile as any)?.breastType || (profile as any)?.breastSize || (profile as any)?.cupSize) && (() => {
+                          const sizeRaw = toStr((profile as any)?.breastSize || (profile as any)?.cupSize)
+                          const cupOrSize = sizeRaw ? (/^[a-z]$/i.test(sizeRaw) ? sizeRaw.toUpperCase() : prettifyToken(sizeRaw)) : ''
+                          const typeRaw = (profile as any)?.breastType
+                          const tokens = [cupOrSize, typeRaw].filter(Boolean)
+                          return (
+                            <div className="text-sm font-light tracking-wide text-gray-700">
+                              <strong>Brust:</strong>{' '}
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE(tokens)}</span>
+                            </div>
+                          )
+                        })()}
+                        {((profile as any)?.intimateArea || (profile as any)?.pubicHair || (profile as any)?.intimateStyle) && (() => {
+                          const arr = [
+                            ...toArray((profile as any)?.intimateArea),
+                            ...toArray((profile as any)?.pubicHair),
+                            ...toArray((profile as any)?.intimateStyle),
+                          ].filter(Boolean)
+                          return (
+                            <div className="text-sm font-light tracking-wide text-gray-700">
+                              <strong>Intimbereich:</strong>{' '}
+                              {arr.length > 1 ? (
+                                <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE(arr)}</span>
+                              ) : (
+                                <span className="ml-1">{formatEnumListDE(arr)}</span>
+                              )}
+                            </div>
+                          )
+                        })()}
+                        {((profile as any)?.piercings !== undefined && (profile as any)?.piercings !== null) && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Piercings:</strong>{' '}
+                            {typeof (profile as any).piercings === 'boolean' ? (
+                              <span className="ml-1">{(profile as any).piercings ? 'Ja' : 'Nein'}</span>
+                            ) : toArray((profile as any).piercings).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE((profile as any).piercings)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE((profile as any).piercings)}</span>
+                            )}
+                          </div>
+                        )}
+                        {((profile as any)?.tattoos !== undefined && (profile as any)?.tattoos !== null) && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Tätowierungen:</strong>{' '}
+                            {typeof (profile as any).tattoos === 'boolean' ? (
+                              <span className="ml-1">{(profile as any).tattoos ? 'Ja' : 'Nein'}</span>
+                            ) : toArray((profile as any).tattoos).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE((profile as any).tattoos)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE((profile as any).tattoos)}</span>
+                            )}
+                          </div>
+                        )}
+                        {(profile as any)?.clothingStyle && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Kleidungsstil:</strong>{' '}
+                            {toArray((profile as any).clothingStyle).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE((profile as any).clothingStyle)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE((profile as any).clothingStyle)}</span>
+                            )}
+                          </div>
+                        )}
+                        {(profile as any)?.dressSize && (
+                          <div className="text-sm font-light tracking-wide text-gray-700">
+                            <strong>Kleidergröße:</strong>{' '}
+                            {toArray((profile as any).dressSize).length > 1 ? (
+                              <span className="ml-1 inline-flex flex-wrap gap-2 align-middle">{badgeElementsDE((profile as any).dressSize)}</span>
+                            ) : (
+                              <span className="ml-1">{formatEnumListDE((profile as any).dressSize)}</span>
+                            )}
+                          </div>
+                        )}
+                        {(profile as any)?.shoeSize && (
+                          <div className="text-sm font-light tracking-wide text-gray-700"><strong>Schuhgröße:</strong> {formatShoeSize((profile as any).shoeSize)}</div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -499,7 +718,51 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
                     <div className="bg-gray-50 p-6">
                       <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">BESCHREIBUNG</h3>
                       <div className="w-12 h-px bg-pink-500 mb-6"></div>
-                      <p className="text-sm font-light tracking-wide text-gray-700 leading-relaxed">{profile.description}</p>
+                      {(() => {
+                        const normalizeDescription = (html: string): string => {
+                          if (!html) return ''
+                          let s = String(html)
+                          // Convert common HTML tags to line breaks or bullets, then strip any remaining tags
+                          s = s
+                            .replace(/<br\s*\/?>/gi, '\n')
+                            .replace(/<\/?div[^>]*>/gi, '\n')
+                            .replace(/<\/?p[^>]*>/gi, '\n')
+                            .replace(/<li[^>]*>/gi, '• ')
+                            .replace(/<\/(li|ul|ol)>/gi, '\n')
+                            .replace(/<h[1-6][^>]*>/gi, '')
+                            .replace(/<\/h[1-6]>/gi, '\n')
+                            .replace(/<[^>]+>/g, '')
+                          // Decode basic HTML entities
+                          s = s
+                            .replace(/&nbsp;/gi, ' ')
+                            .replace(/&amp;/gi, '&')
+                            .replace(/&lt;/gi, '<')
+                            .replace(/&gt;/gi, '>')
+                            .replace(/&quot;/gi, '"')
+                            .replace(/&#39;/gi, "'")
+                          // Collapse excessive blank lines
+                          s = s.replace(/\n{3,}/g, '\n\n').trim()
+                          return s
+                        }
+                        const full = normalizeDescription(profile.description as string)
+                        const LIMIT = 600
+                        const isLong = full.length > LIMIT
+                        const shown = showFullDesc || !isLong ? full : full.slice(0, LIMIT).trimEnd() + '…'
+                        return (
+                          <>
+                            <pre className="text-sm font-light tracking-wide text-gray-700 leading-relaxed whitespace-pre-wrap">{shown}</pre>
+                            {isLong && (
+                              <button
+                                type="button"
+                                onClick={() => setShowFullDesc((v) => !v)}
+                                className="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600"
+                              >
+                                {showFullDesc ? 'WENIGER ANZEIGEN' : 'WEITER LESEN'}
+                              </button>
+                            )}
+                          </>
+                        )
+                      })()}
                     </div>
                   )}
                 </div>

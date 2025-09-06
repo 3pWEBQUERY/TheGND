@@ -19,9 +19,15 @@ export async function GET(request: NextRequest) {
 
     const profile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
 
+    let openingHours: any = undefined
+    try {
+      const oh = (profile as any)?.openingHours
+      openingHours = oh ? JSON.parse(oh) : undefined
+    } catch {}
     return NextResponse.json({
       companyName: profile?.companyName || '',
       businessType: profile?.businessType || '',
+      openingHours: openingHours || undefined,
     })
   } catch (error) {
     console.error('Agency step 1 onboarding GET error:', error)
@@ -50,12 +56,14 @@ export async function POST(request: NextRequest) {
       update: {
         companyName: validated.companyName,
         businessType: validated.businessType,
-      },
+        openingHours: validated.openingHours ? JSON.stringify(validated.openingHours) : undefined,
+      } as any,
       create: {
         userId: session.user.id,
         companyName: validated.companyName,
         businessType: validated.businessType,
-      },
+        openingHours: validated.openingHours ? JSON.stringify(validated.openingHours) : undefined,
+      } as any,
     })
 
     await prisma.user.update({

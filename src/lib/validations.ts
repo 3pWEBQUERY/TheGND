@@ -159,6 +159,12 @@ export const businessOnboardingSchema = z.object({
 export const businessOnboardingStep1Schema = z.object({
   companyName: z.string().min(2, 'Firmenname ist erforderlich'),
   businessType: z.string().min(2, 'Geschäftstyp ist erforderlich'),
+  openingHours: z
+    .record(
+      z.enum(['mon','tue','wed','thu','fri','sat','sun']),
+      z.array(z.object({ from: z.string(), to: z.string() }))
+    )
+    .optional(),
 })
 
 export const businessOnboardingStep2Schema = z.object({

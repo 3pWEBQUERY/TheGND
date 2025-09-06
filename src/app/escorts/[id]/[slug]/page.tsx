@@ -7,11 +7,74 @@ import MessageButton from '@/components/MessageButton'
 import GalleryGrid from '@/components/GalleryGrid'
 import Tabs from '@/components/Tabs'
 import ProfileFeed from '@/components/ProfileFeed'
+import ExpandableText from '@/components/ExpandableText'
 import ServiceTag from '@/components/ServiceTag'
 import ServiceLegend from '@/components/ServiceLegend'
 import { SERVICES_DE } from '@/data/services.de'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+
+// Helpers for formatting (aligned with ProfileComponent)
+const toStr = (v: any) => (v === null || v === undefined) ? '' : String(v).trim()
+const withUnit = (v: any, unit: string) => {
+  const s = toStr(v)
+  if (!s) return ''
+  const low = s.toLowerCase()
+  if (low.includes(unit.toLowerCase())) return s
+  if (/^\d+(?:[\.,]\d+)?$/.test(s)) return `${s.replace(',', '.')} ${unit}`
+  return s
+}
+const formatHeight = (v: any) => withUnit(v, 'cm')
+const formatWeight = (v: any) => withUnit(v, 'kg')
+const formatShoeSize = (v: any) => withUnit(v, 'EU')
+const capitalizeWords = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
+const parseJsonish = (s: string): any => {
+  try {
+    const trimmed = s.trim()
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+      return JSON.parse(trimmed)
+    }
+  } catch {}
+  return s
+}
+const toArray = (v: any): any[] => {
+  if (v === null || v === undefined) return []
+  if (Array.isArray(v)) return v
+  if (typeof v === 'string') {
+    const parsed = parseJsonish(v)
+    if (Array.isArray(parsed)) return parsed
+    const s = toStr(parsed)
+    if (!s) return []
+    if (s.includes(',')) return s.split(',').map((x) => x.trim()).filter(Boolean)
+    return [s]
+  }
+  return [v]
+}
+const translateTokenDE = (token: string): string => {
+  const t = token.toLowerCase().replace(/[_\-\s]+/g, '')
+  const map: Record<string, string> = {
+    slim: 'Schlank', petite: 'Zierlich', athletic: 'Athletisch', fit: 'Fit', average: 'Durchschnittlich', curvy: 'Kurvig', bbw: 'Mollig',
+    blonde: 'Blond', blond: 'Blond', brunette: 'Brünett', brown: 'Braun', black: 'Schwarz', red: 'Rot', auburn: 'Kupfer', chestnut: 'Kastanienbraun',
+    darkbrown: 'Dunkelbraun', lightbrown: 'Hellbraun', grey: 'Grau', gray: 'Grau', silver: 'Silber', dyed: 'Gefärbt', highlights: 'Strähnen',
+    short: 'Kurz', medium: 'Mittel', shoulderlength: 'Schulterlang', long: 'Lang', verylong: 'Sehr lang', bob: 'Bob',
+    blue: 'Blau', green: 'Grün', hazel: 'Hasel', amber: 'Bernstein',
+    natural: 'Natürlich', implants: 'Implantat', implant: 'Implantat', enhanced: 'Vergrößert',
+    shaved: 'Rasiert', fullyshaved: 'Komplett rasiert', partiallyshaved: 'Teilrasiert', trimmed: 'Getrimmt', naturalhair: 'Natürlich', landingstrip: 'Landing Strip', brazilian: 'Brasilianisch', waxed: 'Gewaxt',
+    ears: 'Ohren', navel: 'Bauchnabel', nipples: 'Brustwarzen', tongue: 'Zunge', nose: 'Nase', lip: 'Lippe', eyebrow: 'Augenbraue', intimate: 'Intim',
+    arms: 'Arme', legs: 'Beine', back: 'Rücken', chest: 'Brust', neck: 'Nacken', shoulder: 'Schulter', small: 'Klein', large: 'Groß',
+    elegant: 'Elegant', casual: 'Lässig', sexy: 'Sexy', business: 'Business', sporty: 'Sportlich', chic: 'Chic', street: 'Streetwear', classic: 'Klassisch'
+  }
+  return map[t] || capitalizeWords(token.replace(/[_-]+/g, ' ').toLowerCase())
+}
+const formatEnumListDE = (v: any): string => toArray(v).map((x) => translateTokenDE(String(x))).filter(Boolean).join(', ')
+const badgeElementsDE = (v: any) => {
+  const arr = toArray(v)
+  return arr.map((x: any, i: number) => (
+    <span key={`${String(x)}-${i}`} className="inline-flex items-center px-2.5 py-1 border border-gray-200 bg-gray-50 text-gray-700 text-xs rounded-none">
+      {translateTokenDE(String(x))}
+    </span>
+  ))
+}
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -110,13 +173,22 @@ async function getEscort(id: string) {
     details: {
       height: profile?.height ?? null,
       weight: profile?.weight ?? null,
+      bodyType: (profile as any)?.bodyType ?? null,
       hairColor: profile?.hairColor ?? null,
       hairLength: profile?.hairLength ?? null,
       eyeColor: profile?.eyeColor ?? null,
       breastType: profile?.breastType ?? null,
       breastSize: profile?.breastSize ?? null,
+      cupSize: (profile as any)?.cupSize ?? null,
+      intimateArea: (profile as any)?.intimateArea ?? null,
+      pubicHair: (profile as any)?.pubicHair ?? null,
+      intimateStyle: (profile as any)?.intimateStyle ?? null,
+      piercings: (profile as any)?.piercings ?? null,
+      tattoos: (profile as any)?.tattoos ?? null,
       clothingStyle: profile?.clothingStyle ?? null,
       clothingSize: profile?.clothingSize ?? null,
+      dressSize: (profile as any)?.dressSize ?? null,
+      shoeSize: (profile as any)?.shoeSize ?? null,
     },
   }
 }
@@ -291,22 +363,53 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
                       <div>
                         <h2 className="text-lg font-light tracking-widest text-gray-800">DETAILS</h2>
                         <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {details.height && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GRÖSSE</div><div className="text-gray-800">{details.height}</div></div>)}
-                          {details.weight && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GEWICHT</div><div className="text-gray-800">{details.weight}</div></div>)}
-                          {details.hairColor && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARFARBE</div><div className="text-gray-800">{details.hairColor}</div></div>)}
-                          {details.hairLength && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARLÄNGE</div><div className="text-gray-800">{details.hairLength}</div></div>)}
-                          {details.eyeColor && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">AUGENFARBE</div><div className="text-gray-800">{details.eyeColor}</div></div>)}
-                          {details.breastType && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">BRUSTTYP</div><div className="text-gray-800">{details.breastType}</div></div>)}
-                          {details.breastSize && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">BRUSTGRÖSSE</div><div className="text-gray-800">{details.breastSize}</div></div>)}
-                          {details.clothingStyle && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDUNGSSTIL</div><div className="text-gray-800">{details.clothingStyle}</div></div>)}
-                          {details.clothingSize && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDERGRÖSSE</div><div className="text-gray-800">{details.clothingSize}</div></div>)}
+                          {details.height && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GRÖSSE</div><div className="text-gray-800">{formatHeight(details.height)}</div></div>)}
+                          {details.weight && (<div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GEWICHT</div><div className="text-gray-800">{formatWeight(details.weight)}</div></div>)}
+                          {details.bodyType && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KÖRPERTYP</div><div className="text-gray-800">{toArray(details.bodyType).length > 1 ? <div className="flex flex-wrap gap-2">{badgeElementsDE(details.bodyType)}</div> : formatEnumListDE(details.bodyType)}</div></div>
+                          )}
+                          {details.hairColor && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARFARBE</div><div className="text-gray-800">{toArray(details.hairColor).length > 1 ? <div className="flex flex-wrap gap-2">{badgeElementsDE(details.hairColor)}</div> : formatEnumListDE(details.hairColor)}</div></div>
+                          )}
+                          {details.hairLength && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">HAARLÄNGE</div><div className="text-gray-800">{toArray(details.hairLength).length > 1 ? <div className="flex flex-wrap gap-2">{badgeElementsDE(details.hairLength)}</div> : formatEnumListDE(details.hairLength)}</div></div>
+                          )}
+                          {details.eyeColor && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">AUGENFARBE</div><div className="text-gray-800">{toArray(details.eyeColor).length > 1 ? <div className="flex flex-wrap gap-2">{badgeElementsDE(details.eyeColor)}</div> : formatEnumListDE(details.eyeColor)}</div></div>
+                          )}
+                          {(details.breastType || details.breastSize || details.cupSize) && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">BRUST</div><div className="text-gray-800"><div className="flex flex-wrap gap-2">{badgeElementsDE([toStr(details.breastSize || details.cupSize) ? (/^[a-z]$/i.test(String(details.breastSize || details.cupSize)) ? String(details.breastSize || details.cupSize).toUpperCase() : String(details.breastSize || details.cupSize)) : null, details.breastType].filter(Boolean))}</div></div></div>
+                          )}
+                          {(details.intimateArea || details.pubicHair || details.intimateStyle) && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">INTIMBEREICH</div><div className="text-gray-800"><div className="flex flex-wrap gap-2">{badgeElementsDE([ ...toArray(details.intimateArea), ...toArray(details.pubicHair), ...toArray(details.intimateStyle) ])}</div></div></div>
+                          )}
+                          {(details.piercings !== null && details.piercings !== undefined) && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">PIERCINGS</div><div className="text-gray-800">{typeof details.piercings === 'boolean' ? (details.piercings ? 'Ja' : 'Nein') : toArray(details.piercings).length > 1 ? <div className="flex flex-wrap gap-2">{badgeElementsDE(details.piercings)}</div> : formatEnumListDE(details.piercings)}</div></div>
+                          )}
+                          {(details.tattoos !== null && details.tattoos !== undefined) && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">TÄTOWIERUNGEN</div><div className="text-gray-800">{typeof details.tattoos === 'boolean' ? (details.tattoos ? 'Ja' : 'Nein') : toArray(details.tattoos).length > 1 ? <div className="flex flex-wrap gap-2">{badgeElementsDE(details.tattoos)}</div> : formatEnumListDE(details.tattoos)}</div></div>
+                          )}
+                          {details.clothingStyle && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDUNGSSTIL</div><div className="text-gray-800">{toArray(details.clothingStyle).length > 1 ? <div className="flex flex-wrap gap-2">{badgeElementsDE(details.clothingStyle)}</div> : formatEnumListDE(details.clothingStyle)}</div></div>
+                          )}
+                          {(details.clothingSize || details.dressSize) && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">KLEIDERGRÖSSE</div><div className="text-gray-800">{formatEnumListDE(details.clothingSize || details.dressSize)}</div></div>
+                          )}
+                          {details.shoeSize && (
+                            <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">SCHUHGRÖSSE</div><div className="text-gray-800">{formatShoeSize(details.shoeSize)}</div></div>
+                          )}
                         </div>
                       </div>
                     )}
                     {description && (
                       <div className="mt-8">
                         <h2 className="text-lg font-light tracking-widest text-gray-800">BESCHREIBUNG</h2>
-                        <p className="text-sm text-gray-700 mt-3 whitespace-pre-line">{description}</p>
+                        <ExpandableText
+                          text={description}
+                          limit={600}
+                          className="text-sm text-gray-700 mt-3 leading-relaxed"
+                          buttonClassName="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600"
+                        />
                       </div>
                     )}
                   </div>

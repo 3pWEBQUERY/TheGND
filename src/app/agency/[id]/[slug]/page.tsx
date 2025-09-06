@@ -1,7 +1,8 @@
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
-import { Globe, Phone, Instagram, Facebook, Twitter, Youtube, Linkedin } from 'lucide-react'
+import { Globe, Phone } from 'lucide-react'
+import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import Footer from '@/components/homepage/Footer'
 import MessageButton from '@/components/MessageButton'
@@ -13,6 +14,7 @@ import ServiceLegend from '@/components/ServiceLegend'
 import { SERVICES_DE } from '@/data/services.de'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import ExpandableText from '@/components/ExpandableText'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -32,6 +34,22 @@ function getPrimaryImage(profile: any): string | null {
     }
   } catch {}
   return null
+}
+
+// Helpers to format businessType and dates similar to Escort page formatting style
+const prettifyToken = (v: any): string => {
+  const s = (v ?? '').toString().trim()
+  if (!s) return ''
+  return s.replace(/[_-]+/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())
+}
+const formatBusinessType = (v: any): string => prettifyToken(v)
+const formatEstablished = (iso: any): string => {
+  if (!iso) return ''
+  try {
+    const d = new Date(iso)
+    if (!isNaN(d.getTime())) return d.getFullYear().toString()
+  } catch {}
+  return prettifyToken(iso)
 }
 
 function slugify(input: string): string {
@@ -109,6 +127,14 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
     if (user.profile.socialMedia) {
       const o = JSON.parse(user.profile.socialMedia)
       if (o && typeof o === 'object') socials = o
+    }
+  } catch {}
+  // Parse opening hours (JSON object)
+  let openingHours: Record<string, { from: string; to: string }[]> = {}
+  try {
+    if ((user.profile as any).openingHours) {
+      const oh = JSON.parse((user.profile as any).openingHours as any)
+      if (oh && typeof oh === 'object') openingHours = oh
     }
   } catch {}
   const phone = user.profile.phone || null
@@ -258,13 +284,16 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                     <h2 className="text-lg font-light tracking-widest text-gray-800">DETAILS</h2>
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
                       {user.profile.businessType && (
-                        <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">UNTERNEHMEN</div><div className="text-gray-800">{user.profile.businessType}</div></div>
+                        <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">UNTERNEHMEN</div><div className="text-gray-800">{formatBusinessType(user.profile.businessType)}</div></div>
+                      )}
+                      {user.profile.established && (
+                        <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">GEGRÜNDET</div><div className="text-gray-800">{formatEstablished(user.profile.established)}</div></div>
                       )}
                       {user.profile.address && (
                         <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">ADRESSE</div><div className="text-gray-800">{user.profile.address}</div></div>
                       )}
                       {(city || country) && (
-                        <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">ORT</div><div className="text-gray-800">{city || country}</div></div>
+                        <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">ORT</div><div className="text-gray-800">{user.profile.zipCode ? `${user.profile.zipCode} ` : ''}{city || country}</div></div>
                       )}
                       {website && (
                         <div className="text-sm"><div className="text-[10px] tracking-widest text-gray-500">WEBSEITE</div><div className="text-gray-800 break-all">{website}</div></div>
@@ -276,26 +305,80 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                     {description && (
                       <div className="mt-8">
                         <h2 className="text-lg font-light tracking-widest text-gray-800">BESCHREIBUNG</h2>
-                        <p className="text-sm text-gray-700 mt-3 whitespace-pre-line">{description}</p>
+                        <ExpandableText
+                          text={description}
+                          limit={600}
+                          className="text-sm text-gray-700 mt-3 leading-relaxed"
+                          buttonClassName="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600"
+                        />
+                      </div>
+                    )}
+                    {/* Opening Hours */}
+                    {Object.keys(openingHours).length > 0 && (
+                      <div className="mt-8">
+                        <h2 className="text-lg font-light tracking-widest text-gray-800">ÖFFNUNGSZEITEN</h2>
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {[
+                            { key: 'mon', label: 'Montag' },
+                            { key: 'tue', label: 'Dienstag' },
+                            { key: 'wed', label: 'Mittwoch' },
+                            { key: 'thu', label: 'Donnerstag' },
+                            { key: 'fri', label: 'Freitag' },
+                            { key: 'sat', label: 'Samstag' },
+                            { key: 'sun', label: 'Sonntag' },
+                          ].map(({ key, label }) => {
+                            const slots = openingHours[key] || []
+                            const text = slots.length ? slots.map(s => `${s.from}–${s.to}`).join(', ') : 'Geschlossen'
+                            return (
+                              <div key={key} className="text-sm">
+                                <div className="text-[10px] tracking-widest text-gray-500">{label.toUpperCase()}</div>
+                                <div className="text-gray-800">{text}</div>
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
                     )}
                     {Object.keys(socials).length > 0 && (
                       <div className="mt-8">
                         <h2 className="text-lg font-light tracking-widest text-gray-800">SOCIALS</h2>
-                        <ul className="mt-4 text-sm text-gray-700 space-y-2">
-                          {Object.entries(socials).map(([key, value]) => (
-                            value ? (
-                              <li key={key} className="flex items-center gap-2">
-                                {key.toLowerCase() === 'instagram' && <Instagram className="h-4 w-4 text-gray-400" />}
-                                {key.toLowerCase() === 'facebook' && <Facebook className="h-4 w-4 text-gray-400" />}
-                                {(key.toLowerCase() === 'twitter' || key.toLowerCase() === 'x') && <Twitter className="h-4 w-4 text-gray-400" />}
-                                {key.toLowerCase() === 'youtube' && <Youtube className="h-4 w-4 text-gray-400" />}
-                                {key.toLowerCase() === 'linkedin' && <Linkedin className="h-4 w-4 text-gray-400" />}
-                                <a href={value.startsWith('http') ? value : `https://${value}`} target="_blank" rel="noopener noreferrer" className="hover:underline">{value}</a>
-                              </li>
-                            ) : null
-                          ))}
-                        </ul>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {Object.entries(socials).map(([rawKey, rawVal]) => {
+                            if (!rawVal) return null
+                            const key = rawKey.toLowerCase()
+                            let href = rawVal
+                            if (key === 'whatsapp') {
+                              const phone = rawVal.replace(/[^+\d]/g, '')
+                              href = `https://wa.me/${phone}`
+                            } else if (!/^https?:\/\//i.test(rawVal)) {
+                              href = `https://${rawVal}`
+                            }
+                            const Icon =
+                              key === 'instagram' ? FaInstagram :
+                              key === 'facebook' ? FaFacebook :
+                              key === 'twitter' || key === 'x' ? FaXTwitter :
+                              key === 'youtube' ? FaYoutube :
+                              key === 'linkedin' ? FaLinkedin :
+                              key === 'whatsapp' ? FaWhatsapp :
+                              key === 'telegram' ? FaTelegram :
+                              key === 'tiktok' ? FaTiktok :
+                              key === 'snapchat' ? FaSnapchat :
+                              null
+                            return (
+                              <a
+                                key={rawKey}
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-1 border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-500 text-xs rounded-none"
+                                title={rawKey}
+                              >
+                                {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+                                <span className="truncate max-w-[180px]">{rawVal}</span>
+                              </a>
+                            )
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>

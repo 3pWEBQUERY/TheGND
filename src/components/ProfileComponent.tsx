@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Camera,
   Users,
+  User,
   X,
   Trash2
 } from 'lucide-react'
@@ -80,6 +81,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null)
   const [showFullDesc, setShowFullDesc] = useState(false)
+  const [settingAvatarUrl, setSettingAvatarUrl] = useState<string | null>(null)
 
   const isOwnProfile = !userId || userId === session?.user?.id
 
@@ -379,6 +381,39 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
       console.error('Löschen fehlgeschlagen:', err)
     } finally {
       setDeletingIndex(null)
+    }
+  }
+
+  // Set an image from gallery/media as profile avatar
+  const handleSetAvatar = async (url: string) => {
+    if (!profile) return
+    try {
+      setSettingAvatarUrl(url)
+      const resp = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileData: { avatar: url } }),
+      })
+      if (!resp.ok) {
+        console.error('Fehler beim Setzen des Avatars')
+        return
+      }
+      // Update local state optimistically
+      setProfileData((prev: ProfileData | null) => {
+        if (!prev) return prev
+        const next: ProfileData = {
+          ...prev,
+          user: {
+            ...prev.user,
+            profile: { ...(prev.user.profile as any), avatar: url } as any,
+          },
+        }
+        return next
+      })
+    } catch (e) {
+      console.error('Avatar-Update fehlgeschlagen:', e)
+    } finally {
+      setSettingAvatarUrl(null)
     }
   }
 
@@ -858,14 +893,30 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
                         />
                       )}
                       {isOwnProfile && (
-                        <button
-                          className="absolute top-2 right-2 p-2 bg-white/90 hover:bg-white text-gray-700 hover:text-red-600 transition-colors shadow-sm hidden group-hover:flex"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteMedia(item, index) }}
-                          disabled={deletingIndex === index}
-                          title="Löschen"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="absolute top-2 right-2 flex gap-1">
+                          {/* Avatar setzen (nur Bilder) */}
+                          {item.type === 'image' && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleSetAvatar(item.url) }}
+                              disabled={settingAvatarUrl !== null}
+                              className={`text-[10px] uppercase tracking-widest bg-white/90 border px-2 py-0.5 ${profile?.avatar === item.url ? 'border-emerald-300 text-emerald-700' : 'border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}
+                              title="Als Profilbild setzen"
+                            >
+                              <User className="h-4 w-4" />
+                            </button>
+                          )}
+                          {/* Löschen */}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteMedia(item, index) }}
+                            disabled={deletingIndex === index}
+                            className="text-[10px] uppercase tracking-widest bg-white/90 border border-gray-300 px-2 py-0.5 hover:border-rose-300 hover:text-rose-700"
+                            title="Löschen"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}

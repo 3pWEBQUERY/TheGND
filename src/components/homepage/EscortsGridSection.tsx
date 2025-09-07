@@ -83,8 +83,8 @@ export default function EscortsGridSection() {
                     </div>
                   )}
                   {highlight && (
-                    <div className="absolute bottom-2 left-2 flex items-center gap-2">
-                      <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'}`}>
+                    <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-center">
+                      <span className={`${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'} px-2 py-1 text-[10px] uppercase tracking-widest font-medium`}>
                         {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
                       </span>
                     </div>

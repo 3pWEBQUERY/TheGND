@@ -63,9 +63,9 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
                 ) : (
                   <div className="h-full w-full bg-gray-300" />
                 )}
-                {/* Bottom-left ribbon for highlight */}
+                {/* Bottom ribbon centered with equal left/right spacing */}
                 {highlight && (
-                  <div className="absolute bottom-2 left-2 z-10 flex items-center gap-2">
+                  <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-center">
                     <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'}`}>
                       {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
                     </span>

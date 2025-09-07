@@ -35,6 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               {navItem('/acp/memberships-users', 'User-Mitgliedschaften')}
               {navItem('/acp/addons', 'Add-ons')}
               {navItem('/acp/settings', 'Einstellungen')}
+              {navItem('/acp/marketing', 'Marketing')}
               {navItem('/acp/messages', 'Nachrichten')}
               {navItem('/acp/network', 'Netzwerk')}
             </nav>

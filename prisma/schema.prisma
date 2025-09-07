@@ -5,6 +5,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum MarketingAssetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model VerificationRequest {
   id             String             @id @default(dbgenerated("gen_random_uuid()"))
   userId         String
@@ -138,6 +144,9 @@ model User {
   // Membership relations
   memberships       UserMembership[]
   addonBookings     UserAddonBooking[]
+
+  // Marketing orders
+  marketingOrders   MarketingOrder[]
 
   @@map("users")
 }
@@ -560,4 +569,72 @@ model AppSetting {
   createdAt DateTime @default(now())
 
   @@map("app_settings")
+}
+
+// Marketing / Advertising
+enum MarketingPlacementKey {
+  HOME_BANNER
+  HOME_TILE
+  RESULTS_TOP
+  SIDEBAR
+  SPONSORED_POST
+}
+
+enum MarketingOrderStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ACTIVE
+  COMPLETED
+  CANCELED
+}
+
+model MarketingOrder {
+  id          String                @id @default(cuid())
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      MarketingOrderStatus  @default(DRAFT)
+  currency    String                @default("EUR")
+  totalCents  Int                   @default(0)
+  note        String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  items       MarketingOrderItem[]
+
+  @@index([userId, status])
+  @@map("marketing_orders")
+}
+
+model MarketingOrderItem {
+  id            String               @id @default(cuid())
+  orderId       String
+  order         MarketingOrder       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  placementKey  MarketingPlacementKey
+  durationDays  Int
+  priceCents    Int
+  createdAt     DateTime             @default(now())
+
+  assets        MarketingAsset[]
+
+  @@index([orderId, placementKey])
+  @@map("marketing_order_items")
+}
+
+model MarketingAsset {
+  id           String              @id @default(cuid())
+  orderItemId  String
+  orderItem    MarketingOrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  url          String
+  mimeType     String?
+  width        Int?
+  height       Int?
+  status       MarketingAssetStatus @default(PENDING)
+  reviewNote   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime            @default(now())
+
+  @@index([orderItemId])
+  @@map("marketing_assets")
 }

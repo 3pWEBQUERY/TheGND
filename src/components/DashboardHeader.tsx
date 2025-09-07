@@ -309,6 +309,9 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     <Link href="/membership" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       MITGLIEDSCHAFT
                     </Link>
+                    <Link href="/marketing" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
+                      MARKETING
+                    </Link>
                     <Link href="/settings" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       EINSTELLUNGEN
                     </Link>

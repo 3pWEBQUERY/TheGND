@@ -4,14 +4,14 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { isEmailAdmin } from '@/lib/admin'
 
-export async function POST(req: NextRequest, { params }: { params: { assetId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ assetId: string }> }) {
   const session = (await getServerSession(authOptions as any)) as any
   const email = session?.user?.email as string | undefined
   if (!email || !isEmailAdmin(email)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const assetId = params.assetId
+  const { assetId } = await params
   let body: any
   try {
     body = await req.json()

@@ -25,11 +25,12 @@ function formatCHF(n: number) {
   return new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(n)
 }
 
-export default async function ACPMarketingPage({ searchParams }: { searchParams: { status?: string } }) {
+export default async function ACPMarketingPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const { isAdmin } = await requireAdmin()
   if (!isAdmin) return null
 
-  const status = (searchParams?.status || 'PENDING').toUpperCase()
+  const sp = await searchParams
+  const status = (sp?.status || 'PENDING').toUpperCase()
   const where = status === 'ALL' ? {} : { status }
 
   const assets = await (prisma as any).marketingAsset.findMany({

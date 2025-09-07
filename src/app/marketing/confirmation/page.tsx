@@ -9,11 +9,12 @@ function formatCHF(n: number) {
   return new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(n)
 }
 
-export default async function MarketingConfirmationPage({ searchParams }: { searchParams: { orderId?: string } }) {
+export default async function MarketingConfirmationPage({ searchParams }: { searchParams: Promise<{ orderId?: string }> }) {
   const session = await getServerSession(authOptions as any)
   const userId = (session as any)?.user?.id as string | undefined
 
-  const orderId = searchParams?.orderId
+  const sp = await searchParams
+  const orderId = sp?.orderId
   if (!orderId || !userId) {
     return (
       <div className="max-w-3xl mx-auto px-6 py-12">

@@ -18,6 +18,7 @@ import {
   X,
   Trash2
 } from 'lucide-react'
+import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { getUserTypeDisplayName, getGenderDisplayName, formatTimeAgo } from '@/lib/validations'
 import { UserType, Gender } from '@prisma/client'
 import { formatLocation } from '@/lib/utils'
@@ -214,6 +215,20 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const formatHeight = (v: any) => withUnit(v, 'cm')
   const formatWeight = (v: any) => withUnit(v, 'kg')
   const formatShoeSize = (v: any) => withUnit(v, 'EU')
+  // Brand colors per social platform (for contact tab badges)
+  const brandColor = (key: string): string => {
+    const k = (key || '').toLowerCase()
+    if (k === 'whatsapp') return '#25D366'
+    if (k === 'instagram') return '#E4405F'
+    if (k === 'facebook') return '#1877F2'
+    if (k === 'twitter' || k === 'x') return '#1DA1F2'
+    if (k === 'youtube') return '#FF0000'
+    if (k === 'linkedin') return '#0A66C2'
+    if (k === 'telegram') return '#26A5E4'
+    if (k === 'tiktok') return '#000000'
+    if (k === 'snapchat') return '#FFFC00'
+    return '#6B7280'
+  }
   
   // Generic label formatters for enum-like or array-like values
   const capitalizeWords = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
@@ -950,43 +965,58 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
                 )}
                 
                 {profile.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-light tracking-wide text-gray-700">
-                      {isOwnProfile ? profile.phone : 'Telefon verfügbar'}
-                    </span>
+                  <div>
+                    <div className="text-[10px] tracking-widest text-gray-500 mb-1">TELEFON</div>
+                    <div>{profile.phone}</div>
                   </div>
                 )}
-                
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-light tracking-wide text-gray-700">
-                    {isOwnProfile ? user.email : 'E-Mail verfügbar'}
-                  </span>
-                </div>
-                
                 {profile.website && (
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-gray-500" />
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" 
-                       className="text-sm font-light tracking-wide text-pink-500 hover:text-pink-600 transition-colors">
-                      {profile.website}
-                    </a>
+                  <div>
+                    <div className="text-[10px] tracking-widest text-gray-500 mb-1">WEBSEITE</div>
+                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:underline break-all">{profile.website}</a>
                   </div>
                 )}
-                
                 {profile.socialMedia && Object.keys(profile.socialMedia).length > 0 && (
                   <div>
-                    <div className="text-sm font-light tracking-wide text-gray-700 mb-2"><strong>Soziale Medien:</strong></div>
-                    <div className="space-y-1">
-                      {Object.entries(profile.socialMedia).map(([platform, url]) => (
-                        <div key={platform}>
-                          <a href={url as string} target="_blank" rel="noopener noreferrer" 
-                             className="text-sm font-light tracking-wide text-pink-500 hover:text-pink-600 transition-colors capitalize">
-                            {platform}
+                    <div className="text-[10px] tracking-widest text-gray-500 mb-2">SOZIALE MEDIEN</div>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(profile.socialMedia).map(([rawKey, rawVal]) => {
+                        if (!rawVal) return null
+                        const key = String(rawKey).toLowerCase()
+                        let href = String(rawVal)
+                        if (key === 'whatsapp') {
+                          const phone = href.replace(/[^+\d]/g, '')
+                          href = `https://wa.me/${phone}`
+                        } else if (!/^https?:\/\//i.test(href)) {
+                          href = `https://${href}`
+                        }
+                        const Icon =
+                          key === 'instagram' ? FaInstagram :
+                          key === 'facebook' ? FaFacebook :
+                          (key === 'twitter' || key === 'x') ? FaXTwitter :
+                          key === 'youtube' ? FaYoutube :
+                          key === 'linkedin' ? FaLinkedin :
+                          key === 'whatsapp' ? FaWhatsapp :
+                          key === 'telegram' ? FaTelegram :
+                          key === 'tiktok' ? FaTiktok :
+                          key === 'snapchat' ? FaSnapchat :
+                          null
+                        const color = brandColor(key)
+                        return (
+                          <a
+                            key={rawKey}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-1 border text-xs rounded-none transition-colors border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white hover:border-[var(--brand)]"
+                            style={{ ['--brand' as any]: color }}
+                            title={rawKey}
+                          >
+                            {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+                            <span className="truncate max-w-[180px]">{String(rawVal)}</span>
                           </a>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}

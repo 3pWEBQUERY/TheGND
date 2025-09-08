@@ -15,6 +15,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Globe, ShieldCheck, BadgeCheck } from 'lucide-react'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
+import { SiOnlyfans } from 'react-icons/si'
 import RatingDonut from '@/components/RatingDonut'
 import type React from 'react'
 import ProfileComments from '@/components/ProfileComments'
@@ -43,7 +44,16 @@ const brandColor = (key: string): string => {
   if (k === 'telegram') return '#26A5E4'
   if (k === 'tiktok') return '#000000'
   if (k === 'snapchat') return '#FFFC00'
+  if (k === 'onlyfans') return '#00AEF0'
   return '#6B7280' // gray-500 fallback
+}
+const platformLabel = (key: string): string => {
+  const k = key.toLowerCase()
+  const map: Record<string, string> = {
+    whatsapp: 'WhatsApp', instagram: 'Instagram', facebook: 'Facebook', twitter: 'Twitter', x: 'X',
+    youtube: 'YouTube', linkedin: 'LinkedIn', telegram: 'Telegram', tiktok: 'TikTok', snapchat: 'Snapchat', onlyfans: 'OnlyFans'
+  }
+  return map[k] || (key.charAt(0).toUpperCase() + key.slice(1))
 }
 const formatHeight = (v: any) => withUnit(v, 'cm')
 const formatWeight = (v: any) => withUnit(v, 'kg')
@@ -475,6 +485,7 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
                       key === 'telegram' ? FaTelegram :
                       key === 'tiktok' ? FaTiktok :
                       key === 'snapchat' ? FaSnapchat :
+                      key === 'onlyfans' ? SiOnlyfans :
                       null
                     const color = brandColor(key)
                     return (
@@ -488,7 +499,7 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
                         title={rawKey}
                       >
                         {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-                        <span className="truncate max-w-[180px]">{rawVal}</span>
+                        <span className="truncate">{platformLabel(key)}</span>
                       </a>
                     )
                   })}

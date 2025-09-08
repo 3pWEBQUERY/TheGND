@@ -19,8 +19,8 @@ export default function Tabs({ tabs, initialId, className }: Props) {
 
   return (
     <div className={className}>
-      <div className="border-b border-gray-200 overflow-x-auto no-scrollbar">
-        <div className="flex gap-6 min-w-max">
+      <div className="border-b border-gray-200 overflow-x-auto overflow-y-hidden no-scrollbar touch-pan-x overscroll-x-contain overscroll-y-none">
+        <div className="flex gap-6 min-w-max whitespace-nowrap">
           {tabs.map((t) => {
             const isActive = t.id === active
             return (

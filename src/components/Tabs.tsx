@@ -19,20 +19,22 @@ export default function Tabs({ tabs, initialId, className }: Props) {
 
   return (
     <div className={className}>
-      <div className="flex gap-6 border-b border-gray-200">
-        {tabs.map((t) => {
-          const isActive = t.id === active
-          return (
-            <button
-              key={t.id}
-              onClick={() => setActive(t.id)}
-              className={`px-1 pb-3 text-xs tracking-widest ${isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-800'} relative`}
-            >
-              <span>{t.label.toUpperCase()}</span>
-              <span className={`absolute left-0 -bottom-px h-0.5 ${isActive ? 'w-full bg-pink-500' : 'w-0 bg-transparent'} transition-all`} />
-            </button>
-          )
-        })}
+      <div className="border-b border-gray-200 overflow-x-auto no-scrollbar">
+        <div className="flex gap-6 min-w-max">
+          {tabs.map((t) => {
+            const isActive = t.id === active
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActive(t.id)}
+                className={`shrink-0 px-1 pb-3 text-xs tracking-widest ${isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-800'} relative`}
+              >
+                <span>{t.label.toUpperCase()}</span>
+                <span className={`absolute left-0 -bottom-px h-0.5 ${isActive ? 'w-full bg-pink-500' : 'w-0 bg-transparent'} transition-all`} />
+              </button>
+            )
+          })}
+        </div>
       </div>
       <div className="pt-6">
         {tabs.map((t) => (

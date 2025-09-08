@@ -104,6 +104,17 @@ export const authOptions = {
         session.user.onboardingStatus = token.onboardingStatus as string
       }
       return session
+    },
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Allow relative URLs – resolve against baseUrl
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      // Allow absolute HTTPS URLs (e.g., current deployment origin) to avoid localhost fallback
+      try {
+        const dest = new URL(url)
+        if (dest.protocol === 'https:' || dest.origin === baseUrl) return url
+      } catch {}
+      // Fallback to baseUrl
+      return baseUrl
     }
   },
   pages: {

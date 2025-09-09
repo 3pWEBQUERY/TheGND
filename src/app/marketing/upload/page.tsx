@@ -35,6 +35,8 @@ export default function MarketingUploadPage() {
   const { startUpload, isUploading } = useUploadThing('adAssets')
   const [submitting, setSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<{ type: 'idle' | 'success' | 'error'; text?: string }>({ type: 'idle' })
+  // Ziel-URLs pro Placement (relevant: home_banner, sponsored_post)
+  const [targetUrls, setTargetUrls] = useState<Partial<Record<PlacementKey, string>>>({})
 
   const durationLabel = useMemo(() => (d: Duration) => {
     if (d === 30) return '1 Monat'
@@ -48,6 +50,32 @@ export default function MarketingUploadPage() {
       if (raw) setCart(JSON.parse(raw))
     } catch {}
   }, [])
+
+  // Load saved target URLs
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('marketingTargetUrl')
+      if (raw) {
+        const obj = JSON.parse(raw)
+        if (!obj?.home_banner) obj.home_banner = 'https://'
+        if (!obj?.sponsored_post) obj.sponsored_post = 'https://'
+        setTargetUrls(obj)
+      } else {
+        setTargetUrls((s) => ({
+          ...s,
+          home_banner: s.home_banner ?? 'https://',
+          sponsored_post: s.sponsored_post ?? 'https://',
+        }))
+      }
+    } catch {}
+  }, [])
+
+  // Persist target URLs
+  useEffect(() => {
+    try {
+      if (targetUrls && Object.keys(targetUrls).length > 0) localStorage.setItem('marketingTargetUrl', JSON.stringify(targetUrls))
+    } catch {}
+  }, [targetUrls])
 
   const placementFor = (key: PlacementKey) => PLACEMENTS.find((p) => p.key === key)
 
@@ -76,19 +104,12 @@ export default function MarketingUploadPage() {
     setSubmitting(true)
     setSubmitMessage({ type: 'idle' })
     try {
-      // Load optional target URLs saved from marketing selection page
-      let savedTargets: Partial<Record<PlacementKey, string>> = {}
-      try {
-        const raw = localStorage.getItem('marketingTargetUrl')
-        if (raw) savedTargets = JSON.parse(raw)
-      } catch {}
-
       const items = (Object.entries(cart) as [PlacementKey, Duration][])?.map(([key, duration]) => ({
         key,
         duration,
         assets: uploads[key] || [],
-        // Include optional targetUrl (currently relevant for home_banner)
-        targetUrl: savedTargets[key],
+        // Include optional targetUrl (home_banner, sponsored_post)
+        targetUrl: targetUrls[key],
       }))
       const res = await fetch('/api/marketing/book', {
         method: 'POST',
@@ -165,6 +186,21 @@ export default function MarketingUploadPage() {
                         </label>
                       </div>
                     </div>
+
+                    {/* Ziel-URL Eingabe für relevante Placements */}
+                    {(key === 'home_banner' || key === 'sponsored_post') && (
+                      <div className="mt-4 border border-gray-200 p-4">
+                        <label className="block text-[11px] text-gray-600 uppercase tracking-widest">Ziel-URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://deine-zielseite.tld/"
+                          value={(targetUrls[key] ?? 'https://') as string}
+                          onChange={(e) => setTargetUrls((s) => ({ ...s, [key]: e.target.value }))}
+                          className="mt-2 w-full border border-gray-200 px-3 py-2 focus:outline-none focus:ring-0 focus:border-pink-500"
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500">Wird bei diesem Placement verlinkt. Kann später unter „Meine Buchungen“ angepasst werden.</p>
+                      </div>
+                    )}
 
                     {files.length > 0 && (
                       <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">

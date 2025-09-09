@@ -246,7 +246,7 @@ export default function BookingsPage() {
                                 : 'bg-amber-100 text-amber-800'
 
                             return (
-                              <div key={it.id} className={`border border-gray-200 ${it.placementKey === 'HOME_BANNER' ? 'md:col-span-2 lg:col-span-3' : ''}`}>
+                              <div key={it.id} className={`border border-gray-200 ${(it.placementKey === 'HOME_BANNER' || it.placementKey === 'SPONSORED_POST') ? 'md:col-span-2 lg:col-span-3' : ''}`}>
                                 <div className="px-3 py-2 text-xs uppercase tracking-widest text-gray-600 border-b border-gray-100 flex items-center justify-between">
                                   <span>{labelFor(it.placementKey)}</span>
                                   {itemStatus && (
@@ -258,6 +258,38 @@ export default function BookingsPage() {
                                 <div className="text-gray-700">Preis: {currencyCHF(it.priceCents)}</div>
                                 {/* Full-width Ziel-URL editor for HOME_BANNER */}
                                 {it.placementKey === 'HOME_BANNER' && Array.isArray(it.assets) && it.assets.length > 0 && (() => {
+                                  const target = it.assets.find((a: any) => a.status === 'APPROVED') || it.assets[0]
+                                  const edited = urlEdits[target.id]
+                                  const stored = (target.targetUrl ?? '').trim()
+                                  const val = typeof edited === 'string' ? edited : (stored || 'https://')
+                                  return (
+                                    <div className="mt-3 border border-gray-200 p-3 bg-white">
+                                      <label className="block text-[11px] text-gray-600 uppercase tracking-widest">Ziel-URL</label>
+                                      <input
+                                        type="url"
+                                        placeholder="https://deine-zielseite.tld/"
+                                        value={val}
+                                        onChange={(e) => setUrlEdits((s) => ({ ...s, [target.id]: e.target.value }))}
+                                        className="mt-2 w-full border border-gray-200 px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-0 focus:border-pink-500"
+                                      />
+                                      <div className="mt-2 flex items-center justify-between">
+                                        <span className="text-[11px] text-gray-500 truncate max-w-[70%]">{val || 'Keine URL gesetzt'}</span>
+                                        <button
+                                          onClick={() => saveTargetUrl(target.id)}
+                                          className={`text-[11px] uppercase tracking-widest px-3 py-2 border ${urlSaveState[target.id] === 'saving' ? 'opacity-60' : ''}`}
+                                          disabled={urlSaveState[target.id] === 'saving'}
+                                        >
+                                          {urlSaveState[target.id] === 'saving' ? 'Speichere…' : urlSaveState[target.id] === 'saved' ? 'Gespeichert' : 'Speichern'}
+                                        </button>
+                                      </div>
+                                      {urlSaveState[target.id] === 'error' && (
+                                        <div className="mt-1 text-[11px] text-rose-600">Ungültige URL oder Fehler beim Speichern.</div>
+                                      )}
+                                    </div>
+                                  )
+                                })()}
+                                {/* Full-width Ziel-URL editor for SPONSORED_POST */}
+                                {it.placementKey === 'SPONSORED_POST' && Array.isArray(it.assets) && it.assets.length > 0 && (() => {
                                   const target = it.assets.find((a: any) => a.status === 'APPROVED') || it.assets[0]
                                   const edited = urlEdits[target.id]
                                   const stored = (target.targetUrl ?? '').trim()

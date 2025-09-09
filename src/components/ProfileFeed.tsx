@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Heart, MessageCircle, Share, X, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -118,6 +118,10 @@ export default function ProfileFeed({ posts }: Props) {
   const [localPosts, setLocalPosts] = useState<ProfileFeedPost[]>(posts || [])
   // Sponsored marketing assets for FEED – SPONSORED POST
   const [sponsored, setSponsored] = useState<Array<{ id: string; url: string; targetUrl?: string | null }>>([])
+  // Hide ads for PLUS/PREMIUM memberships
+  const [isAdFree, setIsAdFree] = useState(false)
+  // Dismiss individual sponsored slots by key (e.g., slot-0, slot-1)
+  const [dismissedAds, setDismissedAds] = useState<Set<string>>(new Set())
 
   // Share menu state
   const [shareMenuFor, setShareMenuFor] = useState<string | null>(null)
@@ -148,6 +152,28 @@ export default function ProfileFeed({ posts }: Props) {
     load()
     const id = window.setInterval(load, 60000)
     return () => { cancelled = true; window.clearInterval(id) }
+  }, [])
+
+  // Load membership status to hide ads for PLUS/PREMIUM
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      try {
+        const res = await fetch('/api/membership/my', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        const memberships: any[] = Array.isArray(data?.memberships) ? data.memberships : []
+        const hasPlusPremium = memberships.some((m: any) => {
+          const planKey = String(m?.plan?.key || m?.plan?.name || '').toUpperCase()
+          const status = String(m?.status || '').toUpperCase()
+          const isActive = status ? status === 'ACTIVE' : true
+          return isActive && (planKey.includes('PLUS') || planKey.includes('PREMIUM'))
+        })
+        if (!cancelled) setIsAdFree(!!hasPlusPremium)
+      } catch {}
+    }
+    check()
+    return () => { cancelled = true }
   }, [])
 
   const requireAuth = (action: () => void) => {
@@ -238,13 +264,22 @@ export default function ProfileFeed({ posts }: Props) {
     setLightboxIndex((prev) => (prev + 1) % lightboxImages.length)
   }
 
+  // Cap: max 2 sponsored blocks per page render
+  let adsShown = 0
+
   return (
     <div className="space-y-8" onClickCapture={() => setShareMenuFor(null)}>
       {localPosts && localPosts.length > 0 ? (
         localPosts.map((post, idx) => {
           const displayName = post.author.profile?.displayName || post.author.email
+          // Determine if a sponsored slot should be shown after this post
+          const slotIndex = Math.floor((idx + 1) / 5) - 1
+          const slotKey = `slot-${slotIndex}`
+          const shouldShowAdBase = ((idx + 1) % 5 === 0) && sponsored.length > 0 && !isAdFree && !dismissedAds.has(slotKey)
+          const shouldShowAd = shouldShowAdBase && adsShown < 2
+          if (shouldShowAd) adsShown++
           return (
-            <>
+            <React.Fragment key={`pf-${post.id}`}>
             <div key={post.id} id={`post-${post.id}`} className="bg-white border border-gray-100 rounded-none">
               <div className="p-4 sm:p-8">
                 {/* Header */}
@@ -419,12 +454,27 @@ export default function ProfileFeed({ posts }: Props) {
               </div>
             </div>
             {/* Sponsored insertion after each 5 posts (positions 5,10,15,...) */}
-            {((idx + 1) % 5 === 0 && sponsored.length > 0) ? (
+            {shouldShowAd ? (
               <div key={`sponsored-${idx}`} className="bg-white border border-gray-100 rounded-none">
                 <div className="p-4 sm:p-8">
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-[10px] uppercase tracking-widest text-gray-500">GESCHALTETE ANZEIGE</div>
-                    <div className="text-[10px] uppercase tracking-widest text-gray-400">Sponsored</div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-gray-600"
+                        onClick={() => setDismissedAds((prev) => { const n = new Set(prev); n.add(slotKey); return n })}
+                        aria-label="Anzeige schließen"
+                      >
+                        Schließen
+                      </button>
+                      <a
+                        className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-gray-600"
+                        href={`mailto:support@thegnd.ch?subject=${encodeURIComponent('Anzeige melden')}&body=${encodeURIComponent(`Seite: ${typeof window !== 'undefined' ? window.location.href : ''}\nSlot: ${slotKey}`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                      >
+                        Melden
+                      </a>
+                    </div>
                   </div>
                   <div className="relative">
                     {(() => {
@@ -448,7 +498,7 @@ export default function ProfileFeed({ posts }: Props) {
                 </div>
               </div>
             ) : null}
-            </>
+            </React.Fragment>
           )
         })
       ) : (

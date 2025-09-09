@@ -33,7 +33,7 @@ export default function MarketingPage() {
 
   const [bookingState, setBookingState] = useState<{ type: 'idle' | 'success' | 'error'; message?: string }>({ type: 'idle' })
   const [loading, setLoading] = useState(false)
-  // Optional Ziel-URL pro Placement (aktuell relevant: home_banner)
+  // Optional Ziel-URL pro Placement (relevant: home_banner, sponsored_post)
   const [targetUrls, setTargetUrls] = useState<Partial<Record<PlacementKey, string>>>({})
 
   const durationLabel = useMemo(() => (d: Duration) => {
@@ -56,10 +56,15 @@ export default function MarketingPage() {
       if (raw) {
         const obj = JSON.parse(raw)
         if (!obj?.home_banner) obj.home_banner = 'https://'
+        if (!obj?.sponsored_post) obj.sponsored_post = 'https://'
         setTargetUrls(obj)
       } else {
-        // default prefill for home_banner
-        setTargetUrls((s) => ({ ...s, home_banner: s.home_banner ?? 'https://' }))
+        // default prefill for home_banner & sponsored_post
+        setTargetUrls((s) => ({
+          ...s,
+          home_banner: s.home_banner ?? 'https://',
+          sponsored_post: s.sponsored_post ?? 'https://',
+        }))
       }
     } catch {}
   }, [])
@@ -202,17 +207,17 @@ export default function MarketingPage() {
                 {/* Controls */}
                 <div className="mt-6 flex items-end justify-between gap-6 flex-wrap">
                   <div className="flex-1 min-w-52">
-                    {p.key === 'home_banner' && (
+                    {(p.key === 'home_banner' || p.key === 'sponsored_post') && (
                       <div className="mb-4">
                         <span className="text-xs font-light tracking-widest text-gray-800 uppercase">Ziel-URL</span>
                         <input
                           type="url"
                           placeholder="https://deine-zielseite.tld/"
-                          value={(targetUrls['home_banner'] ?? 'https://') as string}
-                          onChange={(e) => setTargetUrls((s) => ({ ...s, home_banner: e.target.value }))}
+                          value={(targetUrls[p.key] ?? 'https://') as string}
+                          onChange={(e) => setTargetUrls((s) => ({ ...s, [p.key]: e.target.value }))}
                           className="mt-2 w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 text-sm font-light bg-transparent focus:outline-none focus:ring-0 focus:border-pink-500"
                         />
-                        <p className="mt-1 text-[11px] text-gray-500">Wird beim gesponserten Story-Banner verlinkt. Kann später unter „Meine Buchungen“ angepasst werden.</p>
+                        <p className="mt-1 text-[11px] text-gray-500">Wird beim ausgewählten Placement verlinkt (z. B. Story‑Banner oder Sponsored Post). Kann später unter „Meine Buchungen“ angepasst werden.</p>
                       </div>
                     )}
                     <span className="text-xs font-light tracking-widest text-gray-800 uppercase">DAUER</span>
@@ -302,8 +307,8 @@ export default function MarketingPage() {
                         <span className="uppercase tracking-widest text-gray-900">{p.title}</span>
                       </div>
                       <div className="text-xs text-gray-600">{durationLabel(duration)} • {p.dims}</div>
-                      {key === 'home_banner' && (targetUrls['home_banner']?.trim()) && (
-                        <div className="text-[11px] text-gray-500 mt-1">Ziel-URL: {targetUrls['home_banner']}</div>
+                      {(key === 'home_banner' || key === 'sponsored_post') && (targetUrls[key]?.trim()) && (
+                        <div className="text-[11px] text-gray-500 mt-1">Ziel-URL: {targetUrls[key]}</div>
                       )}
                     </div>
                     <div className="flex items-center gap-3">

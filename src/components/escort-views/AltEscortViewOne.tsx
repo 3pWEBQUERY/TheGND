@@ -46,7 +46,7 @@ export default function AltEscortViewOne(props: {
       <MinimalistNavigation />
       {/* Hero */}
       <section className="relative">
-        <div className="h-64 md:h-80 relative">
+        <div className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">
           <img src={image || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0">

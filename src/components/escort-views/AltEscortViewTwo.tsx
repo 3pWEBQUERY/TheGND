@@ -44,7 +44,7 @@ export default function AltEscortViewTwo(props: {
 
       {/* Wide Hero with Info Overlap */}
       <section className="relative">
-        <div className="h-80 md:h-96 relative">
+        <div className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">
           <img src={image || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>

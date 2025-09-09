@@ -19,6 +19,8 @@ import { SiOnlyfans } from 'react-icons/si'
 import RatingDonut from '@/components/RatingDonut'
 import type React from 'react'
 import ProfileComments from '@/components/ProfileComments'
+import AltEscortViewOne from '@/components/escort-views/AltEscortViewOne'
+import AltEscortViewTwo from '@/components/escort-views/AltEscortViewTwo'
 
 export const dynamic = 'force-dynamic'
 
@@ -187,6 +189,7 @@ async function getEscort(id: string) {
 
   return {
     id: user.id,
+    profileView: profile?.profileView ?? 'STANDARD',
     name: profile?.displayName ?? null,
     slogan: profile?.slogan ?? null,
     city: profile?.city ?? null,
@@ -251,8 +254,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-export default async function EscortProfilePage({ params }: { params: Promise<{ id: string; slug: string }> }) {
+export default async function EscortProfilePage({ params, searchParams }: { params: Promise<{ id: string; slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id, slug } = await params
+  const sp = await searchParams
   const data = await getEscort(id)
   // Redirect to canonical slug if mismatch
   if (data?.name) {
@@ -370,6 +374,23 @@ export default async function EscortProfilePage({ params }: { params: Promise<{ 
       `
       hasApprovedVerification = !!rows?.[0]?.exists
     } catch {}
+  }
+
+  // Determine selected view, allowing owner preview override via `?view=` or `?previewView=`
+  let selectedView = (data as any)?.profileView || 'STANDARD'
+  const candidate = (typeof sp?.view === 'string' ? sp.view : Array.isArray(sp?.view) ? sp?.view?.[0] : undefined)
+    || (typeof sp?.previewView === 'string' ? sp.previewView : Array.isArray(sp?.previewView) ? sp?.previewView?.[0] : undefined)
+  if (candidate && session?.user?.id === data.id && ['STANDARD', 'ALT1', 'ALT2'].includes(candidate)) {
+    selectedView = candidate
+  }
+
+  const sharedProps = { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification }
+
+  if (selectedView === 'ALT1') {
+    return <AltEscortViewOne {...sharedProps} />
+  }
+  if (selectedView === 'ALT2') {
+    return <AltEscortViewTwo {...sharedProps} />
   }
 
   return (

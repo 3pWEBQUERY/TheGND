@@ -81,6 +81,13 @@ enum NotificationPreference {
   NONE
 }
 
+// Profile View selection for Escorts
+enum ProfileView {
+  STANDARD
+  ALT1
+  ALT2
+}
+
 // Membership & Add-ons
 enum MembershipPlanKey {
   BASIS
@@ -207,6 +214,7 @@ model Profile {
   // Privacy & Notifications
   visibility             ProfileVisibility       @default(PUBLIC)
   notificationPreference NotificationPreference  @default(ALL)
+  profileView            ProfileView             @default(STANDARD)
   
   // Structured geolocation fields
   latitude    Float?

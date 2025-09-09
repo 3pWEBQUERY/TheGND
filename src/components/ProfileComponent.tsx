@@ -83,6 +83,9 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null)
   const [showFullDesc, setShowFullDesc] = useState(false)
   const [settingAvatarUrl, setSettingAvatarUrl] = useState<string | null>(null)
+  const [selectedView, setSelectedView] = useState<'STANDARD' | 'ALT1' | 'ALT2' | null>(null)
+  const [savingView, setSavingView] = useState(false)
+  const [savedViewAt, setSavedViewAt] = useState<number | null>(null)
 
   const isOwnProfile = !userId || userId === session?.user?.id
 
@@ -135,6 +138,12 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
       if (response.ok) {
         const data = await response.json()
         setProfileData(data)
+        const pv = data?.user?.profile?.profileView as any
+        if (pv === 'STANDARD' || pv === 'ALT1' || pv === 'ALT2') {
+          setSelectedView(pv)
+        } else {
+          setSelectedView('STANDARD')
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -311,6 +320,37 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         {translateTokenDE(String(x))}
       </span>
     ))
+  }
+
+  // Helper to build slug for preview links
+  const slugify = (input: string): string => {
+    return (input || '')
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '')
+  }
+
+  const handleSaveProfileView = async () => {
+    if (!selectedView) return
+    try {
+      setSavingView(true)
+      const resp = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileData: { profileView: selectedView } }),
+      })
+      if (!resp.ok) {
+        console.error('Fehler beim Speichern der Profilansicht')
+        return
+      }
+      setSavedViewAt(Date.now())
+    } catch (e) {
+      console.error('Profilansicht speichern fehlgeschlagen:', e)
+    } finally {
+      setSavingView(false)
+    }
   }
   // Medien (Bilder/Videos) aus Profile.media und Profile.gallery vereinheitlichen
   const mediaItems = (() => {
@@ -598,6 +638,55 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         </div>
       </div>
       
+      {/* Escort View Selection (owner only) */}
+      {isOwnProfile && userType === 'ESCORT' && (
+        <div className="bg-white border border-gray-100 rounded-none">
+          <div className="p-4 sm:p-8">
+            <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-1">PROFILANSICHT</h3>
+            <p className="text-sm text-gray-600 mb-4">Wähle eine von drei Ansichten für dein öffentliches Escort-Profil aus. Die Auswahl wird gespeichert und auf deiner Profilseite verwendet.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(['STANDARD','ALT1','ALT2'] as const).map((key) => (
+                <label key={key} className={`border ${selectedView === key ? 'border-pink-500' : 'border-gray-200'} p-4 cursor-pointer flex items-center gap-3`}>
+                  <input
+                    type="radio"
+                    name="profile-view"
+                    className="accent-pink-500"
+                    checked={selectedView === key}
+                    onChange={() => setSelectedView(key)}
+                  />
+                  <div>
+                    <div className="text-sm font-light tracking-widest text-gray-800">{key === 'STANDARD' ? 'STANDARD' : key === 'ALT1' ? 'ALTERNATIVE 1' : 'ALTERNATIVE 2'}</div>
+                    <div className="text-xs text-gray-500">{key === 'STANDARD' ? 'Aktuelle Standard-Ansicht' : key === 'ALT1' ? 'Kompakte Seitenleiste + Tabs' : 'Großes Hero + Sektionen'}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button onClick={handleSaveProfileView} disabled={!selectedView || savingView} className={`px-5 py-2 text-xs tracking-widest uppercase ${savingView ? 'bg-pink-400' : 'bg-pink-500 hover:bg-pink-600'} text-white`}>
+                {savingView ? 'SPEICHERN…' : 'AUSWAHL SPEICHERN'}
+              </button>
+              {savedViewAt && (
+                <span className="text-xs text-emerald-600">Gespeichert</span>
+              )}
+              {/* Preview links */}
+              <div className="text-xs text-gray-600">
+                Vorschau: {(['STANDARD','ALT1','ALT2'] as const).map((key, i) => (
+                  <a
+                    key={key}
+                    href={`/escorts/${user.id}/${slugify(profile?.displayName || user.email)}?previewView=${key}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-pink-600 ml-2"
+                  >
+                    {key}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Profile Tabs */}
       <div className="bg-white border border-gray-100 rounded-none">
         <div className="border-b border-gray-100 overflow-x-auto no-scrollbar">

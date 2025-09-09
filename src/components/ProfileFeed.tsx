@@ -35,6 +35,75 @@ type Props = {
   posts: ProfileFeedPost[]
 }
 
+// Variants for profile view schematic
+export type ProfileViewVariant = 'STANDARD' | 'ALT1' | 'ALT2'
+
+// A small, image-free schematic/thumbnail to preview the page layout for a profile view.
+// This is purely illustrative (boxes/lines), no real images are used.
+export function ProfileViewPreview({ variant = 'STANDARD' }: { variant?: ProfileViewVariant }) {
+  return (
+    <div className="w-full">
+      <div className="text-xs font-light tracking-widest text-gray-600 mb-2">PROFILANSICHT • {variant}</div>
+      <div className="relative w-full aspect-[16/9] bg-white border border-gray-200 overflow-hidden">
+        {/* HERO / HEADER */}
+        <div className={
+          variant === 'ALT2'
+            ? 'absolute inset-x-0 top-0 h-[38%] bg-gradient-to-b from-gray-300 to-gray-200'
+            : 'absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-gray-300 to-gray-200'
+        } />
+
+        {/* NAME + SUBTEXT placeholder (center or left depending on variant) */}
+        {variant !== 'ALT1' ? (
+          <div className="absolute top-[12%] left-1/2 -translate-x-1/2 text-center">
+            <div className="h-4 w-40 bg-white/70" />
+            <div className="mt-2 h-2 w-24 bg-white/60" />
+          </div>
+        ) : (
+          <div className="absolute top-[12%] left-6">
+            <div className="h-4 w-32 bg-white/70" />
+            <div className="mt-2 h-2 w-20 bg-white/60" />
+          </div>
+        )}
+
+        {/* BODY LAYOUT */}
+        {variant === 'ALT1' ? (
+          // ALT1: Sidebar card + tabs/content on the right
+          <>
+            <div className="absolute left-6 top-[32%] w-40 h-48 bg-gray-50 border border-gray-200 shadow-sm" />
+            <div className="absolute left-6 top-[32%] translate-x-44 w-1/2 h-6 bg-gray-100 border border-gray-200" />
+            <div className="absolute left-[calc(1.5rem+10rem)] top-[40%] right-6 grid grid-rows-3 gap-2">
+              <div className="h-20 bg-gray-50 border border-gray-200" />
+              <div className="h-20 bg-gray-50 border border-gray-200" />
+              <div className="h-20 bg-gray-50 border border-gray-200" />
+            </div>
+          </>
+        ) : variant === 'ALT2' ? (
+          // ALT2: Wide hero with info overlap + sections below
+          <>
+            <div className="absolute left-6 right-6 top-[34%] bg-white/90 border border-gray-200 h-20 shadow-sm" />
+            <div className="absolute left-6 right-6 top-[52%] grid grid-cols-3 gap-2">
+              <div className="h-24 bg-gray-50 border border-gray-200" />
+              <div className="h-24 bg-gray-50 border border-gray-200" />
+              <div className="h-24 bg-gray-50 border border-gray-200" />
+            </div>
+            <div className="absolute left-6 right-6 top-[72%] h-24 bg-gray-50 border border-gray-200" />
+          </>
+        ) : (
+          // STANDARD: Content stack with hero, profile block, tabs
+          <>
+            <div className="absolute left-6 right-6 top-[30%] h-20 bg-white/90 border border-gray-200 shadow-sm" />
+            <div className="absolute left-6 right-6 top-[48%] h-6 bg-gray-100 border border-gray-200" />
+            <div className="absolute left-6 right-6 top-[56%] grid grid-cols-2 gap-2">
+              <div className="h-24 bg-gray-50 border border-gray-200" />
+              <div className="h-24 bg-gray-50 border border-gray-200" />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function normalize(url?: string | null): string | undefined {
   if (!url) return undefined
   const t = url.trim()

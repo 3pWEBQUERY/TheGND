@@ -23,6 +23,7 @@ import { getUserTypeDisplayName, getGenderDisplayName, formatTimeAgo } from '@/l
 import { UserType, Gender } from '@prisma/client'
 import { formatLocation } from '@/lib/utils'
 import { COUNTRIES_DE } from '@/data/countries.de'
+import { ProfileViewPreview } from '@/components/ProfileFeed'
 
 interface ProfileData {
   user: {
@@ -646,17 +647,20 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
             <p className="text-sm text-gray-600 mb-4">Wähle eine von drei Ansichten für dein öffentliches Escort-Profil aus. Die Auswahl wird gespeichert und auf deiner Profilseite verwendet.</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {(['STANDARD','ALT1','ALT2'] as const).map((key) => (
-                <label key={key} className={`border ${selectedView === key ? 'border-pink-500' : 'border-gray-200'} p-4 cursor-pointer flex items-center gap-3`}>
-                  <input
-                    type="radio"
-                    name="profile-view"
-                    className="accent-pink-500"
-                    checked={selectedView === key}
-                    onChange={() => setSelectedView(key)}
-                  />
-                  <div>
-                    <div className="text-sm font-light tracking-widest text-gray-800">{key === 'STANDARD' ? 'STANDARD' : key === 'ALT1' ? 'ALTERNATIVE 1' : 'ALTERNATIVE 2'}</div>
-                    <div className="text-xs text-gray-500">{key === 'STANDARD' ? 'Aktuelle Standard-Ansicht' : key === 'ALT1' ? 'Kompakte Seitenleiste + Tabs' : 'Großes Hero + Sektionen'}</div>
+                <label key={key} className={`border ${selectedView === key ? 'border-pink-500' : 'border-gray-200'} p-4 cursor-pointer flex flex-col gap-3`}>
+                  <ProfileViewPreview variant={key} />
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="profile-view"
+                      className="accent-pink-500"
+                      checked={selectedView === key}
+                      onChange={() => setSelectedView(key)}
+                    />
+                    <div>
+                      <div className="text-sm font-light tracking-widest text-gray-800">{key === 'STANDARD' ? 'STANDARD' : key === 'ALT1' ? 'ALTERNATIVE 1' : 'ALTERNATIVE 2'}</div>
+                      <div className="text-xs text-gray-500">{key === 'STANDARD' ? 'Aktuelle Standard-Ansicht' : key === 'ALT1' ? 'Kompakte Seitenleiste + Tabs' : 'Großes Hero + Sektionen'}</div>
+                    </div>
                   </div>
                 </label>
               ))}
@@ -668,6 +672,15 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
               {savedViewAt && (
                 <span className="text-xs text-emerald-600">Gespeichert</span>
               )}
+            </div>
+
+            {/* Selected View Large Preview */}
+            <div className="mt-6">
+              <div className="text-xs font-light tracking-widest text-gray-600 mb-2">AUSGEWÄHLTE ANSICHT</div>
+              <ProfileViewPreview variant={(selectedView as any) || 'STANDARD'} />
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               {/* Preview links */}
               <div className="text-xs text-gray-600">
                 Vorschau: {(['STANDARD','ALT1','ALT2'] as const).map((key, i) => (

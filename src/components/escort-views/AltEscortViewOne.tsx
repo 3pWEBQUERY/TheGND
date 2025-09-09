@@ -74,8 +74,8 @@ export default function AltEscortViewOne(props: {
       {/* Profile and Content */}
       <section className="relative">
         <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Profile Card */}
-          <aside className="lg:col-span-1 bg-white border border-gray-200 p-6 space-y-4">
+          {/* Left: Profile Card (sticky on desktop) */}
+          <aside className="lg:col-span-1 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] overflow-auto bg-white border border-gray-200 p-6 space-y-4">
             <div className="w-full aspect-[3/4] bg-gray-100 overflow-hidden">
               <img src={image || '/escort.png'} alt={name ?? ''} className="w-full h-full object-cover" />
             </div>

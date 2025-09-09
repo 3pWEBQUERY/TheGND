@@ -33,6 +33,8 @@ export default function MarketingPage() {
 
   const [bookingState, setBookingState] = useState<{ type: 'idle' | 'success' | 'error'; message?: string }>({ type: 'idle' })
   const [loading, setLoading] = useState(false)
+  // Optional Ziel-URL pro Placement (aktuell relevant: home_banner)
+  const [targetUrls, setTargetUrls] = useState<Partial<Record<PlacementKey, string>>>({})
 
   const durationLabel = useMemo(() => (d: Duration) => {
     if (d === 30) return '1 Monat'
@@ -47,12 +49,35 @@ export default function MarketingPage() {
     } catch {}
   }, [])
 
+  // Load saved target URLs
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('marketingTargetUrl')
+      if (raw) {
+        const obj = JSON.parse(raw)
+        if (!obj?.home_banner) obj.home_banner = 'https://'
+        setTargetUrls(obj)
+      } else {
+        // default prefill for home_banner
+        setTargetUrls((s) => ({ ...s, home_banner: s.home_banner ?? 'https://' }))
+      }
+    } catch {}
+  }, [])
+
   useEffect(() => {
     try {
       if (cart && Object.keys(cart).length > 0) localStorage.setItem('marketingCart', JSON.stringify(cart))
       else localStorage.removeItem('marketingCart')
     } catch {}
   }, [cart])
+
+  // Persist target URLs
+  useEffect(() => {
+    try {
+      if (targetUrls && Object.keys(targetUrls).length > 0) localStorage.setItem('marketingTargetUrl', JSON.stringify(targetUrls))
+      else localStorage.removeItem('marketingTargetUrl')
+    } catch {}
+  }, [targetUrls])
 
   const handleBook = async () => {
     const cartItems = Object.entries(cart) as [PlacementKey, Duration][]
@@ -176,7 +201,20 @@ export default function MarketingPage() {
 
                 {/* Controls */}
                 <div className="mt-6 flex items-end justify-between gap-6 flex-wrap">
-                  <div>
+                  <div className="flex-1 min-w-52">
+                    {p.key === 'home_banner' && (
+                      <div className="mb-4">
+                        <span className="text-xs font-light tracking-widest text-gray-800 uppercase">Ziel-URL</span>
+                        <input
+                          type="url"
+                          placeholder="https://deine-zielseite.tld/"
+                          value={(targetUrls['home_banner'] ?? 'https://') as string}
+                          onChange={(e) => setTargetUrls((s) => ({ ...s, home_banner: e.target.value }))}
+                          className="mt-2 w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 text-sm font-light bg-transparent focus:outline-none focus:ring-0 focus:border-pink-500"
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500">Wird beim gesponserten Story-Banner verlinkt. Kann später unter „Meine Buchungen“ angepasst werden.</p>
+                      </div>
+                    )}
                     <span className="text-xs font-light tracking-widest text-gray-800 uppercase">DAUER</span>
                     <div className="mt-2">
                       <Select
@@ -264,6 +302,9 @@ export default function MarketingPage() {
                         <span className="uppercase tracking-widest text-gray-900">{p.title}</span>
                       </div>
                       <div className="text-xs text-gray-600">{durationLabel(duration)} • {p.dims}</div>
+                      {key === 'home_banner' && (targetUrls['home_banner']?.trim()) && (
+                        <div className="text-[11px] text-gray-500 mt-1">Ziel-URL: {targetUrls['home_banner']}</div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-gray-900">{formatCHF(price)}</span>

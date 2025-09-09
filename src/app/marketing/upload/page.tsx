@@ -76,10 +76,19 @@ export default function MarketingUploadPage() {
     setSubmitting(true)
     setSubmitMessage({ type: 'idle' })
     try {
+      // Load optional target URLs saved from marketing selection page
+      let savedTargets: Partial<Record<PlacementKey, string>> = {}
+      try {
+        const raw = localStorage.getItem('marketingTargetUrl')
+        if (raw) savedTargets = JSON.parse(raw)
+      } catch {}
+
       const items = (Object.entries(cart) as [PlacementKey, Duration][])?.map(([key, duration]) => ({
         key,
         duration,
         assets: uploads[key] || [],
+        // Include optional targetUrl (currently relevant for home_banner)
+        targetUrl: savedTargets[key],
       }))
       const res = await fetch('/api/marketing/book', {
         method: 'POST',

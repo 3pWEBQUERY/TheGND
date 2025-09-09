@@ -116,6 +116,8 @@ export default function ProfileFeed({ posts }: Props) {
   const { data: session } = useSession()
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [localPosts, setLocalPosts] = useState<ProfileFeedPost[]>(posts || [])
+  // Sponsored marketing assets for FEED – SPONSORED POST
+  const [sponsored, setSponsored] = useState<Array<{ id: string; url: string; targetUrl?: string | null }>>([])
 
   // Share menu state
   const [shareMenuFor, setShareMenuFor] = useState<string | null>(null)
@@ -131,6 +133,22 @@ export default function ProfileFeed({ posts }: Props) {
   useEffect(() => {
     setLocalPosts(posts || [])
   }, [posts])
+
+  // Load active SPONSORED_POST assets (limit a few to rotate)
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch('/api/marketing/active?placement=SPONSORED_POST&limit=5', { cache: 'no-store' })
+        if (!res.ok) return
+        const data: { assets?: { id: string; url: string; targetUrl?: string | null }[] } = await res.json()
+        if (!cancelled) setSponsored(Array.isArray(data.assets) ? data.assets : [])
+      } catch {}
+    }
+    load()
+    const id = window.setInterval(load, 60000)
+    return () => { cancelled = true; window.clearInterval(id) }
+  }, [])
 
   const requireAuth = (action: () => void) => {
     if (!session?.user?.id) {
@@ -223,9 +241,10 @@ export default function ProfileFeed({ posts }: Props) {
   return (
     <div className="space-y-8" onClickCapture={() => setShareMenuFor(null)}>
       {localPosts && localPosts.length > 0 ? (
-        localPosts.map((post) => {
+        localPosts.map((post, idx) => {
           const displayName = post.author.profile?.displayName || post.author.email
           return (
+            <>
             <div key={post.id} id={`post-${post.id}`} className="bg-white border border-gray-100 rounded-none">
               <div className="p-4 sm:p-8">
                 {/* Header */}
@@ -399,6 +418,37 @@ export default function ProfileFeed({ posts }: Props) {
                 {/* Thread wird jetzt im Modal geöffnet */}
               </div>
             </div>
+            {/* Sponsored insertion after each 5 posts (positions 5,10,15,...) */}
+            {((idx + 1) % 5 === 0 && sponsored.length > 0) ? (
+              <div key={`sponsored-${idx}`} className="bg-white border border-gray-100 rounded-none">
+                <div className="p-4 sm:p-8">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-[10px] uppercase tracking-widest text-gray-500">GESCHALTETE ANZEIGE</div>
+                    <div className="text-[10px] uppercase tracking-widest text-gray-400">Sponsored</div>
+                  </div>
+                  <div className="relative">
+                    {(() => {
+                      const asset = sponsored[Math.floor(idx / 5) % sponsored.length]
+                      const img = (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={asset.url}
+                          alt="Sponsored Post"
+                          className="w-full h-auto object-cover"
+                          loading="lazy"
+                        />
+                      )
+                      return asset.targetUrl ? (
+                        <a href={asset.targetUrl} target="_blank" rel="noopener noreferrer" className="block group">
+                          {img}
+                        </a>
+                      ) : img
+                    })()}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            </>
           )
         })
       ) : (

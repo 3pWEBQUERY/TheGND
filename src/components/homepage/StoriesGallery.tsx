@@ -60,6 +60,9 @@ export default function StoriesGallery() {
   const touchStartAt = useRef<number | null>(null)
   // Seen timestamps by authorId
   const [seenByAuthor, setSeenByAuthor] = useState<Record<string, number>>({})
+  // Sponsored marketing asset (HOME_BANNER)
+  const [sponsoredUrl, setSponsoredUrl] = useState<string | null>(null)
+  const [sponsoredTargetUrl, setSponsoredTargetUrl] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -77,6 +80,29 @@ export default function StoriesGallery() {
     return () => {
       active = false
     }
+  }, [])
+
+  // Load active approved marketing asset for HOME_BANNER
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch('/api/marketing/active?placement=HOME_BANNER&limit=1', { cache: 'no-store' })
+        if (!res.ok) return
+        const data: { assets: { url: string; targetUrl?: string | null }[] } = await res.json()
+        if (!cancelled) {
+          setSponsoredUrl(data.assets?.[0]?.url || null)
+          setSponsoredTargetUrl(data.assets?.[0]?.targetUrl ?? null)
+        }
+      } catch {
+        if (!cancelled) {
+          setSponsoredUrl(null)
+          setSponsoredTargetUrl(null)
+        }
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   // Load seen timestamps from localStorage when stories load
@@ -109,6 +135,33 @@ export default function StoriesGallery() {
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onVis)
     const id = window.setInterval(revalidate, 60000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [])
+
+  // Revalidate marketing asset periodically and on focus as well (every 60s)
+  useEffect(() => {
+    let cancelled = false
+    const reload = async () => {
+      try {
+        const res = await fetch('/api/marketing/active?placement=HOME_BANNER&limit=1', { cache: 'no-store' })
+        if (!res.ok) return
+        const data: { assets: { url: string; targetUrl?: string | null }[] } = await res.json()
+        if (!cancelled) {
+          setSponsoredUrl(data.assets?.[0]?.url || null)
+          setSponsoredTargetUrl(data.assets?.[0]?.targetUrl ?? null)
+        }
+      } catch {}
+    }
+    const onFocus = () => reload()
+    const onVis = () => { if (!document.hidden) reload() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVis)
+    const id = window.setInterval(reload, 60000)
     return () => {
       cancelled = true
       window.clearInterval(id)
@@ -394,6 +447,34 @@ export default function StoriesGallery() {
           <div className="text-sm text-red-600">Fehler beim Laden der Stories: {error}</div>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          {/* Sponsored HOME_BANNER tile (if any) */}
+          {sponsoredUrl && (
+            <div
+              key="sponsored"
+              className="aspect-[3/4] group overflow-hidden relative ring-2 ring-[var(--brand-pink)] bg-gray-200"
+              title="Sponsored – Story Banner"
+              aria-label="Sponsored – Story Banner"
+            >
+              {/* Use a plain <img> because the CDN uses dynamic subdomains (e.g., *.ufs.sh) */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={sponsoredUrl}
+                alt="Sponsored Story Banner"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="eager"
+              />
+              <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase tracking-widest px-2 py-1">Sponsored</div>
+              {sponsoredTargetUrl && (
+                <a
+                  href={sponsoredTargetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute inset-0"
+                  aria-label="Gesponsertes Banner öffnen"
+                />
+              )}
+            </div>
+          )}
           {((groupedGridItems ?? Array.from({ length: 7 })) as any[]).map((story, idx) => {
             if (!stories) {
               return (

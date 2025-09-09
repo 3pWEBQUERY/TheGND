@@ -635,6 +635,7 @@ model MarketingAsset {
   orderItemId  String
   orderItem    MarketingOrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
   url          String
+  targetUrl    String?
   mimeType     String?
   width        Int?
   height       Int?

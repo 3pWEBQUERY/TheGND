@@ -680,22 +680,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
               <ProfileViewPreview variant={(selectedView as any) || 'STANDARD'} />
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              {/* Preview links */}
-              <div className="text-xs text-gray-600">
-                Vorschau: {(['STANDARD','ALT1','ALT2'] as const).map((key, i) => (
-                  <a
-                    key={key}
-                    href={`/escorts/${user.id}/${slugify(profile?.displayName || user.email)}?previewView=${key}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-pink-600 ml-2"
-                  >
-                    {key}
-                  </a>
-                ))}
-              </div>
-            </div>
+            {/* Removed manual preview links */}
           </div>
         </div>
       )}

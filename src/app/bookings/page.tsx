@@ -13,6 +13,8 @@ export default function BookingsPage() {
   const [addons, setAddons] = useState<any[]>([])
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
   const [marketingOrders, setMarketingOrders] = useState<any[]>([])
+  const [urlEdits, setUrlEdits] = useState<Record<string, string>>({})
+  const [urlSaveState, setUrlSaveState] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({})
 
   const fetchData = async () => {
     try {
@@ -43,6 +45,47 @@ export default function BookingsPage() {
 
   const currency = (cents?: number) => typeof cents === 'number' ? (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) : '-'
   const currencyCHF = (cents?: number) => typeof cents === 'number' ? (cents / 100).toLocaleString('de-CH', { style: 'currency', currency: 'CHF' }) : '-'
+
+  const isValidUrl = (u: string) => {
+    try {
+      const url = new URL(u)
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
+  const saveTargetUrl = async (assetId: string) => {
+    const value = (urlEdits[assetId] || '').trim()
+    if (!isValidUrl(value)) {
+      setUrlSaveState((s) => ({ ...s, [assetId]: 'error' }))
+      setTimeout(() => setUrlSaveState((s) => ({ ...s, [assetId]: 'idle' })), 2000)
+      return
+    }
+    try {
+      setUrlSaveState((s) => ({ ...s, [assetId]: 'saving' }))
+      const res = await fetch(`/api/marketing/assets/${assetId}/target`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUrl: value })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Fehler beim Speichern')
+      // Update local state
+      setMarketingOrders((orders) => orders.map((o) => ({
+        ...o,
+        items: o.items?.map((it: any) => ({
+          ...it,
+          assets: it.assets?.map((a: any) => a.id === assetId ? { ...a, targetUrl: value } : a)
+        }))
+      })))
+      setUrlSaveState((s) => ({ ...s, [assetId]: 'saved' }))
+      setTimeout(() => setUrlSaveState((s) => ({ ...s, [assetId]: 'idle' })), 1500)
+    } catch (e) {
+      setUrlSaveState((s) => ({ ...s, [assetId]: 'error' }))
+      setTimeout(() => setUrlSaveState((s) => ({ ...s, [assetId]: 'idle' })), 2000)
+    }
+  }
 
   const doAction = async (action: 'pause_membership' | 'resume_membership' | 'cancel_membership' | 'cancel_addon', id: string) => {
     try {
@@ -179,19 +222,80 @@ export default function BookingsPage() {
                       </div>
                       <div className="p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {o.items?.map((it: any) => (
-                            <div key={it.id} className="border border-gray-200">
-                              <div className="px-3 py-2 text-xs uppercase tracking-widest text-gray-600 border-b border-gray-100">{it.placementKey.replace(/_/g, ' ')}</div>
+                          {o.items?.map((it: any) => {
+                            const labelFor = (k: string) => {
+                              switch (k) {
+                                case 'HOME_BANNER': return 'Startseite – Storie Banner'
+                                case 'HOME_TILE': return 'Startseite – Featured Tile'
+                                case 'RESULTS_TOP': return 'Suche – Top Banner'
+                                case 'SIDEBAR': return 'Seitenleiste – Medium Rectangle'
+                                case 'SPONSORED_POST': return 'Feed – Sponsored Post'
+                                default: return k.replace(/_/g, ' ')
+                              }
+                            }
+                            const statuses: string[] = Array.isArray(it.assets) ? it.assets.map((a: any) => a.status) : []
+                            let itemStatus: 'APPROVED' | 'PENDING' | 'REJECTED' | null = null
+                            if (statuses.includes('APPROVED')) itemStatus = 'APPROVED'
+                            else if (statuses.includes('PENDING')) itemStatus = 'PENDING'
+                            else if (statuses.length > 0 && statuses.every((s) => s === 'REJECTED')) itemStatus = 'REJECTED'
+
+                            const statusClass = (s: string) => s === 'APPROVED'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : s === 'REJECTED'
+                                ? 'bg-rose-100 text-rose-700'
+                                : 'bg-amber-100 text-amber-800'
+
+                            return (
+                              <div key={it.id} className={`border border-gray-200 ${it.placementKey === 'HOME_BANNER' ? 'md:col-span-2 lg:col-span-3' : ''}`}>
+                                <div className="px-3 py-2 text-xs uppercase tracking-widest text-gray-600 border-b border-gray-100 flex items-center justify-between">
+                                  <span>{labelFor(it.placementKey)}</span>
+                                  {itemStatus && (
+                                    <span className={`text-[10px] px-2 py-0.5 ${statusClass(itemStatus)}`}>{itemStatus}</span>
+                                  )}
+                                </div>
                               <div className="p-3 text-sm">
                                 <div className="text-gray-700">Dauer: {it.durationDays} Tage</div>
                                 <div className="text-gray-700">Preis: {currencyCHF(it.priceCents)}</div>
+                                {/* Full-width Ziel-URL editor for HOME_BANNER */}
+                                {it.placementKey === 'HOME_BANNER' && Array.isArray(it.assets) && it.assets.length > 0 && (() => {
+                                  const target = it.assets.find((a: any) => a.status === 'APPROVED') || it.assets[0]
+                                  const edited = urlEdits[target.id]
+                                  const stored = (target.targetUrl ?? '').trim()
+                                  const val = typeof edited === 'string' ? edited : (stored || 'https://')
+                                  return (
+                                    <div className="mt-3 border border-gray-200 p-3 bg-white">
+                                      <label className="block text-[11px] text-gray-600 uppercase tracking-widest">Ziel-URL</label>
+                                      <input
+                                        type="url"
+                                        placeholder="https://deine-zielseite.tld/"
+                                        value={val}
+                                        onChange={(e) => setUrlEdits((s) => ({ ...s, [target.id]: e.target.value }))}
+                                        className="mt-2 w-full border border-gray-200 px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-0 focus:border-pink-500"
+                                      />
+                                      <div className="mt-2 flex items-center justify-between">
+                                        <span className="text-[11px] text-gray-500 truncate max-w-[70%]">{val || 'Keine URL gesetzt'}</span>
+                                        <button
+                                          onClick={() => saveTargetUrl(target.id)}
+                                          className={`text-[11px] uppercase tracking-widest px-3 py-2 border ${urlSaveState[target.id] === 'saving' ? 'opacity-60' : ''}`}
+                                          disabled={urlSaveState[target.id] === 'saving'}
+                                        >
+                                          {urlSaveState[target.id] === 'saving' ? 'Speichere…' : urlSaveState[target.id] === 'saved' ? 'Gespeichert' : 'Speichern'}
+                                        </button>
+                                      </div>
+                                      {urlSaveState[target.id] === 'error' && (
+                                        <div className="mt-1 text-[11px] text-rose-600">Ungültige URL oder Fehler beim Speichern.</div>
+                                      )}
+                                    </div>
+                                  )
+                                })()}
                                 {Array.isArray(it.assets) && it.assets.length > 0 ? (
                                   <div className="mt-2 grid grid-cols-3 gap-2">
                                     {it.assets.map((a: any) => (
                                       <div key={a.id} className="border border-gray-200 relative">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={a.url} alt="Asset" className="w-full h-20 object-cover" />
-                                        <span className={`absolute bottom-1 right-1 text-[10px] px-1 py-0.5 uppercase tracking-widest ${a.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : a.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'}`}>{a.status}</span>
+                                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="block group">
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img src={a.url} alt="Asset" className="w-full h-20 object-cover" loading="lazy" />
+                                        </a>
                                       </div>
                                     ))}
                                   </div>
@@ -200,7 +304,8 @@ export default function BookingsPage() {
                                 )}
                               </div>
                             </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       </div>
                     </li>

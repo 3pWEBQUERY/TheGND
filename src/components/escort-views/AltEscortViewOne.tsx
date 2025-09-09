@@ -1,6 +1,6 @@
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import Footer from '@/components/homepage/Footer'
-import GalleryGrid from '@/components/GalleryGrid'
+import SimpleSlider from '@/components/SimpleSlider'
 import Tabs from '@/components/Tabs'
 import ProfileFeed from '@/components/ProfileFeed'
 import ExpandableText from '@/components/ExpandableText'
@@ -132,18 +132,6 @@ export default function AltEscortViewOne(props: {
 
           {/* Right: Main Content */}
           <main className="lg:col-span-2 space-y-8">
-            {/* Media Gallery */}
-            <div className="bg-white border border-gray-200 p-6">
-              <h2 className="text-lg font-light tracking-widest text-gray-800">GALERIE</h2>
-              <div className="mt-4">
-                {images.length > 0 ? (
-                  <GalleryGrid images={images} altBase={name ?? ''} className="mt-2" />
-                ) : (
-                  <div className="text-sm text-gray-500">Keine Bilder vorhanden.</div>
-                )}
-              </div>
-            </div>
-
             {/* Tabs for Details/Services/Feed/Kommentare/Standort */}
             <div className="bg-white border border-gray-200 p-6">
               <Tabs
@@ -278,6 +266,14 @@ export default function AltEscortViewOne(props: {
                   }
                 ]}
               />
+            </div>
+
+            {/* Media Gallery (Slider, no auto-slide) */}
+            <div className="bg-white border border-gray-200 p-6">
+              <h2 className="text-lg font-light tracking-widest text-gray-800">GALERIE</h2>
+              <div className="mt-4">
+                <SimpleSlider images={images} altBase={name ?? ''} />
+              </div>
             </div>
           </main>
         </div>

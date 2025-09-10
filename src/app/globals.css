@@ -134,6 +134,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent accidental horizontal scroll from full-width overlays */
+    overflow-x: hidden;
   }
 }
 

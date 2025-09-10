@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const placement = (searchParams.get('placement') || 'HOME_BANNER') as any
     const limit = Math.max(1, Math.min(10, Number(searchParams.get('limit') || '1')))
+    const includeParam = (searchParams.get('include') || '').toLowerCase()
+    const includePending = includeParam.includes('pending')
 
     const now = new Date()
 
@@ -20,7 +22,7 @@ export async function GET(req: NextRequest) {
     // Time-window filter is applied in JS because it depends on durationDays.
     const assets = await prisma.marketingAsset.findMany({
       where: {
-        status: 'APPROVED',
+        status: includePending ? { in: ['APPROVED', 'PENDING'] as any } : ('APPROVED' as any),
         orderItem: {
           placementKey: placement,
           // Do not strictly depend on the order status to avoid hiding approved assets

@@ -15,19 +15,19 @@ export default function Footer() {
           </p>
           <div className="flex justify-center gap-6 mb-8">
             <Link
-              href="#"
+              href="/agb"
               className="text-xs md:text-sm font-light tracking-[0.25em] text-neutral-300 hover:text-pink-400 transition-colors underline-offset-4 hover:underline hover:decoration-pink-400"
             >
               AGB
             </Link>
             <Link
-              href="#"
+              href="/datenschutz"
               className="text-xs md:text-sm font-light tracking-[0.25em] text-neutral-300 hover:text-pink-400 transition-colors underline-offset-4 hover:underline hover:decoration-pink-400"
             >
               DATENSCHUTZ
             </Link>
             <Link
-              href="#"
+              href="/imprint"
               className="text-xs md:text-sm font-light tracking-[0.25em] text-neutral-300 hover:text-pink-400 transition-colors underline-offset-4 hover:underline hover:decoration-pink-400"
             >
               IMPRINT

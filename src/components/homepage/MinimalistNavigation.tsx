@@ -13,6 +13,17 @@ export default function MinimalistNavigation() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [discoverOpen, setDiscoverOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [navAd, setNavAd] = useState<{ url: string; targetUrl?: string | null } | null>(null)
+
+  const fetchNavAd = async () => {
+    try {
+      const res = await fetch('/api/marketing/active?placement=SIDEBAR&include=pending&limit=1', { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json().catch(() => ({}))
+      const asset = Array.isArray(data?.assets) ? data.assets[0] : null
+      if (asset) setNavAd({ url: asset.url, targetUrl: asset.targetUrl ?? null })
+    } catch {}
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -27,6 +38,11 @@ export default function MinimalistNavigation() {
     load()
     setMounted(true)
   }, [session?.user?.id])
+
+  // Load active NAV menu banner (uses SIDEBAR placement key in backend)
+  useEffect(() => {
+    fetchNavAd()
+  }, [])
 
   return (
     <nav className="absolute top-0 w-full z-50 bg-transparent">
@@ -91,8 +107,26 @@ export default function MinimalistNavigation() {
                           </Link>
                         </div>
                         {/* Ad banner placeholder below primary cards */}
-                        <div className="mt-3 border border-gray-200 bg-white h-[30rem] md:h-[40rem] flex items-center justify-center text-[10px] uppercase tracking-widest text-gray-500">
-                          Werbebanner
+                        <div className="mt-3 border border-gray-200 bg-white h-[30rem] md:h-[40rem] relative overflow-hidden">
+                          {navAd ? (
+                            navAd.targetUrl ? (
+                              <a href={navAd.targetUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 block group">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={navAd.url} alt="Navigation Menü Banner" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
+                              </a>
+                            ) : (
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={navAd.url} alt="Navigation Menü Banner" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
+                              </>
+                            )
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest text-gray-500">
+                              Werbebanner
+                            </div>
+                          )}
                         </div>
                       </div>
 

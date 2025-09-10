@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ungültige JSON-Daten' }, { status: 400 })
   }
 
-  const items: Array<{ key: string; duration: number; assets?: string[] }> = Array.isArray(body?.items) ? body.items : []
+  const items: Array<{ key: string; duration: number; assets?: string[]; targetUrl?: string }> = Array.isArray(body?.items) ? body.items : []
   if (items.length === 0) {
     return NextResponse.json({ error: 'Keine Artikel übergeben' }, { status: 400 })
   }
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     const urls = Array.isArray(it.assets) ? it.assets : []
     if (urls.length > 0) {
       await (prisma as any).marketingAsset.createMany({
-        data: urls.map((url) => ({ orderItemId: orderItem.id, url })),
+        data: urls.map((url) => ({ orderItemId: orderItem.id, url, targetUrl: typeof it.targetUrl === 'string' ? it.targetUrl : undefined })),
       })
     }
   }

@@ -21,7 +21,7 @@ const PLACEMENTS: Array<{
   { key: 'home_banner', title: 'Startseite – Storie Banner', dims: 'Empfehlung: 1080×1920px', desc: 'Vertikales Storie‑Banner.' },
   { key: 'home_tile', title: 'Startseite – Featured Tile', dims: 'Empfehlung: 800×800px', desc: 'Quadratische Kachel im Startseiten‑Grid.' },
   { key: 'results_top', title: 'Suche – Top Banner', dims: 'Empfehlung: 1200×300px', desc: 'Breites Banner über den Suchergebnissen.' },
-  { key: 'sidebar', title: 'Seitenleiste – Medium Rectangle', dims: 'Empfehlung: 300×600px', desc: 'Rechte Sidebar‑Fläche (hochformat).' },
+  { key: 'sidebar', title: 'Navigation – Menü Banner', dims: 'Empfehlung: 1200×2000px (Hochformat)', desc: 'Großer Banner im Navigations‑Mega‑Menü.' },
   { key: 'sponsored_post', title: 'Feed – Sponsored Post', dims: 'Empfehlung: Titel + Bild 1200×800px', desc: 'Native Einbettung in den Newsfeed.' },
 ]
 
@@ -35,7 +35,7 @@ export default function MarketingUploadPage() {
   const { startUpload, isUploading } = useUploadThing('adAssets')
   const [submitting, setSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<{ type: 'idle' | 'success' | 'error'; text?: string }>({ type: 'idle' })
-  // Ziel-URLs pro Placement (relevant: home_banner, sponsored_post)
+  // Ziel-URLs pro Placement (relevant: home_banner, sidebar (Navigation‑Banner), sponsored_post)
   const [targetUrls, setTargetUrls] = useState<Partial<Record<PlacementKey, string>>>({})
 
   const durationLabel = useMemo(() => (d: Duration) => {
@@ -58,12 +58,14 @@ export default function MarketingUploadPage() {
       if (raw) {
         const obj = JSON.parse(raw)
         if (!obj?.home_banner) obj.home_banner = 'https://'
+        if (!obj?.sidebar) obj.sidebar = 'https://'
         if (!obj?.sponsored_post) obj.sponsored_post = 'https://'
         setTargetUrls(obj)
       } else {
         setTargetUrls((s) => ({
           ...s,
           home_banner: s.home_banner ?? 'https://',
+          sidebar: s.sidebar ?? 'https://',
           sponsored_post: s.sponsored_post ?? 'https://',
         }))
       }
@@ -188,7 +190,7 @@ export default function MarketingUploadPage() {
                     </div>
 
                     {/* Ziel-URL Eingabe für relevante Placements */}
-                    {(key === 'home_banner' || key === 'sponsored_post') && (
+                    {(key === 'home_banner' || key === 'sidebar' || key === 'sponsored_post') && (
                       <div className="mt-4 border border-gray-200 p-4">
                         <label className="block text-[11px] text-gray-600 uppercase tracking-widest">Ziel-URL</label>
                         <input

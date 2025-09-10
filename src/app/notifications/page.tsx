@@ -118,7 +118,7 @@ export default function NotificationsPage() {
     <>
       <DashboardHeader session={session} activeTab="notifications" setActiveTab={() => {}} />
       <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-light tracking-widest text-gray-900">BENACHRICHTIGUNGEN</h1>
             <div className="w-24 h-px bg-pink-500 mt-3" />
@@ -126,11 +126,11 @@ export default function NotificationsPage() {
               Alle Aktivitäten auf einen Blick. Neue Benachrichtigungen sind hervorgehoben.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap mt-4 sm:mt-0">
             <button
               type="button"
               onClick={() => setUnreadOnly(v => !v)}
-              className={`text-xs uppercase tracking-widest px-3 py-2 border transition-colors ${
+              className={`whitespace-nowrap text-[11px] sm:text-xs uppercase tracking-wide sm:tracking-widest px-3 py-2 border rounded transition-colors ${
                 unreadOnly ? 'border-pink-500 text-pink-600 bg-pink-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
@@ -140,7 +140,7 @@ export default function NotificationsPage() {
               type="button"
               onClick={handleMarkAllRead}
               disabled={markAllBusy || unreadCount === 0}
-              className={`text-xs uppercase tracking-widest px-3 py-2 border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`whitespace-nowrap text-[11px] sm:text-xs uppercase tracking-wide sm:tracking-widest px-3 py-2 border rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 unreadCount > 0 ? 'border-gray-200 text-gray-700 hover:bg-gray-50' : 'border-gray-200 text-gray-400'
               }`}
             >

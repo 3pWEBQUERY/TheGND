@@ -210,14 +210,14 @@ export default function BookingsPage() {
                 <ul className="mt-4 space-y-3">
                   {marketingOrders.map((o) => (
                     <li key={o.id} className="border border-gray-200">
-                      <div className="px-4 py-3 bg-gray-50 flex items-center justify-between text-sm">
-                        <div>
+                      <div className="px-4 py-3 bg-gray-50 flex flex-wrap items-start sm:items-center sm:justify-between gap-x-3 text-sm">
+                        <div className="min-w-0">
                           <span className="text-gray-900">Bestellung</span> <span className="text-gray-500">#{o.id}</span>
-                          <span className="ml-3 text-xs text-gray-500">{new Date(o.createdAt).toLocaleString('de-CH')}</span>
+                          <span className="ml-2 sm:ml-3 text-xs text-gray-500">{new Date(o.createdAt).toLocaleString('de-CH')}</span>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right w-full sm:w-auto mt-1 sm:mt-0 sm:ml-auto">
                           <div className="text-gray-900 font-medium">{currencyCHF(o.totalCents)}</div>
-                          <div className="text-[11px] uppercase tracking-widest text-gray-500">{o.status}</div>
+                          <div className="text-[11px] uppercase tracking-wide sm:tracking-widest text-gray-500">{o.status}</div>
                         </div>
                       </div>
                       <div className="p-4">

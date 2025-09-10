@@ -321,13 +321,13 @@ export default function MembershipPage() {
     <>
       <DashboardHeader session={session} activeTab="membership" setActiveTab={() => {}} />
       <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
             <h1 className="text-2xl font-light tracking-widest text-gray-900">MITGLIEDSCHAFT</h1>
             <div className="w-24 h-px bg-pink-500 mt-3" />
           </div>
-          <Link href="/bookings" className="inline-block">
-            <Button className="bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-4 py-2 h-auto text-xs uppercase tracking-widest">MEINE BUCHUNGEN</Button>
+          <Link href="/bookings" className="inline-block w-full sm:w-auto">
+            <Button className="w-full sm:w-auto max-w-full whitespace-normal break-words bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-3 sm:px-4 py-2 h-auto text-[11px] sm:text-xs uppercase tracking-wide sm:tracking-widest leading-4">MEINE BUCHUNGEN</Button>
           </Link>
         </div>
         <p className="text-sm text-gray-600 mt-4">Mitgliedschaft abschließen und Zusätze buchen – alles an einem Ort.</p>

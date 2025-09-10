@@ -41,8 +41,8 @@ function UploadCard({
   const sizeText = file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : ''
 
   return (
-    <div className="flex gap-4 border border-gray-200 p-4" onDragOver={onDragOver} onDrop={onDrop}>
-      <div className="w-28 h-28 bg-gray-100 flex items-center justify-center text-xs text-gray-500 select-none overflow-hidden">
+    <div className="flex flex-col sm:flex-row gap-4 border border-gray-200 p-4" onDragOver={onDragOver} onDrop={onDrop}>
+      <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gray-100 flex items-center justify-center text-xs text-gray-500 select-none overflow-hidden">
         {previewUrl ? (
           accept.includes('video') && file?.type.startsWith('video') ? (
             <video src={previewUrl} className="w-full h-full object-cover" muted />
@@ -62,7 +62,7 @@ function UploadCard({
           {title} {required && <span className="text-red-600">*</span>}
         </div>
         {description && <div className="text-xs text-gray-600 mt-1 whitespace-pre-line">{description}</div>}
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
           <Button type="button" onClick={open} className="bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-2 text-xs uppercase rounded-none">
             Datei hochladen
           </Button>
@@ -74,7 +74,7 @@ function UploadCard({
               <button type="button" onClick={() => onFile(null)} className="ml-2 text-pink-600 hover:underline">Entfernen</button>
             </div>
           ) : (
-            <div className="text-xs text-gray-500">Ziehen & Ablegen oder erlaubte Typen: {accept}</div>
+            <div className="text-[11px] sm:text-xs text-gray-500 leading-snug whitespace-normal break-words min-w-0">Ziehen & Ablegen oder erlaubte Typen: {accept}</div>
           )}
         </div>
         {progress > 0 && (
@@ -184,11 +184,11 @@ export default function VerifyPage() {
   return (
     <>
       <DashboardHeader session={session} activeTab="settings" setActiveTab={() => {}} />
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <h1 className="text-2xl font-light tracking-widest text-gray-900">VERIFIZIEREN</h1>
         <div className="w-24 h-px bg-pink-500 mt-3" />
 
-        <div className="mt-6 border border-gray-200 p-6">
+        <div className="mt-6 border border-gray-200 p-4 sm:p-6">
           <h2 className="text-sm font-light tracking-widest text-gray-800 flex items-center gap-2">
             <span>{isEscort ? '18+ Altersverifizierung' : 'Identitätsverifizierung'}</span>
           </h2>

@@ -10,14 +10,14 @@ export const metadata: Metadata = {
 }
 
 const PRICES = {
-  membership: { basis: 19.99, plus: 39.99, premium: 69.99 },
-  dayAddon: { 1: 9.99, 3: 19.99, 7: 29.99 },
-  weekAddon: { 1: 29.99, 2: 49.99 },
-  monthAddon: { 1: 79.99, 2: 139.99 },
-  cityBoost: { 7: 24.99, 14: 39.99, 30: 59.99 },
+  membership: { basis: 24.9, plus: 49.9, premium: 89.9 },
+  dayAddon: { 1: 12.9, 3: 29.9, 7: 39.9 },
+  weekAddon: { 1: 39.9, 2: 69.9 },
+  monthAddon: { 1: 99, 2: 169 },
+  cityBoost: { 7: 29.9, 14: 49.9, 30: 79 },
 } as const
 
-const eur = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+const eur = (n: number) => n.toLocaleString('de-CH', { style: 'currency', currency: 'CHF' })
 
 export default function PreisePage() {
   // Inner tabs for ESCORTS (uses real pricing)
@@ -262,16 +262,678 @@ export default function PreisePage() {
     },
   ]
 
-  const Placeholder = ({ audience }: { audience: string }) => (
-    <div className="border border-gray-200 bg-white p-8 text-center">
-      <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">{audience}</h3>
-      <p className="mt-3 text-sm text-gray-600 max-w-2xl mx-auto">Preise und Pakete für {audience.toLowerCase()} werden aktuell finalisiert. Schau bald wieder vorbei oder kontaktiere uns für individuelle Konditionen.</p>
-      <div className="mt-6 flex items-center justify-center gap-3">
-        <Link href="/info" className="inline-flex items-center justify-center border border-gray-300 text-gray-700 hover:bg-pink-50/40 text-xs font-light tracking-widest px-6 py-3 uppercase rounded-none">Mehr erfahren</Link>
-        <Link href="/auth/signup" className="inline-flex items-center justify-center bg-pink-500 hover:bg-pink-600 text-white text-xs font-light tracking-widest px-6 py-3 uppercase rounded-none">Interesse bekunden</Link>
-      </div>
-    </div>
-  )
+  // Mitglieder (Visitors) Pricing
+  const PRICES_MEMBERS = {
+    membership: { basis: 0, plus: 7.9, premium: 14.9 },
+    dayAddon: { 1: 1.9, 3: 3.9, 7: 6.9 },
+    cityBoost: { 7: 2.9, 14: 4.9, 30: 7.9 },
+  } as const
+
+  const membersInnerTabs = [
+    {
+      id: 'mitgliedschaften',
+      label: 'Mitgliedschaften',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">MITGLIEDSCHAFTEN</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Wähle dein Level – vom kostenlosen Einstieg bis zu Premium-Vorteilen.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">BASIS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_MEMBERS.membership.basis)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Kostenlos starten. Entdecken, folgen, speichern.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Favoriten & Folgen</li>
+                <li>Standard-Feed</li>
+                <li>2 gespeicherte Suchen</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PLUS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_MEMBERS.membership.plus)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <span className="mt-2 inline-block px-2 py-1 text-[10px] uppercase tracking-widest border border-pink-300 text-pink-600">Beliebt</span>
+              <p className="mt-3 text-sm text-gray-600">Mehr Komfort & Personalisierung.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Werbefreie Ansicht</li>
+                <li>Erweiterte Filter</li>
+                <li>Unbegrenzte gespeicherte Suchen</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PREMIUM</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_MEMBERS.membership.premium)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Exklusive Inhalte & Prioritäten.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Early Access zu Stories</li>
+                <li>Profil-Badges</li>
+                <li>Priorisierte Support-Antwort</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'add-ons',
+      label: 'Add-ons',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">ADD-ONS</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Booste deine Sichtbarkeit als Mitglied.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Profil-Boost (Tage)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_MEMBERS.dayAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Dein Profil prominenter in Feeds & Listen.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Tag</td>
+                      <td className="px-4 py-2">{eur(PRICES_MEMBERS.dayAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">3 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_MEMBERS.dayAddon[3])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">7 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_MEMBERS.dayAddon[7])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">City-Boost</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_MEMBERS.cityBoost[7])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Mehr Sichtbarkeit in deiner Stadt.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">7 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_MEMBERS.cityBoost[7])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">14 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_MEMBERS.cityBoost[14])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">30 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_MEMBERS.cityBoost[30])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ]
+
+  // Agenturen Pricing
+  const PRICES_AGENCIES = {
+    membership: { basis: 79, plus: 129, premium: 199 },
+    dayAddon: { 1: 19, 3: 39, 7: 69 },
+    weekAddon: { 1: 99, 2: 179 },
+    monthAddon: { 1: 349, 2: 599 },
+    cityBoost: { 7: 49, 14: 89, 30: 149 },
+  } as const
+
+  const agenciesInnerTabs = [
+    {
+      id: 'mitgliedschaften',
+      label: 'Mitgliedschaften',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">MITGLIEDSCHAFTEN</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Skaliere deine Agentur – mehr Reichweite & Tools.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">BASIS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_AGENCIES.membership.basis)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Für kleine Agenturen.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Agentur-Profil</li>
+                <li>Bis zu 5 Escort-Listings</li>
+                <li>Standard-Support</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PLUS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_AGENCIES.membership.plus)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <span className="mt-2 inline-block px-2 py-1 text-[10px] uppercase tracking-widest border border-pink-300 text-pink-600">Empfohlen</span>
+              <p className="mt-3 text-sm text-gray-600">Mehr Slots & Tools.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Bis zu 15 Escort-Listings</li>
+                <li>Teamverwaltung</li>
+                <li>Erweiterte Statistiken</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PREMIUM</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_AGENCIES.membership.premium)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Maximale Kapazität & Priorität.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Unbegrenzte Escort-Listings</li>
+                <li>Priorisierter Support</li>
+                <li>Partner-Features</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'add-ons',
+      label: 'Add-ons',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">ADD-ONS</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Kampagnen & Platzierungen für maximale Sichtbarkeit.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Top-Listing (Tage)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_AGENCIES.dayAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Prominente Platzierung in Ergebnissen.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Tag</td>
+                      <td className="px-4 py-2">{eur(PRICES_AGENCIES.dayAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">3 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_AGENCIES.dayAddon[3])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">7 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_AGENCIES.dayAddon[7])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Top-Listing (Wochen)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_AGENCIES.weekAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Sichtbarkeit über längere Zeiträume.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Woche</td>
+                      <td className="px-4 py-2">{eur(PRICES_AGENCIES.weekAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">2 Wochen</td>
+                      <td className="px-4 py-2">{eur(PRICES_AGENCIES.weekAddon[2])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="border border-gray-200 bg-white p-6 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Kampagne (Monate)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_AGENCIES.monthAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Langfristige Kampagne mit maximaler Reichweite.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Monat</td>
+                      <td className="px-4 py-2">{eur(PRICES_AGENCIES.monthAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">2 Monate</td>
+                      <td className="px-4 py-2">{eur(PRICES_AGENCIES.monthAddon[2])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ]
+
+  // Clubs Pricing
+  const PRICES_CLUBS = {
+    membership: { basis: 59, plus: 99, premium: 159 },
+    dayAddon: { 1: 14.9, 3: 29.9, 7: 49.9 },
+    weekAddon: { 1: 79, 2: 129 },
+    cityBoost: { 7: 39, 14: 69, 30: 109 },
+  } as const
+
+  const clubsInnerTabs = [
+    {
+      id: 'mitgliedschaften',
+      label: 'Mitgliedschaften',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">MITGLIEDSCHAFTEN</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Präsentation deines Clubs mit mehr Reichweite.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">BASIS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_CLUBS.membership.basis)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Standard-Auftritt & Suche.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Club-Profil</li>
+                <li>Standard-Listing</li>
+                <li>Bis zu 10 Fotos</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PLUS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_CLUBS.membership.plus)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <span className="mt-2 inline-block px-2 py-1 text-[10px] uppercase tracking-widest border border-pink-300 text-pink-600">Beliebt</span>
+              <p className="mt-3 text-sm text-gray-600">Mehr Module & Reichweite.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Erweiterte Module</li>
+                <li>Priorisierung in Listen</li>
+                <li>Bis zu 20 Fotos</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PREMIUM</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_CLUBS.membership.premium)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Top-Placement & volle Features.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Top-Placement</li>
+                <li>Alle Module</li>
+                <li>Stories & Videos</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'add-ons',
+      label: 'Add-ons',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">ADD-ONS</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Zusätzliche Platzierungen für Events & Aktionen.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Top-Listing (Tage)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_CLUBS.dayAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Prominente Platzierung über Tage.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Tag</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.dayAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">3 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.dayAddon[3])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">7 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.dayAddon[7])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Top-Listing (Wochen)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_CLUBS.weekAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Stetige Sichtbarkeit über Wochen.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Woche</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.weekAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">2 Wochen</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.weekAddon[2])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="border border-gray-200 bg-white p-6 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">City-Boost</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_CLUBS.cityBoost[7])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Mehr Reichweite in deiner Stadt.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">7 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.cityBoost[7])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">14 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.cityBoost[14])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">30 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_CLUBS.cityBoost[30])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ]
+
+  // Studios Pricing
+  const PRICES_STUDIOS = {
+    membership: { basis: 49, plus: 89, premium: 139 },
+    dayAddon: { 1: 12.9, 3: 24.9, 7: 39.9 },
+    weekAddon: { 1: 69, 2: 109 },
+    cityBoost: { 7: 29.9, 14: 49.9, 30: 89 },
+  } as const
+
+  const studiosInnerTabs = [
+    {
+      id: 'mitgliedschaften',
+      label: 'Mitgliedschaften',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">MITGLIEDSCHAFTEN</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Optimiere deine Studio-Präsenz.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">BASIS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_STUDIOS.membership.basis)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Standard-Reichweite & Module.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Studio-Profil</li>
+                <li>Standard-Listing</li>
+                <li>Bis zu 10 Fotos</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PLUS</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_STUDIOS.membership.plus)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <span className="mt-2 inline-block px-2 py-1 text-[10px] uppercase tracking-widest border border-pink-300 text-pink-600">Beliebt</span>
+              <p className="mt-3 text-sm text-gray-600">Mehr Sichtbarkeit & Module.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Erweiterte Module</li>
+                <li>Priorisierung</li>
+                <li>Bis zu 20 Fotos</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 p-6 hover:border-pink-300 transition-colors">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">PREMIUM</h3>
+                <div className="text-right">
+                  <div className="text-4xl font-semibold text-gray-900">{eur(PRICES_STUDIOS.membership.premium)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">pro Monat</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600">Top-Placement & alle Features.</p>
+              <ul className="mt-4 text-sm text-gray-700 space-y-2 list-disc ml-5">
+                <li>Top-Placement</li>
+                <li>Alle Module</li>
+                <li>Stories & Videos</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'add-ons',
+      label: 'Add-ons',
+      content: (
+        <div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">ADD-ONS</h2>
+            <div className="mt-3 w-24 h-px bg-pink-500" />
+            <p className="mt-4 text-sm text-gray-600">Platzierungen & Local-Boosts.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Top-Listing (Tage)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_STUDIOS.dayAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Prominente Platzierung über Tage.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Tag</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.dayAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">3 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.dayAddon[3])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">7 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.dayAddon[7])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">Top-Listing (Wochen)</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_STUDIOS.weekAddon[1])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Stetige Sichtbarkeit über Wochen.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">1 Woche</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.weekAddon[1])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">2 Wochen</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.weekAddon[2])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="border border-gray-200 bg-white p-6 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium tracking-widest text-gray-900 uppercase">City-Boost</h3>
+                <span className="text-sm text-gray-600">ab {eur(PRICES_STUDIOS.cityBoost[7])}</span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Mehr Reichweite in deiner Stadt.</p>
+              <div className="mt-4 overflow-hidden border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="text-left font-medium px-4 py-2">Dauer</th>
+                      <th className="text-left font-medium px-4 py-2">Preis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-2">7 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.cityBoost[7])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">14 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.cityBoost[14])}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2">30 Tage</td>
+                      <td className="px-4 py-2">{eur(PRICES_STUDIOS.cityBoost[30])}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ]
 
   const audienceTabs = [
     { id: 'escorts', label: 'Escorts', content: <Tabs tabs={escortsInnerTabs} initialId="mitgliedschaften" /> },
@@ -279,52 +941,28 @@ export default function PreisePage() {
       id: 'mitglieder',
       label: 'Mitglieder',
       content: (
-        <Tabs
-          tabs={[
-            { id: 'mitgliedschaften', label: 'Mitgliedschaften', content: <Placeholder audience="Mitglieder" /> },
-            { id: 'add-ons', label: 'Add-ons', content: <Placeholder audience="Mitglieder" /> },
-          ]}
-          initialId="mitgliedschaften"
-        />
+        <Tabs tabs={membersInnerTabs} initialId="mitgliedschaften" />
       ),
     },
     {
       id: 'agenturen',
       label: 'Agenturen',
       content: (
-        <Tabs
-          tabs={[
-            { id: 'mitgliedschaften', label: 'Mitgliedschaften', content: <Placeholder audience="Agenturen" /> },
-            { id: 'add-ons', label: 'Add-ons', content: <Placeholder audience="Agenturen" /> },
-          ]}
-          initialId="mitgliedschaften"
-        />
+        <Tabs tabs={agenciesInnerTabs} initialId="mitgliedschaften" />
       ),
     },
     {
       id: 'clubs',
       label: 'Clubs',
       content: (
-        <Tabs
-          tabs={[
-            { id: 'mitgliedschaften', label: 'Mitgliedschaften', content: <Placeholder audience="Clubs" /> },
-            { id: 'add-ons', label: 'Add-ons', content: <Placeholder audience="Clubs" /> },
-          ]}
-          initialId="mitgliedschaften"
-        />
+        <Tabs tabs={clubsInnerTabs} initialId="mitgliedschaften" />
       ),
     },
     {
       id: 'studios',
       label: 'Studios',
       content: (
-        <Tabs
-          tabs={[
-            { id: 'mitgliedschaften', label: 'Mitgliedschaften', content: <Placeholder audience="Studios" /> },
-            { id: 'add-ons', label: 'Add-ons', content: <Placeholder audience="Studios" /> },
-          ]}
-          initialId="mitgliedschaften"
-        />
+        <Tabs tabs={studiosInnerTabs} initialId="mitgliedschaften" />
       ),
     },
   ]

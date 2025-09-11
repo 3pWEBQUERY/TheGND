@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import AuthProvider from "@/components/providers/auth-provider";
 import I18nProvider from "@/components/providers/i18n-provider";
@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   title: "GND - Escort Platform",
   description: "Premium Escort Platform mit sozialen Features",
   manifest: "/manifest.webmanifest",
-  themeColor: "#ffffff",
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -31,6 +30,10 @@ export const metadata: Metadata = {
       { rel: "android-chrome", url: "/android-chrome-512x512.png" },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({

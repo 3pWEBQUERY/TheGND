@@ -58,18 +58,18 @@ function LocaleSwitcher() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-full border border-pink-500/60 bg-black/40 px-3 py-1 text-xs font-medium tracking-widest text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-pink-500/60"
+        className="inline-flex items-center gap-2 rounded-none border border-pink-500/60 bg-black/40 px-3 py-1 text-xs font-medium tracking-widest text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-pink-500/60"
       >
         <span>{current.toUpperCase()}</span>
         <span className="text-base leading-none">{FLAGS[current] ?? '🌐'}</span>
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-40 rounded-xl bg-neutral-900 text-neutral-100 shadow-2xl ring-1 ring-neutral-700/60 p-1">
+        <div className="absolute right-0 mt-2 w-40 rounded-none bg-neutral-900 text-neutral-100 shadow-2xl ring-1 ring-neutral-700/60 p-1">
           {LOCALES.map((code) => (
             <button
               key={code}
               onClick={() => onSelect(code)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-800 text-xs tracking-widest"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-none hover:bg-neutral-800 text-xs tracking-widest"
             >
               <span className="font-semibold">{code.toUpperCase()}</span>
               <span className="text-base">{FLAGS[code]}</span>

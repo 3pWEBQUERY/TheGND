@@ -6,14 +6,7 @@ export default function ImprintPage() {
     <>
       <MinimalistNavigation />
       {/* Hero */}
-      <header className="relative h-[50vh] min-h-[400px]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/agentur.jpg"
-          alt="Imprint Hero"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/50" />
+      <header className="relative h-[50vh] min-h-[400px] bg-neutral-950 bg-gradient-to-b from-black to-neutral-900 border-b border-neutral-800/60">
         <div className="relative z-10 h-full flex items-center justify-center text-center px-6">
           <div>
             <h1 className="text-5xl md:text-6xl font-thin tracking-wider text-white mb-4">IMPRESSUM</h1>

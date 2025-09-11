@@ -13,11 +13,17 @@ export default function MobileNavbar() {
   const [openMenu, setOpenMenu] = useState<"none" | "login" | "user">("none")
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  // Verhindert Hydration-Mismatch: erst nach Mount aktiven Zustand einfärben
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     // Close dropdown on route change
     setOpenMenu("none")
   }, [pathname])
+
+  useEffect(() => {
+    setReady(true)
+  }, [])
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -62,11 +68,13 @@ export default function MobileNavbar() {
     "flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-2"
 
   const iconClass = (active: boolean) =>
-    `h-5 w-5 ${active ? "text-pink-500" : "text-white"}`
+    `h-5 w-5 ${ready && active ? "text-pink-500" : "text-white"}`
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/"
-    return pathname.startsWith(href)
+    // Locale-Präfix entfernen (z. B. /de, /en, ...)
+    const path = (pathname || "/").replace(/^(?:\/(de|en|fr|it|es|pt|nl|pl|cs|hu|ro))(?:\/|$)/, "") || "/"
+    if (href === "/") return path === "/"
+    return path.startsWith(href)
   }
 
   return (

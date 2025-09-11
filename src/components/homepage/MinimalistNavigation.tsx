@@ -3,13 +3,87 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
  
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSession } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useTranslation } from 'react-i18next'
+import { usePathname, useRouter } from 'next/navigation'
+
+const LOCALES = ["de","en","fr","it","es","pt","nl","pl","cs","hu","ro"] as const
+const FLAGS: Record<string, string> = { de:"🇩🇪", en:"🇬🇧", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", pt:"🇵🇹", nl:"🇳🇱", pl:"🇵🇱", cs:"🇨🇿", hu:"🇭🇺", ro:"🇷🇴" }
+
+function LocaleSwitcher() {
+  const { i18n } = useTranslation('common')
+  const router = useRouter()
+  const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const current = (i18n.language || 'de').toLowerCase()
+
+  // Close on outside click or Escape
+  useEffect(() => {
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (!open) return
+      const target = e.target as Node
+      if (containerRef.current && !containerRef.current.contains(target)) {
+        setOpen(false)
+      }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('touchstart', onDown, { passive: true })
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('touchstart', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const onSelect = (code: string) => {
+    const locale = code
+    const localePattern = /^(?:\/(de|en|fr|it|es|pt|nl|pl|cs|hu|ro))(?:\/|$)/
+    const basePath = pathname.replace(localePattern, '/').replace(/\/$/, '') || '/'
+    const nextPath = `/${locale}${basePath === '/' ? '' : basePath}`
+    i18n.changeLanguage(locale)
+    router.push(nextPath)
+    setOpen(false)
+  }
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-full border border-pink-500/60 bg-black/40 px-3 py-1 text-xs font-medium tracking-widest text-white hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-pink-500/60"
+      >
+        <span>{current.toUpperCase()}</span>
+        <span className="text-base leading-none">{FLAGS[current] ?? '🌐'}</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-40 rounded-xl bg-neutral-900 text-neutral-100 shadow-2xl ring-1 ring-neutral-700/60 p-1">
+          {LOCALES.map((code) => (
+            <button
+              key={code}
+              onClick={() => onSelect(code)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-800 text-xs tracking-widest"
+            >
+              <span className="font-semibold">{code.toUpperCase()}</span>
+              <span className="text-base">{FLAGS[code]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function MinimalistNavigation() {
   const { data: session } = useSession()
+  const { t } = useTranslation('common')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [discoverOpen, setDiscoverOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -60,7 +134,7 @@ export default function MinimalistNavigation() {
               onMouseEnter={() => setDiscoverOpen(true)}
             >
               <button className="relative group transition-colors select-none">
-                ENTDECKEN
+                {t('nav.discover', { defaultValue: 'ENTDECKEN' })}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
               </button>
 
@@ -76,14 +150,14 @@ export default function MinimalistNavigation() {
                         <div className="grid grid-cols-12 gap-6 py-6">
                       {/* Left column: primary categories as 9:16 cards (smaller, 2-up) */}
                       <div className="col-span-12 md:col-span-4">
-                        <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-3">KATEGORIEN</div>
+                        <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-3">{t('sections.categories', { defaultValue: 'KATEGORIEN' })}</div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           <Link href="/escorts" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
                               <img src="/2.jpg" alt="Escorts" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
-                                <span className="text-xs tracking-widest text-white">ESCORTS</span>
+                                <span className="text-xs tracking-widest text-white">{t('categories.escorts', { defaultValue: 'ESCORTS' })}</span>
                               </div>
                             </div>
                           </Link>
@@ -92,7 +166,7 @@ export default function MinimalistNavigation() {
                               <img src="/agentur.jpg" alt="Agenturen" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
-                                <span className="text-xs tracking-widest text-white">AGENTUREN</span>
+                                <span className="text-xs tracking-widest text-white">{t('categories.agencies', { defaultValue: 'AGENTUREN' })}</span>
                               </div>
                             </div>
                           </Link>
@@ -101,7 +175,7 @@ export default function MinimalistNavigation() {
                               <img src="/1.jpg" alt="Clubs & Studios" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
-                                <span className="text-xs tracking-widest text-white">CLUBS &amp; STUDIOS</span>
+                                <span className="text-xs tracking-widest text-white">{t('categories.clubsStudios', { defaultValue: 'CLUBS & STUDIOS' })}</span>
                               </div>
                             </div>
                           </Link>
@@ -124,7 +198,7 @@ export default function MinimalistNavigation() {
                             )
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest text-gray-500">
-                              Werbebanner
+                              {t('misc.adBanner', { defaultValue: 'Werbebanner' })}
                             </div>
                           )}
                         </div>
@@ -132,14 +206,14 @@ export default function MinimalistNavigation() {
 
                       {/* Middle column: secondary links as 9:16 cards (smaller) */}
                       <div className="col-span-12 md:col-span-4">
-                        <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-3">INHALTE</div>
+                        <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-3">{t('sections.content', { defaultValue: 'INHALTE' })}</div>
                         <div className="grid grid-cols-2 gap-3">
                           <Link href="/stories" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
                               <img src="/1.jpg" alt="Stories" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
-                                <span className="text-xs tracking-widest text-white">STORIES</span>
+                                <span className="text-xs tracking-widest text-white">{t('content.stories', { defaultValue: 'STORIES' })}</span>
                               </div>
                             </div>
                           </Link>
@@ -148,7 +222,7 @@ export default function MinimalistNavigation() {
                               <img src="/2.jpg" alt="Feeds" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
-                                <span className="text-xs tracking-widest text-white">FEEDS</span>
+                                <span className="text-xs tracking-widest text-white">{t('content.feeds', { defaultValue: 'FEEDS' })}</span>
                               </div>
                             </div>
                           </Link>
@@ -157,7 +231,7 @@ export default function MinimalistNavigation() {
                               <img src="/1.jpg" alt="Jobs" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
-                                <span className="text-xs tracking-widest text-white">JOBS</span>
+                                <span className="text-xs tracking-widest text-white">{t('content.jobs', { defaultValue: 'JOBS' })}</span>
                               </div>
                             </div>
                           </Link>
@@ -166,7 +240,7 @@ export default function MinimalistNavigation() {
                               <img src="/2.jpg" alt="Mieten" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
-                                <span className="text-xs tracking-widest text-white">MIETEN</span>
+                                <span className="text-xs tracking-widest text-white">{t('content.rent', { defaultValue: 'MIETEN' })}</span>
                               </div>
                             </div>
                           </Link>
@@ -179,18 +253,18 @@ export default function MinimalistNavigation() {
                           <div className="flex-1 border border-gray-200 bg-white rounded-none overflow-hidden">
                             <div className="h-full p-4 flex items-end">
                               <div className="text-left">
-                                <div className="text-[10px] uppercase tracking-widest text-gray-500">HIGHLIGHT</div>
-                                <div className="mt-1 text-gray-900 text-sm">Entdecke verifizierte Profile</div>
-                                <Link href="/agency" className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4">Jetzt ansehen</Link>
+                                <div className="text-[10px] uppercase tracking-widest text-gray-500">{t('labels.highlight', { defaultValue: 'HIGHLIGHT' })}</div>
+                                <div className="mt-1 text-gray-900 text-sm">{t('texts.discoveryHighlight', { defaultValue: 'Entdecke verifizierte Profile' })}</div>
+                                <Link href="/agency" className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4">{t('cta.viewNow', { defaultValue: 'Jetzt ansehen' })}</Link>
                               </div>
                             </div>
                           </div>
                           <div className="flex-1 border border-gray-200 bg-white rounded-none overflow-hidden">
                             <div className="h-full p-4 flex items-end">
                               <div className="text-left">
-                                <div className="text-[10px] uppercase tracking-widest text-gray-500">MAGAZIN</div>
-                                <div className="mt-1 text-gray-900 text-sm">Neuigkeiten &amp; Stories</div>
-                                <Link href="/stories" className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4">Mehr lesen</Link>
+                                <div className="text-[10px] uppercase tracking-widest text-gray-500">{t('labels.magazine', { defaultValue: 'MAGAZIN' })}</div>
+                                <div className="mt-1 text-gray-900 text-sm">{t('texts.magazineTeaser', { defaultValue: 'Neuigkeiten & Stories' })}</div>
+                                <Link href="/stories" className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4">{t('cta.readMore', { defaultValue: 'Mehr lesen' })}</Link>
                               </div>
                             </div>
                           </div>
@@ -209,15 +283,15 @@ export default function MinimalistNavigation() {
 
             {/* Remaining simple nav items */}
             <Link href="/search" className="relative group transition-colors">
-              SUCHE
+              {t('nav.search', { defaultValue: 'SUCHE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link href="/preise" className="relative group transition-colors">
-              PREISE
+              {t('nav.pricing', { defaultValue: 'PREISE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link href="/info" className="relative group transition-colors">
-              INFO
+              {t('nav.info', { defaultValue: 'INFO' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </div>
@@ -239,16 +313,20 @@ export default function MinimalistNavigation() {
               <div className="hidden md:flex items-center space-x-4">
                 <Link href="/auth/signin">
                   <Button variant="ghost" className="text-sm font-light tracking-widest text-white hover:text-pink-500">
-                    ANMELDEN
+                    {t('nav.signin', { defaultValue: 'ANMELDEN' })}
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
                   <Button className="bg-pink-500 hover:bg-pink-600 text-white text-sm font-light tracking-widest px-6">
-                    REGISTRIEREN
+                    {t('nav.signup', { defaultValue: 'REGISTRIEREN' })}
                   </Button>
                 </Link>
               </div>
             )}
+            {/* Language Switcher */}
+            <div className="block">
+              <LocaleSwitcher />
+            </div>
           </div>
         </div>
       </div>

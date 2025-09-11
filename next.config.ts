@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      // Locale prefix rewrites: map /:locale/... to non-localized routes
+      {
+        source: "/:locale(de|en|fr|it|es|pt|nl|pl|cs|hu|ro)",
+        destination: "/",
+      },
+      {
+        source: "/:locale(de|en|fr|it|es|pt|nl|pl|cs|hu|ro)/:path*",
+        destination: "/:path*",
+      },
+      // Existing rewrite: escorts pretty slug
       {
         source: "/escorts/:id-:slug",
         destination: "/escorts/:id/:slug",

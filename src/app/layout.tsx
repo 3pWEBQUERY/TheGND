@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import AuthProvider from "@/components/providers/auth-provider";
+import I18nProvider from "@/components/providers/i18n-provider";
 import MobileNavbar from "@/components/MobileNavbar";
 import "./globals.css";
 
@@ -43,8 +44,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <div className="pb-24 md:pb-0">{children}</div>
-          <MobileNavbar />
+          <I18nProvider>
+            <div className="pb-24 md:pb-0">{children}</div>
+            <MobileNavbar />
+          </I18nProvider>
         </AuthProvider>
       </body>
     </html>

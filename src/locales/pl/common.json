@@ -1,0 +1,42 @@
+{
+  "app": { "name": "THEGND" },
+  "nav": {
+    "agb": "REGULAMIN",
+    "privacy": "PRYWATNOŚĆ",
+    "imprint": "IMPRINT",
+    "discover": "ODKRYWAJ",
+    "search": "SZUKAJ",
+    "pricing": "CENY",
+    "info": "INFO",
+    "signin": "ZALOGUJ SIĘ",
+    "signup": "ZAREJESTRUJ SIĘ"
+  },
+  "sections": { "categories": "KATEGORIE", "content": "TREŚCI" },
+  "categories": {
+    "escorts": "ESCORTS",
+    "agencies": "AGENCJE",
+    "clubsStudios": "KLUBY I STUDIA"
+  },
+  "content": {
+    "stories": "STORIES",
+    "feeds": "FEEDS",
+    "jobs": "OFERTY",
+    "rent": "WYNAJEM"
+  },
+  "labels": { "highlight": "WYRÓŻNIONE", "magazine": "MAGAZYN" },
+  "texts": {
+    "discoveryHighlight": "Odkrywaj zweryfikowane profile",
+    "magazineTeaser": "Aktualności i Stories"
+  },
+  "cta": { "viewNow": "Zobacz teraz", "readMore": "Czytaj więcej" },
+  "misc": { "adBanner": "Baner reklamowy" },
+  "legal": {
+    "header": "Informacje prawne",
+    "imprint": { "title": "IMPRINT" },
+    "privacy": { "title": "PRYWATNOŚĆ" },
+    "terms": { "title": "REGULAMIN" }
+  },
+  "footer": {
+    "tagline": "Znajdź swoje Girls Next Door na THEGND."
+  }
+}

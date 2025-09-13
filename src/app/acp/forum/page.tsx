@@ -27,6 +27,15 @@ export default async function AdminForumPage() {
     forums: c.forums.map((f) => ({ id: f.id, name: f.name })),
   }))
 
+  const posts = await prisma.forumPost.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+    include: {
+      thread: { select: { id: true, title: true, forum: { select: { slug: true, name: true } } } },
+      author: { select: { email: true, profile: { select: { displayName: true } } } },
+    },
+  })
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -85,6 +94,43 @@ export default async function AdminForumPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-xl font-light tracking-wide text-gray-900">Neueste Beiträge</h2>
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-2 text-gray-500 font-medium">Beitrag</th>
+                <th className="text-left px-4 py-2 text-gray-500 font-medium">Thread</th>
+                <th className="text-left px-4 py-2 text-gray-500 font-medium">Forum</th>
+                <th className="text-left px-4 py-2 text-gray-500 font-medium">Autor</th>
+                <th className="text-right px-4 py-2 text-gray-500 font-medium">Erstellt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.map((p) => (
+                <tr key={p.id} className="border-t border-gray-100">
+                  <td className="px-4 py-3 text-gray-700">
+                    <div className="line-clamp-2 max-w-xl">{p.content}</div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    <a href={`/forum/thread/${p.thread?.id}`} className="text-pink-600 hover:underline">{p.thread?.title || p.thread?.id}</a>
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">{p.thread?.forum?.name}</td>
+                  <td className="px-4 py-3 text-gray-700">{p.author?.profile?.displayName || p.author?.email || '—'}</td>
+                  <td className="px-4 py-3 text-right text-gray-500">{new Date(p.createdAt).toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                </tr>
+              ))}
+              {posts.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500 text-sm">Keine Beiträge gefunden.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

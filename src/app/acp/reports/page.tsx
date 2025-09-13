@@ -5,7 +5,7 @@ import { requireModerator } from '@/lib/moderation'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export default async function ReportsPage({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
+export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const { isAdmin } = await requireAdmin()
   const { isModerator } = await requireModerator()
   if (!isAdmin && !isModerator) {
@@ -16,7 +16,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: { [
     )
   }
 
-  const sp = searchParams || {}
+  const sp = (await searchParams) || {}
   const status = typeof sp.status === 'string' ? sp.status : ''
 
   type ReportRow = {

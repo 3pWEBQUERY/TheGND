@@ -26,8 +26,16 @@ const PLACEMENTS: Array<{
 ]
 
 export default function MarketingUploadPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
+  
+  // Auth guard: redirect unauthenticated users to sign-in
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      const cb = encodeURIComponent('/marketing/upload')
+      router.replace(`/auth/signin?callbackUrl=${cb}`)
+    }
+  }, [status, router])
 
   const [cart, setCart] = useState<Partial<Record<PlacementKey, Duration>>>({})
   const [uploads, setUploads] = useState<Partial<Record<PlacementKey, string[]>>>({})

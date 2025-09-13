@@ -51,6 +51,17 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
     }),
+
+  // Uploader for Forum post assets (images only)
+  forumAssets: f({
+    image: { maxFileSize: "16MB", maxFileCount: 10 },
+  })
+    .middleware(async () => {
+      return {};
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

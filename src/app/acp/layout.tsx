@@ -38,6 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               {navItem('/acp/marketing', 'Marketing')}
               {navItem('/acp/messages', 'Nachrichten')}
               {navItem('/acp/network', 'Netzwerk')}
+              {navItem('/acp/forum', 'Forum')}
             </nav>
           </div>
           <div className="text-xs text-gray-500">Admin</div>

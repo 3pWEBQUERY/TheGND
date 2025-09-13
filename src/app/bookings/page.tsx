@@ -5,9 +5,19 @@ import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useUploadThing } from '@/utils/uploadthing'
+import { useRouter } from 'next/navigation'
 
 export default function BookingsPage() {
-  const { data: session } = useSession()
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  
+  // Auth guard: redirect unauthenticated users to sign-in
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      const cb = encodeURIComponent('/bookings')
+      router.replace(`/auth/signin?callbackUrl=${cb}`)
+    }
+  }, [status, router])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [memberships, setMemberships] = useState<any[]>([])
@@ -44,7 +54,11 @@ export default function BookingsPage() {
     }
   }
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchData()
+    }
+  }, [status])
 
   const currency = (cents?: number) => typeof cents === 'number' ? (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) : '-'
   const currencyCHF = (cents?: number) => typeof cents === 'number' ? (cents / 100).toLocaleString('de-CH', { style: 'currency', currency: 'CHF' }) : '-'

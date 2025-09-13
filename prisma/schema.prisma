@@ -128,6 +128,7 @@ model User {
   userType          UserType
   onboardingStatus  OnboardingStatus  @default(NOT_STARTED)
   isActive          Boolean           @default(true)
+  isModerator       Boolean           @default(false)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -154,6 +155,12 @@ model User {
 
   // Marketing orders
   marketingOrders   MarketingOrder[]
+
+  // Forum relations
+  forumThreads      ForumThread[]
+  forumPosts        ForumPost[]
+  threadSubscriptions ThreadSubscription[]
+  postReports       ForumPostReport[] @relation("ReportReporter")
 
   @@map("users")
 }
@@ -646,4 +653,109 @@ model MarketingAsset {
 
   @@index([orderItemId])
   @@map("marketing_assets")
+}
+
+// Forum Models
+
+model ForumCategory {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  forums      Forum[]
+
+  @@map("forum_categories")
+}
+
+model Forum {
+  id          String   @id @default(cuid())
+  categoryId  String
+  category    ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      Forum?   @relation("Subforums", fields: [parentId], references: [id])
+  children    Forum[]  @relation("Subforums")
+  name        String
+  slug        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  isLocked    Boolean  @default(false)
+  isHidden    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  threads     ForumThread[]
+
+  @@index([categoryId, parentId])
+  @@map("forums")
+}
+
+model ForumThread {
+  id         String  @id @default(cuid())
+  forumId    String
+  forum      Forum   @relation(fields: [forumId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title      String
+  isPinned   Boolean @default(false)
+  isClosed   Boolean @default(false)
+  views      Int     @default(0)
+  lastPostAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  posts      ForumPost[]
+  subscriptions ThreadSubscription[]
+
+  @@index([forumId, isPinned, lastPostAt])
+  @@map("forum_threads")
+}
+
+model ForumPost {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  parentId  String?
+  parent    ForumPost? @relation("ForumPostReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  children  ForumPost[] @relation("ForumPostReplies")
+  editedAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reports   ForumPostReport[]
+
+  @@index([threadId, parentId, createdAt])
+  @@map("forum_posts")
+}
+
+model ThreadSubscription {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threadId  String
+  thread    ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, threadId])
+  @@map("thread_subscriptions")
+}
+
+model ForumPostReport {
+  id         String @id @default(cuid())
+  postId     String
+  post       ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String?
+  status     String @default("OPEN")
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+
+  @@index([postId, status])
+  @@map("forum_post_reports")
 }

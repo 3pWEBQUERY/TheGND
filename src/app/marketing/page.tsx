@@ -10,11 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Tabs from '@/components/Tabs'
 
 export default function MarketingPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
 
   type PlacementKey = 'home_banner' | 'home_tile' | 'results_top' | 'sidebar' | 'sponsored_post'
   type Duration = 7 | 14 | 30
+
+  // Auth guard: redirect unauthenticated users to sign-in
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      const cb = encodeURIComponent('/marketing')
+      router.replace(`/auth/signin?callbackUrl=${cb}`)
+    }
+  }, [status, router])
 
   const PRICES: Record<PlacementKey, Record<Duration, number>> = {
     home_banner: { 7: 149.99, 14: 259.99, 30: 449.99 },

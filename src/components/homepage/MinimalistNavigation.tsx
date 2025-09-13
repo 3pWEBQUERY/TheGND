@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Bell } from 'lucide-react'
  
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -88,6 +89,10 @@ export default function MinimalistNavigation() {
   const [discoverOpen, setDiscoverOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [navAd, setNavAd] = useState<{ url: string; targetUrl?: string | null } | null>(null)
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; isRead: boolean; createdAt: string }>>([])
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [notifLoading, setNotifLoading] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
 
   const fetchNavAd = async () => {
     try {
@@ -117,6 +122,35 @@ export default function MinimalistNavigation() {
   useEffect(() => {
     fetchNavAd()
   }, [])
+
+  // Notifications: load on open and close on outside click
+  const loadNotifications = async () => {
+    try {
+      setNotifLoading(true)
+      const res = await fetch('/api/notifications?limit=20')
+      if (res.ok) {
+        const data = await res.json()
+        setNotifications(Array.isArray(data) ? data : [])
+      }
+    } catch {}
+    finally {
+      setNotifLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (notifOpen) loadNotifications()
+  }, [notifOpen])
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false)
+      }
+    }
+    if (notifOpen) document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [notifOpen])
 
   return (
     <nav className="absolute top-0 w-full z-50 bg-transparent">
@@ -286,6 +320,10 @@ export default function MinimalistNavigation() {
               {t('nav.search', { defaultValue: 'SUCHE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
+            <Link href="/forum" className="relative group transition-colors">
+              {t('nav.forum', { defaultValue: 'FORUM' })}
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
             <Link href="/preise" className="relative group transition-colors">
               {t('nav.pricing', { defaultValue: 'PREISE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
@@ -321,6 +359,58 @@ export default function MinimalistNavigation() {
                     {t('nav.signup', { defaultValue: 'REGISTRIEREN' })}
                   </Button>
                 </Link>
+              </div>
+            )}
+            {/* Notifications */}
+            {session?.user && (
+              <div className="relative" ref={notifRef}>
+                <button 
+                  onClick={() => setNotifOpen(o => !o)}
+                  className="relative p-2 text-white hover:text-pink-300 transition-colors"
+                  aria-haspopup="true"
+                  aria-expanded={notifOpen}
+                >
+                  <Bell className="h-5 w-5" />
+                  {notifications.some(n => !n.isRead) && (
+                    <span className="absolute top-1 right-1 h-2 w-2 bg-pink-500 rounded-full"></span>
+                  )}
+                </button>
+                {notifOpen && (
+                  <div className="fixed left-1/2 -translate-x-1/2 top-20 md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:translate-x-0 w-80 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 shadow-lg z-50">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="text-sm font-thin tracking-wider text-gray-800">BENACHRICHTIGUNGEN</div>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifLoading ? (
+                        <div className="p-4 text-sm font-light tracking-wide text-gray-500">Wird geladen...</div>
+                      ) : notifications.length === 0 ? (
+                        <div className="p-6 text-center text-sm font-light tracking-wide text-gray-500">Keine Benachrichtigungen</div>
+                      ) : (
+                        notifications.map(n => (
+                          <div key={n.id} className={`flex items-start gap-3 p-3 border-b border-gray-50 ${n.isRead ? '' : 'bg-pink-50/40'}`}>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-light tracking-wide text-gray-800 truncate">{n.title}</div>
+                                <div className="text-xs font-light tracking-wide text-gray-400 ml-2 shrink-0">{new Date(n.createdAt).toLocaleString('de-DE')}</div>
+                              </div>
+                              <div className="text-xs font-light tracking-wide text-gray-600 truncate">{n.message}</div>
+                            </div>
+                            {!n.isRead && <span className="h-2 w-2 bg-pink-500 rounded-full mt-2"></span>}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="p-3 border-t border-gray-100 text-right">
+                      <Link
+                        href="/notifications"
+                        onClick={() => setNotifOpen(false)}
+                        className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase inline-block"
+                      >
+                        ALLE ANZEIGEN
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {/* Language Switcher */}

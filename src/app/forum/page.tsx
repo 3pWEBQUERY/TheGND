@@ -1,0 +1,133 @@
+import Link from 'next/link'
+import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
+import Footer from '@/components/homepage/Footer'
+import ForumHero from '@/components/homepage/ForumHero'
+import { prisma } from '@/lib/prisma'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+export default async function ForumHomePage() {
+  const categories = await prisma.forumCategory.findMany({
+    orderBy: { sortOrder: 'asc' },
+    include: {
+      forums: {
+        where: { parentId: null },
+        orderBy: { sortOrder: 'asc' },
+        include: {
+          children: { orderBy: { sortOrder: 'asc' } },
+          threads: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: {
+              id: true,
+              title: true,
+              createdAt: true,
+              author: { select: { email: true, profile: { select: { displayName: true, avatar: true } } } },
+            },
+          },
+          _count: { select: { threads: true } },
+        },
+      },
+    },
+  })
+
+  function relativeFromNow(date: Date) {
+    const diffMs = Date.now() - date.getTime()
+    const sec = Math.floor(diffMs / 1000)
+    const min = Math.floor(sec / 60)
+    const hr = Math.floor(min / 60)
+    const day = Math.floor(hr / 24)
+    if (day > 0) return `Vor ${day} Tag${day === 1 ? '' : 'en'}`
+    if (hr > 0) return `Vor ${hr} Stunde${hr === 1 ? '' : 'n'}`
+    if (min > 0) return `Vor ${min} Minute${min === 1 ? '' : 'n'}`
+    return 'Gerade eben'
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <MinimalistNavigation />
+      <ForumHero />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+
+        <div className="mt-8 space-y-10">
+          {categories.map((cat) => (
+            <section key={cat.id}>
+              <h2 className="text-sm font-light tracking-widest text-gray-800 uppercase">{cat.name}</h2>
+              {cat.description && (
+                <p className="mt-1 text-sm text-gray-600">{cat.description}</p>
+              )}
+              <div className="mt-4 divide-y border border-gray-200">
+                {cat.forums.length === 0 && (
+                  <div className="p-4 text-sm text-gray-500">Keine Foren in dieser Kategorie.</div>
+                )}
+                {cat.forums.map((f: any) => (
+                  <Link
+                    key={f.id}
+                    href={`/forum/${f.slug}`}
+                    className="group block p-4 sm:p-5 transition-colors duration-200 hover:bg-pink-50/40 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2 focus:ring-offset-white"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 sm:gap-6 items-center">
+                      <div className="min-w-0">
+                        <span className="text-gray-900 group-hover:text-pink-600 font-medium tracking-widest uppercase transition-colors">
+                          {f.name}
+                        </span>
+                        {f.description && (
+                          <p className="mt-1 text-sm text-gray-600">{f.description}</p>
+                        )}
+                        {Array.isArray(f.children) && f.children.length > 0 && (
+                          <div className="mt-2 text-xs text-gray-600">
+                            Unterforen:{' '}
+                            {f.children?.map((c: any, i: number) => (
+                              <span key={c.id}>
+                                <Link href={`/forum/${c.slug}`} className="text-pink-600 hover:underline">{c.name}</Link>
+                                {i < (f.children?.length ?? 0) - 1 ? ', ' : ''}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {f.threads?.[0] && (
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-6 w-6 bg-gray-200">
+                              {f.threads[0].author?.profile?.avatar ? (
+                                <AvatarImage src={f.threads[0].author.profile.avatar} alt="avatar" />
+                              ) : (
+                                <AvatarFallback className="text-[10px] font-light tracking-widest text-gray-700">
+                                  {(f.threads[0].author?.profile?.displayName || f.threads[0].author?.email || '?')
+                                    .split(/\s+/)
+                                    .map((s: string) => s.charAt(0).toUpperCase())
+                                    .slice(0, 2)
+                                    .join('')}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="text-sm text-gray-900 truncate group-hover:text-pink-600">{f.threads[0].title}</div>
+                              <div className="text-[11px] text-gray-500">
+                                {(f.threads[0].author?.profile?.displayName || f.threads[0].author?.email || 'Unbekannt')}
+                                {' · '}
+                                {relativeFromNow(new Date(f.threads[0].createdAt))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs uppercase tracking-widest text-gray-500">Themen</div>
+                        <div className="text-sm text-gray-900">{f._count.threads}</div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </main>
+      <Footer />
+    </div>
+  )
+}

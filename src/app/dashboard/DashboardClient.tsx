@@ -13,6 +13,7 @@ import MessagingComponent from '@/components/MessagingComponent'
 import CommentsComponent from '@/components/CommentsComponent'
 import DashboardHeader from '@/components/DashboardHeader'
 import DashboardMobileNavigation from '@/components/DashboardMobileNavigation'
+import ForumDashboard from '@/components/ForumDashboard'
 
 export default function DashboardClient() {
   const { data: session, status } = useSession()
@@ -159,6 +160,10 @@ export default function DashboardClient() {
           
           {canStories && activeTab === 'stories' && (
             <StoriesComponent />
+          )}
+          
+          {activeTab === 'forum' && (
+            <ForumDashboard />
           )}
           
           {activeTab === 'settings' && (

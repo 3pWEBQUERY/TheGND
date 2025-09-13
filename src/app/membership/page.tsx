@@ -7,9 +7,19 @@ import Tabs from '@/components/Tabs'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function MembershipPage() {
-  const { data: session } = useSession()
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  
+  // Auth guard: redirect unauthenticated users to sign-in
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      const cb = encodeURIComponent('/membership')
+      router.replace(`/auth/signin?callbackUrl=${cb}`)
+    }
+  }, [status, router])
   type Choice = { category: 'membership' | 'day' | 'week' | 'month' | 'city'; name: string; price: number; duration?: number }
   const [selectedChoice, setSelectedChoice] = useState<Choice | null>(null)
   const [weekDuration, setWeekDuration] = useState<'1' | '2'>('1')

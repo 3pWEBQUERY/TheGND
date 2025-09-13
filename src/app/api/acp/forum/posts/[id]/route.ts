@@ -4,10 +4,11 @@ import { requireAdmin } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { isAdmin } = await requireAdmin()
   if (!isAdmin) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
   try {
+    const { id } = await params
     const contentType = req.headers.get('content-type') || ''
     let action: string | null = null
     if (contentType.includes('application/json')) {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // For simplicity we treat any POST here as delete when not specified
     if (!action || action === 'delete') {
-      await prisma.forumPost.delete({ where: { id: params.id } })
+      await prisma.forumPost.delete({ where: { id } })
       return NextResponse.json({ ok: true })
     }
 

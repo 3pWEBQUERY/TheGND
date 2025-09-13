@@ -4,10 +4,11 @@ import { requireAdmin } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { isAdmin } = await requireAdmin()
   if (!isAdmin) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
   try {
+    const { id } = await params
     const contentType = req.headers.get('content-type') || ''
     let action: string | null = null
     if (contentType.includes('application/json')) {
@@ -20,21 +21,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     if (!action) return NextResponse.json({ error: 'action erforderlich' }, { status: 400 })
 
-    const thread = await prisma.forumThread.findUnique({ where: { id: params.id } })
+    const thread = await prisma.forumThread.findUnique({ where: { id } })
     if (!thread) return NextResponse.json({ error: 'Thread nicht gefunden' }, { status: 404 })
 
     if (action === 'toggle_pin') {
-      const updated = await prisma.forumThread.update({ where: { id: params.id }, data: { isPinned: !thread.isPinned } })
+      const updated = await prisma.forumThread.update({ where: { id }, data: { isPinned: !thread.isPinned } })
       return NextResponse.json({ ok: true, isPinned: updated.isPinned })
     }
 
     if (action === 'toggle_close') {
-      const updated = await prisma.forumThread.update({ where: { id: params.id }, data: { isClosed: !thread.isClosed } })
+      const updated = await prisma.forumThread.update({ where: { id }, data: { isClosed: !thread.isClosed } })
       return NextResponse.json({ ok: true, isClosed: updated.isClosed })
     }
 
     if (action === 'delete') {
-      await prisma.forumThread.delete({ where: { id: params.id } })
+      await prisma.forumThread.delete({ where: { id } })
       return NextResponse.json({ ok: true })
     }
 

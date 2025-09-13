@@ -6,11 +6,12 @@ import { requireModerator } from '@/lib/moderation'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { isAdmin } = await requireAdmin()
   const { isModerator } = await requireModerator()
   if (!isAdmin && !isModerator) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
   try {
+    const { id } = await params
     const contentType = req.headers.get('content-type') || ''
     let action: string | null = null
     if (contentType.includes('application/json')) {
@@ -24,15 +25,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!action) return NextResponse.json({ error: 'action erforderlich' }, { status: 400 })
 
     if (action === 'resolve') {
-      const updated = await (prisma as any).forumPostReport.update({ where: { id: params.id }, data: { status: 'RESOLVED', resolvedAt: new Date() } })
+      const updated = await (prisma as any).forumPostReport.update({ where: { id }, data: { status: 'RESOLVED', resolvedAt: new Date() } })
       return NextResponse.json({ ok: true, status: updated.status })
     }
     if (action === 'reopen') {
-      const updated = await (prisma as any).forumPostReport.update({ where: { id: params.id }, data: { status: 'OPEN', resolvedAt: null } })
+      const updated = await (prisma as any).forumPostReport.update({ where: { id }, data: { status: 'OPEN', resolvedAt: null } })
       return NextResponse.json({ ok: true, status: updated.status })
     }
     if (action === 'delete') {
-      await (prisma as any).forumPostReport.delete({ where: { id: params.id } })
+      await (prisma as any).forumPostReport.delete({ where: { id } })
       return NextResponse.json({ ok: true })
     }
 

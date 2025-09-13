@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import MarketingAssetsGrid from '@/components/admin/MarketingAssetsGrid'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 function statusLabel(s: string) {
   if (s === 'APPROVED') return 'Freigegeben'

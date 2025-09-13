@@ -6,15 +6,15 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ postId: string }> }) {
   try {
     const session = await getServerSession(authOptions as any)
     const userId = (session as any)?.user?.id as string | undefined
     if (!userId) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
-    const { id } = await params
+    const { postId } = await params
     const post: any = await (prisma as any).post.findUnique({
-      where: { id },
+      where: { id: postId },
       select: { id: true, authorId: true, groupId: true }
     })
     if (!post) return NextResponse.json({ error: 'Post nicht gefunden' }, { status: 404 })
@@ -35,7 +35,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     if (!allowed) return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
 
-    await prisma.post.delete({ where: { id } })
+    await prisma.post.delete({ where: { id: postId } })
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Fehler' }, { status: 500 })

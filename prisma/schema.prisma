@@ -5,6 +5,52 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Feed Groups (user-created discussion groups similar to Facebook)
+
+enum GroupPrivacy {
+  PUBLIC
+  PRIVATE
+}
+
+enum GroupRole {
+  ADMIN
+  MEMBER
+}
+
+model FeedGroup {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  description String?
+  privacy     GroupPrivacy @default(PUBLIC)
+  ownerId     String
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  members     FeedGroupMember[]
+  posts       Post[]
+
+  @@index([ownerId])
+  @@map("feed_groups")
+}
+
+model FeedGroupMember {
+  id        String     @id @default(cuid())
+  groupId   String
+  userId    String
+  role      GroupRole  @default(MEMBER)
+  createdAt DateTime   @default(now())
+
+  group     FeedGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@map("feed_group_members")
+}
+
 enum MarketingAssetStatus {
   PENDING
   APPROVED
@@ -254,6 +300,9 @@ model Post {
   images    String?  // JSON array of image URLs
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  // Optional group association for posts inside user-created groups
+  groupId   String?
+  group     FeedGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

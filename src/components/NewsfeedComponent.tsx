@@ -313,7 +313,7 @@ export default function NewsfeedComponent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6" onClickCapture={() => setShareMenuFor(null)}>
+    <div className="space-y-8" onClickCapture={() => setShareMenuFor(null)}>
       {/* Create Post */}
       <div className="bg-white border border-gray-100 rounded-none">
         <div className="p-4 sm:p-8">

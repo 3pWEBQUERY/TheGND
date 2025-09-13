@@ -14,6 +14,7 @@ import CommentsComponent from '@/components/CommentsComponent'
 import DashboardHeader from '@/components/DashboardHeader'
 import DashboardMobileNavigation from '@/components/DashboardMobileNavigation'
 import ForumDashboard from '@/components/ForumDashboard'
+import FeedTabs from '@/components/FeedTabs'
 
 export default function DashboardClient() {
   const { data: session, status } = useSession()
@@ -140,7 +141,7 @@ export default function DashboardClient() {
           )}
           
           {activeTab === 'feed' && (
-            <NewsfeedComponent />
+            <FeedTabs />
           )}
           
           {activeTab === 'profile' && (

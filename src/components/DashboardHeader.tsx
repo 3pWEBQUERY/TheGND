@@ -194,6 +194,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     <div className="py-2">
                       <Link href="/dashboard?tab=profile" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">PROFIL</Link>
                       <Link href="/dashboard?tab=feed" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">FEED</Link>
+                      
                       <Link href="/dashboard?tab=network" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">NETZWERK</Link>
                       <Link href="/dashboard?tab=comments" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">KOMMENTARE</Link>
                       {canStories && (

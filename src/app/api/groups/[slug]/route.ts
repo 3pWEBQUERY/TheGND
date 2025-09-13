@@ -6,6 +6,23 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  try {
+    const session = await getServerSession(authOptions as any)
+    const userId = (session as any)?.user?.id as string | undefined
+    const { slug } = await params
+    const group = await (prisma as any).feedGroup.findUnique({
+      where: { slug },
+      include: { _count: { select: { members: true, posts: true } } }
+    })
+    if (!group) return NextResponse.json({ error: 'Gruppe nicht gefunden' }, { status: 404 })
+    const membership = userId ? await (prisma as any).feedGroupMember.findUnique({ where: { groupId_userId: { groupId: group.id, userId } } }) : null
+    return NextResponse.json({ group, membership })
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || 'Fehler' }, { status: 500 })
+  }
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getServerSession(authOptions as any)

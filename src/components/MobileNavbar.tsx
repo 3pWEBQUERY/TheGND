@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 export default function MobileNavbar() {
   const { data: session } = useSession()
   const pathname = usePathname()
-  const [openMenu, setOpenMenu] = useState<"none" | "login" | "user">("none")
+  const [openMenu, setOpenMenu] = useState<"none" | "login" | "user" | "escort">("none")
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   // Verhindert Hydration-Mismatch: erst nach Mount aktiven Zustand einfärben
@@ -65,10 +65,10 @@ export default function MobileNavbar() {
   }, [session?.user?.id])
 
   const baseItemClass =
-    "flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-2"
+    "flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-3"
 
   const iconClass = (active: boolean) =>
-    `h-5 w-5 ${ready && active ? "text-pink-500" : "text-white"}`
+    `h-6 w-6 ${ready && active ? "text-pink-500" : "text-white"}`
 
   const isActive = (href: string) => {
     // Locale-Präfix entfernen (z. B. /de, /en, ...)
@@ -91,10 +91,18 @@ export default function MobileNavbar() {
             <Home className={iconClass(isActive("/"))} />
           </Link>
 
-          {/* ESCORT */}
-          <Link href="/escorts" aria-label="Escort" className={baseItemClass}>
+          {/* ESCORT (dropdown) */}
+          <button
+            type="button"
+            onClick={() => setOpenMenu((m) => (m === "escort" ? "none" : "escort"))}
+            className={`${baseItemClass} relative`}
+            aria-haspopup="menu"
+            aria-expanded={openMenu === "escort"}
+            aria-controls="escort-menu"
+            aria-label="Escort Menu"
+          >
             <Users2 className={iconClass(isActive("/escorts"))} />
-          </Link>
+          </button>
 
           {/* LOGIN or USER MENU in the middle */}
           {session?.user ? (
@@ -145,11 +153,11 @@ export default function MobileNavbar() {
         {openMenu !== "none" && (
           <div
             ref={dropdownRef}
-            id={openMenu === "login" ? "login-menu" : "user-menu"}
+            id={openMenu === "login" ? "login-menu" : openMenu === "user" ? "user-menu" : "escort-menu"}
             role="menu"
             className="absolute -top-2 translate-y-[-100%] left-1/2 -translate-x-1/2 w-56 rounded-xl bg-black/90 ring-1 ring-white/15 shadow-xl backdrop-blur-md p-2"
           >
-            {openMenu === "login" ? (
+            {openMenu === "login" && (
               <>
                 <Link
                   href="/auth/signin"
@@ -166,7 +174,8 @@ export default function MobileNavbar() {
                   Registrieren
                 </Link>
               </>
-            ) : (
+            )}
+            {openMenu === "user" && (
               <>
                 <Link
                   href="/dashboard"
@@ -182,6 +191,18 @@ export default function MobileNavbar() {
                 >
                   <LogOut className="h-4 w-4" /> Abmelden
                 </button>
+              </>
+            )}
+            {openMenu === "escort" && (
+              <>
+                <Link href="/escorts" className="block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">ESCORT</Link>
+                <Link href="/agency" className="mt-1 block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">AGENTUREN</Link>
+                <Link href="/club-studio" className="mt-1 block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">CLUBS & STUDIOS</Link>
+                <Link href="/feed" className="mt-1 block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">FEED</Link>
+                <Link href="/forum" className="mt-1 block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">FORUM</Link>
+                <Link href="/stories" className="mt-1 block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">STORIES</Link>
+                <Link href="/jobs" className="mt-1 block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">JOBS</Link>
+                <Link href="/mieten" className="mt-1 block w-full px-3 py-2 rounded-lg text-sm tracking-wider text-white/90 hover:bg-white/10" role="menuitem">MIETEN</Link>
               </>
             )}
           </div>

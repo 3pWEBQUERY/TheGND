@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     const name = String(body?.name || '').trim()
     const description = typeof body?.description === 'string' ? body.description.trim() : null
     const privacy = (String(body?.privacy || 'PUBLIC').toUpperCase() === 'PRIVATE') ? 'PRIVATE' : 'PUBLIC'
+    const cover = typeof body?.cover === 'string' && body.cover.trim() ? String(body.cover).trim() : null
     if (!name) return NextResponse.json({ error: 'Name erforderlich' }, { status: 400 })
 
     let base = slugify(name)
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     const group = await (prisma as any).feedGroup.create({
-      data: { name, slug, description: description || undefined, privacy: privacy as any, ownerId: userId }
+      data: { name, slug, description: description || undefined, privacy: privacy as any, ownerId: userId, ...(cover ? { cover } : {}) }
     })
     await (prisma as any).feedGroupMember.create({ data: { groupId: group.id, userId, role: 'ADMIN' } })
 

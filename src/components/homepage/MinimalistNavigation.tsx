@@ -283,25 +283,36 @@ export default function MinimalistNavigation() {
 
                       {/* Right column: stacked vertical cards */}
                       <div className="col-span-12 md:col-span-4">
+                        <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-3">COMMUNITY</div>
                         <div className="flex h-full flex-col gap-3">
-                          <div className="flex-1 border border-gray-200 bg-white rounded-none overflow-hidden">
-                            <div className="h-full p-4 flex items-end">
-                              <div className="text-left">
-                                <div className="text-[10px] uppercase tracking-widest text-gray-500">{t('labels.highlight', { defaultValue: 'HIGHLIGHT' })}</div>
-                                <div className="mt-1 text-gray-900 text-sm">{t('texts.discoveryHighlight', { defaultValue: 'Entdecke verifizierte Profile' })}</div>
-                                <Link href="/agency" className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4">{t('cta.viewNow', { defaultValue: 'Jetzt ansehen' })}</Link>
+                          <Link href="/feed" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
+                            <div style={{ aspectRatio: '9 / 7.7' }} className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src="/2.jpg" alt="NEWSFEED" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70" />
+                              <div className="absolute inset-0 p-3 flex items-end">
+                                <div className="text-left">
+                                  <div className="text-[10px] uppercase tracking-widest text-white">{t('labels.newsfeed', { defaultValue: 'NEWSFEED' })}</div>
+                                  <div className="mt-1 text-white text-sm">Neueste News & Stories</div>
+                                  <span className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4 text-white">JETZT ANSEHEN</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex-1 border border-gray-200 bg-white rounded-none overflow-hidden">
-                            <div className="h-full p-4 flex items-end">
-                              <div className="text-left">
-                                <div className="text-[10px] uppercase tracking-widest text-gray-500">{t('labels.magazine', { defaultValue: 'MAGAZIN' })}</div>
-                                <div className="mt-1 text-gray-900 text-sm">{t('texts.magazineTeaser', { defaultValue: 'Neuigkeiten & Stories' })}</div>
-                                <Link href="/stories" className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4">{t('cta.readMore', { defaultValue: 'Mehr lesen' })}</Link>
+                          </Link>
+                          <Link href="/forum" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
+                            <div style={{ aspectRatio: '9 / 7.7' }} className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src="/1.jpg" alt="Forum" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70" />
+                              <div className="absolute inset-0 p-3 flex items-end">
+                                <div className="text-left">
+                                  <div className="text-[10px] uppercase tracking-widest text-white">{t('labels.forum', { defaultValue: 'FORUM' })}</div>
+                                  <div className="mt-1 text-white text-sm">Community & Diskussionen</div>
+                                  <span className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4 text-white">MEHR LESEN</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -320,10 +331,7 @@ export default function MinimalistNavigation() {
               {t('nav.search', { defaultValue: 'SUCHE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            <Link href="/forum" className="relative group transition-colors">
-              {t('nav.forum', { defaultValue: 'FORUM' })}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
+            {/* Forum link removed per request; forum is accessible via the mega menu */}
             <Link href="/preise" className="relative group transition-colors">
               {t('nav.pricing', { defaultValue: 'PREISE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>

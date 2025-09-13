@@ -22,6 +22,7 @@ model FeedGroup {
   name        String
   slug        String       @unique
   description String?
+  cover       String?
   privacy     GroupPrivacy @default(PUBLIC)
   ownerId     String
   owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)

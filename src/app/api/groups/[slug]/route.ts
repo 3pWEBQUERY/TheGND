@@ -27,6 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
     if (typeof body.name === 'string' && body.name.trim()) data.name = body.name.trim()
     if (typeof body.description === 'string') data.description = body.description.trim()
     if (typeof body.privacy === 'string' && ['PUBLIC','PRIVATE'].includes(body.privacy)) data.privacy = body.privacy
+    if (typeof body.cover === 'string') data.cover = body.cover.trim() || null
 
     const updated = await (prisma as any).feedGroup.update({ where: { id: group.id }, data })
     return NextResponse.json({ ok: true, group: updated })

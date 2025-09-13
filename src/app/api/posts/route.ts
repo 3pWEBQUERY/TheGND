@@ -124,15 +124,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const validatedData = createPostSchema.parse(body)
+    const raw = await request.json()
+    const validatedData = createPostSchema.parse(raw)
     const safeContent = (validatedData.content ?? '').trim()
+    const groupId: string | undefined = typeof (raw as any)?.groupId === 'string' && (raw as any).groupId ? (raw as any).groupId : undefined
+
+    // If posting to a group, check group exists and membership if private
+    if (groupId) {
+      const group = await (prisma as any).feedGroup.findUnique({ where: { id: groupId } })
+      if (!group) {
+        return NextResponse.json({ error: 'Gruppe nicht gefunden' }, { status: 404 })
+      }
+      if (group.privacy === 'PRIVATE') {
+        const isMember = await (prisma as any).feedGroupMember.findUnique({ where: { groupId_userId: { groupId, userId: session.user.id } } })
+        if (!isMember) {
+          return NextResponse.json({ error: 'Kein Zugriff auf private Gruppe' }, { status: 403 })
+        }
+      }
+    }
 
     const post = await prisma.post.create({
       data: {
         content: safeContent,
         images: validatedData.images ? JSON.stringify(validatedData.images) : null,
-        authorId: session.user.id
+        authorId: session.user.id,
+        ...(groupId ? { groupId } : {} as any),
       },
       include: {
         author: {

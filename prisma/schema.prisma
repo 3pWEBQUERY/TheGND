@@ -208,6 +208,10 @@ model User {
   threadSubscriptions ThreadSubscription[]
   postReports       ForumPostReport[] @relation("ReportReporter")
 
+  // Feed groups
+  feedGroupsOwned   FeedGroup[]
+  feedGroupMemberships FeedGroupMember[]
+
   @@map("users")
 }
 

@@ -33,6 +33,7 @@ export type ProfileFeedPost = {
 
 type Props = {
   posts: ProfileFeedPost[]
+  adminActions?: (post: ProfileFeedPost) => React.ReactNode
 }
 
 // Variants for profile view schematic
@@ -112,7 +113,7 @@ function normalize(url?: string | null): string | undefined {
   return t.startsWith('/') ? t : `/${t}`
 }
 
-export default function ProfileFeed({ posts }: Props) {
+export default function ProfileFeed({ posts, adminActions }: Props) {
   const { data: session } = useSession()
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [localPosts, setLocalPosts] = useState<ProfileFeedPost[]>(posts || [])
@@ -305,6 +306,11 @@ export default function ProfileFeed({ posts }: Props) {
                       </span>
                     </div>
                   </div>
+                  {adminActions && (
+                    <div className="ml-4">
+                      {adminActions(post)}
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}

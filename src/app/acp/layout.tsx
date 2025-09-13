@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/admin'
+import AcpSidebar from '@/components/admin/AcpSidebar'
+import AcpMobileSidebar from '@/components/admin/AcpMobileSidebar'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,42 +12,26 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/')
   }
 
-  const navItem = (href: string, label: string) => (
-    <Link
-      href={href}
-      className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-pink-600 hover:bg-pink-50"
-    >
-      {label}
-    </Link>
-  )
-
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center gap-3">
+            <AcpMobileSidebar />
             <Link href="/" className="text-2xl font-thin tracking-wider text-gray-900 hover:text-pink-600">THEGND</Link>
-            <nav className="hidden md:flex items-center space-x-1">
-              {navItem('/acp', 'Übersicht')}
-              {navItem('/acp/users', 'User')}
-              {navItem('/acp/escorts', 'Escorts')}
-              {navItem('/acp/feeds', 'Feeds')}
-              {navItem('/acp/verifications', 'Verifizierungen')}
-              {navItem('/acp/memberships', 'Mitgliedschaften')}
-              {navItem('/acp/memberships-users', 'User-Mitgliedschaften')}
-              {navItem('/acp/addons', 'Add-ons')}
-              {navItem('/acp/settings', 'Einstellungen')}
-              {navItem('/acp/marketing', 'Marketing')}
-              {navItem('/acp/messages', 'Nachrichten')}
-              {navItem('/acp/network', 'Netzwerk')}
-              {navItem('/acp/forum', 'Forum')}
-            </nav>
           </div>
           <div className="text-xs text-gray-500">Admin</div>
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {children}
+        <div className="flex gap-8">
+          <aside className="hidden md:block w-64 shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-auto">
+            <AcpSidebar />
+          </aside>
+          <div className="flex-1 min-w-0">
+            {children}
+          </div>
+        </div>
       </main>
     </div>
   )

@@ -1,7 +1,9 @@
-import React from 'react'
+"use client"
+
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { EscortItem } from '@/types/escort'
-import { ShieldCheck, BadgeCheck } from 'lucide-react'
+import { ShieldCheck, BadgeCheck, Star } from 'lucide-react'
 
 type Props = {
   items: EscortItem[] | null
@@ -19,6 +21,50 @@ function slugify(input: string): string {
 }
 
 export default function EscortsResultsGrid({ items, loading, total }: Props) {
+  const [ratingsMap, setRatingsMap] = useState<Record<string, { avg: number; count: number }>>({})
+
+  // Enrich ratings from comments API if not provided by search endpoint
+  useEffect(() => {
+    if (!items || items.length === 0) return
+    const missing = items.filter((e: any) => {
+      const hasInline = typeof e?.ratingAverage === 'number' || typeof e?.avgRating === 'number' || typeof e?.rating === 'number'
+      const hasCount = typeof e?.ratingCount === 'number' || typeof e?.commentsCount === 'number' || typeof e?._count?.comments === 'number'
+      return !(hasInline && hasCount) && !ratingsMap[e.id]
+    })
+    if (missing.length === 0) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const results = await Promise.all(
+          missing.map(async (e) => {
+            try {
+              const res = await fetch(`/api/comments?targetUserId=${encodeURIComponent(e.id)}`, { cache: 'no-store' })
+              if (!res.ok) return [e.id, { avg: 0, count: 0 }] as const
+              const comments = await res.json()
+              const rated = (Array.isArray(comments) ? comments : []).filter((c: any) => typeof c?.rating === 'number' && c.rating > 0)
+              const count = rated.length
+              const avg = count > 0 ? rated.reduce((a: number, c: any) => a + (Number(c.rating) || 0), 0) / count : 0
+              return [e.id, { avg, count }] as const
+            } catch {
+              return [e.id, { avg: 0, count: 0 }] as const
+            }
+          })
+        )
+        if (cancelled) return
+        setRatingsMap((prev) => {
+          const next = { ...prev }
+          for (const [id, val] of results) next[id] = val
+          return next
+        })
+      } catch {
+        // no-op
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [items, ratingsMap])
+
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-6">
@@ -29,13 +75,15 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loading && !items &&
-            Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="group">
-                <div className="aspect-[3/4] bg-gray-200 animate-pulse" />
-                <div className="h-3 w-3/4 bg-gray-200 mt-2 animate-pulse" />
-                <div className="h-2 w-1/2 bg-gray-100 mt-1 animate-pulse" />
+            Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="group cursor-pointer rounded-none">
+                <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden animate-pulse border border-gray-200" />
+                <div className="px-3 py-3">
+                  <div className="h-3 w-3/4 bg-gray-200 animate-pulse" />
+                  <div className="h-2 w-1/2 bg-gray-100 mt-2 animate-pulse" />
+                </div>
               </div>
             ))}
 
@@ -50,52 +98,89 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
                   ? 'ring-2 ring-amber-400 shadow-lg shadow-amber-200/60'
                   : 'ring-2 ring-pink-400 shadow-lg shadow-pink-200/60')
               : ''
+            // Build rating from item fields or from ratingsMap fallback (comments API)
+            const comments: any[] | undefined = Array.isArray((e as any)?.comments) ? (e as any).comments : undefined
+            const reviews: any[] | undefined = Array.isArray((e as any)?.reviews) ? (e as any).reviews : undefined
+            const ratingCountRaw = (e as any)?.ratingCount ?? (e as any)?.commentsCount ?? (e as any)?._count?.comments
+            const ratingAverageRaw = (e as any)?.avgRating ?? (e as any)?.commentsAverage ?? (e as any)?.averageRating ?? (e as any)?.ratingAverage ?? (e as any)?.rating
+            let ratingCount = typeof ratingCountRaw === 'number' ? ratingCountRaw : (comments ? comments.length : (reviews ? reviews.length : 0))
+            let rating = typeof ratingAverageRaw === 'number' ? ratingAverageRaw : NaN
+            if ((!Number.isFinite(rating) || rating <= 0) && ratingsMap[e.id]) {
+              rating = ratingsMap[e.id].avg
+              ratingCount = ratingsMap[e.id].count
+            }
+            if ((!Number.isFinite(rating) || rating <= 0) && comments && comments.length) {
+              const sum = comments.reduce((acc, c: any) => acc + (Number(c?.rating ?? c?.stars) || 0), 0)
+              rating = sum / comments.length
+              ratingCount = comments.length
+            } else if ((!Number.isFinite(rating) || rating <= 0) && reviews && reviews.length) {
+              const sum = reviews.reduce((acc, r: any) => acc + (Number(r?.rating ?? r?.stars) || 0), 0)
+              rating = sum / reviews.length
+              ratingCount = reviews.length
+            }
+            rating = Math.max(0, Math.min(5, Number.isFinite(rating) ? (rating as number) : 0))
+            const stars = Math.round(rating)
             return (
-            <Link href={href} key={e.id} className="group cursor-pointer block">
-              <div className={`aspect-[3/4] bg-gray-200 relative overflow-hidden mb-3 ${frameClasses}`}>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                {highlight && (
-                  <div className={`absolute inset-0 pointer-events-none ${isMonth ? 'bg-gradient-to-b from-amber-100/10 via-transparent to-amber-200/10' : 'bg-gradient-to-b from-pink-100/10 via-transparent to-pink-200/10'}`}></div>
-                )}
-                {e.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full bg-gray-300" />
-                )}
-                {/* Bottom ribbon centered with equal left/right spacing */}
-                {highlight && (
-                  <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-center">
-                    <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'}`}>
-                      {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
-                    </span>
-                  </div>
-                )}
-                {/* Icon-only badges top-right */}
-                {(e.isVerified || e.isAgeVerified) && (
-                  <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
-                    {e.isVerified && (
-                      <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
-                        <BadgeCheck className="h-4 w-4" />
-                      </span>
+              <div key={e.id} className={`group cursor-pointer rounded-none`}>
+                {/* Image as link */}
+                <Link href={href} className="block">
+                  <div className={`aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors ${frameClasses}`}>
+                    {e.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-gray-300" />
                     )}
-                    {(e.isAgeVerified || e.isVerified) && (
-                      <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
-                        <ShieldCheck className="h-4 w-4" />
-                      </span>
+                    {highlight && (
+                      <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-center">
+                        <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'}`}>
+                          {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
+                        </span>
+                      </div>
+                    )}
+                    {(e.isVerified || e.isAgeVerified) && (
+                      <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
+                        {e.isVerified && (
+                          <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                            <BadgeCheck className="h-4 w-4" />
+                          </span>
+                        )}
+                        {(e.isAgeVerified || e.isVerified) && (
+                          <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
+                            <ShieldCheck className="h-4 w-4" />
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
+                </Link>
+                {/* Text content */}
+                <div className="px-3 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Link href={href} className="block truncate">
+                        <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">
+                          {(e.name?.toUpperCase?.() ?? e.name) || '—'}
+                        </h3>
+                      </Link>
+                      {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
+                    </div>
+                    {rating > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                        <span className="tracking-wide font-medium">{`${rating.toFixed(1)}/5`}</span>
+                        <span className="flex items-center">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className={`h-4 w-4 ${i < stars ? 'text-pink-500' : 'text-gray-300'}`} fill="currentColor" />
+                          ))}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {(e.city || e.country) && (
+                    <div className="mt-1 text-sm text-gray-700">{e.city || e.country}</div>
+                  )}
+                </div>
               </div>
-              <div className="text-center">
-                {e.name && (
-                  <h3 className="text-sm font-light tracking-widest text-gray-800">{e.name.toUpperCase?.() ?? e.name}</h3>
-                )}
-                {(e.city || e.country) && (
-                  <p className="text-xs text-gray-500 mt-1">{e.city || e.country}</p>
-                )}
-              </div>
-            </Link>
             )
           })}
 

@@ -15,8 +15,8 @@ import {
   Camera,
   Users,
   User,
-  X,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { getUserTypeDisplayName, getGenderDisplayName, formatTimeAgo } from '@/lib/validations'
@@ -87,6 +87,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const [selectedView, setSelectedView] = useState<'STANDARD' | 'ALT1' | 'ALT2' | null>(null)
   const [savingView, setSavingView] = useState(false)
   const [savedViewAt, setSavedViewAt] = useState<number | null>(null)
+
 
   const isOwnProfile = !userId || userId === session?.user?.id
 
@@ -174,6 +175,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const userType = user.userType
   const displayName = profile?.displayName || user.email
   const formattedLocation = formatLocation(profile)
+  const hasAvatar = !!(profile?.avatar && String(profile.avatar).trim())
   // Build a quick lookup for code -> German label
   const COUNTRY_LABEL_BY_CODE: Record<string, string> = Object.fromEntries(
     (COUNTRIES_DE || []).map((c) => [String(c.value).toUpperCase(), c.label])
@@ -514,6 +516,8 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
                   <span>PROFIL BEARBEITEN</span>
                 </button>
               )}
+
+              {/* Avatar-Editor entfernt */}
               
               {!isOwnProfile && (
                 <div className="flex gap-3">
@@ -679,6 +683,8 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
               <div className="text-xs font-light tracking-widest text-gray-600 mb-2">AUSGEWÄHLTE ANSICHT</div>
               <ProfileViewPreview variant={(selectedView as any) || 'STANDARD'} />
             </div>
+
+            {/* Avatar-Editor Modal entfernt */}
 
             {/* Removed manual preview links */}
           </div>

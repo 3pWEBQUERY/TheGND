@@ -213,6 +213,12 @@ model User {
   feedGroupsOwned   FeedGroup[]
   feedGroupMemberships FeedGroupMember[]
 
+  // Gamification
+  gamificationProfile GamificationProfile?
+  gamificationEvents  GamificationEvent[]
+  userBadges          UserBadge[]
+  userPerks           UserPerk[]
+
   @@map("users")
 }
 
@@ -812,4 +818,101 @@ model ForumPostReport {
 
   @@index([postId, status])
   @@map("forum_post_reports")
+}
+
+// Gamification
+
+enum GamificationEventType {
+  DAILY_LOGIN
+  FORUM_POST
+  FORUM_REPLY
+  FEED_POST
+  COMMENT_VERIFIED
+  REGULAR_USE
+}
+
+model GamificationProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points         Int      @default(0)
+  level          Int      @default(1)
+  streakDays     Int      @default(0)
+  lastLoginAt    DateTime?
+  totalLogins    Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("gamification_profiles")
+}
+
+model GamificationEvent {
+  id          String                 @id @default(cuid())
+  userId      String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        GamificationEventType
+  points      Int                    @default(0)
+  metadata    String?
+  createdAt   DateTime               @default(now())
+
+  @@index([userId, type, createdAt])
+  @@map("gamification_events")
+}
+
+model Badge {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  name         String
+  description  String?
+  icon         String?
+  pointsReward Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userBadges   UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([badgeId])
+  @@map("user_badges")
+}
+
+model Perk {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  name         String
+  description  String?
+  thresholdPts Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userPerks    UserPerk[]
+
+  @@map("perks")
+}
+
+model UserPerk {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perkId     String
+  perk       Perk     @relation(fields: [perkId], references: [id], onDelete: Cascade)
+  unlockedAt DateTime @default(now())
+  claimedAt  DateTime?
+
+  @@unique([userId, perkId])
+  @@index([perkId])
+  @@map("user_perks")
 }

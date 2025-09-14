@@ -127,7 +127,7 @@ export default function MinimalistNavigation() {
   const loadNotifications = async () => {
     try {
       setNotifLoading(true)
-      const res = await fetch('/api/notifications?limit=20')
+      const res = await fetch('/api/notifications?limit=20', { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setNotifications(Array.isArray(data) ? data : [])

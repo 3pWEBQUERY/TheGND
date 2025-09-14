@@ -159,13 +159,20 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Resolve sender display name from profile/companyName for all user types
+    const senderUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { profile: true }
+    })
+    const senderName = senderUser?.profile?.displayName ?? senderUser?.profile?.companyName ?? 'Ein Nutzer'
+
     // Create notification for receiver
     await prisma.notification.create({
       data: {
         userId: validatedData.receiverId,
         type: 'message',
         title: 'Neue Nachricht',
-        message: `${session.user.email} hat Ihnen eine Nachricht gesendet`
+        message: `${senderName} hat Ihnen eine Nachricht gesendet`
       }
     })
 

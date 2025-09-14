@@ -52,13 +52,20 @@ export async function POST(
       }
     })
 
+    // Resolve follower display name/company name for all user types
+    const follower = await prisma.user.findUnique({
+      where: { id: currentUserId },
+      include: { profile: true }
+    })
+    const followerName = follower?.profile?.displayName ?? follower?.profile?.companyName ?? 'Ein Nutzer'
+
     // Create notification for the followed user
     await prisma.notification.create({
       data: {
         userId: targetUserId,
         type: 'follow',
         title: 'Neuer Follower',
-        message: `${session.user.email} folgt Ihnen jetzt`
+        message: `${followerName} folgt Ihnen jetzt`
       }
     })
 

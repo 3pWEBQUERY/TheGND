@@ -45,7 +45,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const loadNotifications = async () => {
     try {
       setNotifLoading(true)
-      const res = await fetch('/api/notifications?limit=20')
+      const res = await fetch('/api/notifications?limit=20', { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setNotifications(data)
@@ -317,6 +317,9 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     </Link>
                     <Link href="/marketing" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       MARKETING
+                    </Link>
+                    <Link href="/dashboard?tab=gamification" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
+                      GAMIFIKATION
                     </Link>
                     <Link href="/settings" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       EINSTELLUNGEN

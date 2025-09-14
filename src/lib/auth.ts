@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { User } from '@prisma/client'
+import { awardDailyLogin } from '@/lib/gamification'
 
 declare module 'next-auth' {
   interface Session {
@@ -116,6 +117,17 @@ export const authOptions = {
       // Fallback to baseUrl
       return baseUrl
     }
+  },
+  events: {
+    async signIn({ user }: { user: any }) {
+      try {
+        if (user?.id) {
+          await awardDailyLogin(user.id as string)
+        }
+      } catch (e) {
+        // Do not block sign-in on gamification errors
+      }
+    },
   },
   pages: {
     signIn: '/auth/signin',

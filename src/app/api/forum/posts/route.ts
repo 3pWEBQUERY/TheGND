@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { awardEvent } from '@/lib/gamification'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,6 +50,12 @@ export async function POST(req: NextRequest) {
     })
 
     await prisma.forumThread.update({ where: { id: threadId }, data: { lastPostAt: new Date() } })
+
+    // Gamification: award points for forum activity (post vs reply)
+    try {
+      const isReply = !!parentId
+      await awardEvent(session.user.id, (isReply ? 'FORUM_REPLY' : 'FORUM_POST') as any, isReply ? 10 : 15, { threadId })
+    } catch {}
 
     // Notify subscribers (best-effort)
     try {

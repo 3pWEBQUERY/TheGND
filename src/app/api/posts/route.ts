@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createPostSchema } from '@/lib/validations'
+import { awardEvent } from '@/lib/gamification'
 
 // GET - Fetch posts for newsfeed
 export async function GET(request: NextRequest) {
@@ -180,6 +181,13 @@ export async function POST(request: NextRequest) {
       isLikedByUser: false,
       likes: [],
       comments: []
+    }
+
+    // Gamification: award points for creating a feed post
+    try {
+      await awardEvent(session.user.id, 'FEED_POST' as any, 20, { postId: post.id })
+    } catch (e) {
+      // do not block post creation on gamification failure
     }
 
     return NextResponse.json(

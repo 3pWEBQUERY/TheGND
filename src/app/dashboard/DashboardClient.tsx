@@ -15,6 +15,7 @@ import DashboardHeader from '@/components/DashboardHeader'
 import DashboardMobileNavigation from '@/components/DashboardMobileNavigation'
 import ForumDashboard from '@/components/ForumDashboard'
 import FeedTabs from '@/components/FeedTabs'
+import GamificationComponent from '@/components/GamificationComponent'
 
 export default function DashboardClient() {
   const { data: session, status } = useSession()
@@ -165,6 +166,10 @@ export default function DashboardClient() {
           
           {activeTab === 'forum' && (
             <ForumDashboard />
+          )}
+
+          {activeTab === 'gamification' && (
+            <GamificationComponent />
           )}
           
           {activeTab === 'settings' && (

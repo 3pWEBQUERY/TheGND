@@ -84,18 +84,18 @@ export default function EscortsGridSection() {
 
   return (
     <section id="escorts" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-thin tracking-wider text-gray-800 mb-4">ESCORTS</h2>
           <div className="w-24 h-px bg-pink-500 mx-auto"></div>
         </div>
         
         {/* Escort Grid - live data */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-6 sm:gap-6 mb-12">
           {loading && !items &&
             Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="group cursor-pointer rounded-none">
-                <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden animate-pulse border border-gray-200" />
+                <div className="aspect-[2/3] sm:aspect-[3/4] bg-gray-200 relative overflow-hidden animate-pulse border border-gray-200" />
                 <div className="px-3 py-3">
                   <div className="h-3 w-3/4 bg-gray-200 animate-pulse" />
                   <div className="h-2 w-1/2 bg-gray-100 mt-2 animate-pulse" />
@@ -140,7 +140,7 @@ export default function EscortsGridSection() {
               <div key={`${e.id}-${index}`} className={`group cursor-pointer rounded-none`}>
                 {/* Image as link */}
                 <Link href={href} className="block">
-                  <div className={`aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors ${frameClasses}`}>
+                  <div className={`aspect-[2/3] sm:aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors ${frameClasses}`}>
                     {e.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />

@@ -4,6 +4,9 @@ import { useSession } from 'next-auth/react'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import HeroSection from '@/components/homepage/HeroSection'
 import EscortsGridSection from '@/components/homepage/EscortsGridSection'
+import AgencyGridSection from '@/components/homepage/AgencyGridSection'
+import ClubStudioGridSection from '@/components/homepage/ClubStudioGridSection'
+import JoinCtaSection from '@/components/homepage/JoinCtaSection'
 import VisionSection from '@/components/homepage/VisionSection'
 import StoriesGallery from '@/components/homepage/StoriesGallery'
 import Footer from '@/components/homepage/Footer'
@@ -27,6 +30,9 @@ export default function Home() {
       <StoriesGallery />
       <EscortsGridSection />
       <VisionSection />
+      <AgencyGridSection />
+      <ClubStudioGridSection />
+      <JoinCtaSection />
       <Footer />
     </div>
   )

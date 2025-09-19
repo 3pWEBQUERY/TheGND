@@ -14,13 +14,13 @@ export default function JoinCtaSection() {
           <div className="mt-6 flex items-center justify-center gap-3">
             <Link
               href="/auth/signin"
-              className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/40 text-xs md:text-sm font-light tracking-widest px-6 py-3 uppercase rounded-none"
+              className="flex-1 min-w-0 inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/40 text-[11px] sm:text-sm font-light tracking-widest px-3 sm:px-6 h-11 sm:h-12 uppercase rounded-none overflow-hidden text-ellipsis whitespace-nowrap"
             >
               Anmelden
             </Link>
             <Link
               href="/auth/signup"
-              className="inline-flex items-center justify-center bg-white hover:bg-white/90 text-pink-600 text-xs md:text-sm font-light tracking-widest px-6 py-3 uppercase rounded-none"
+              className="flex-1 min-w-0 inline-flex items-center justify-center bg-white hover:bg-white/90 text-pink-600 text-[11px] sm:text-sm font-light tracking-widest px-3 sm:px-6 h-11 sm:h-12 uppercase rounded-none overflow-hidden text-ellipsis whitespace-nowrap"
             >
               Benutzerkonto erstellen
             </Link>

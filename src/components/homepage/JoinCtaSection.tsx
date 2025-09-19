@@ -22,7 +22,7 @@ export default function JoinCtaSection() {
               href="/auth/signup"
               className="flex-1 min-w-0 inline-flex items-center justify-center bg-white hover:bg-white/90 text-pink-600 text-[11px] sm:text-sm font-light tracking-widest px-3 sm:px-6 h-11 sm:h-12 uppercase rounded-none overflow-hidden text-ellipsis whitespace-nowrap"
             >
-              Benutzerkonto erstellen
+              JETZT REGISTRIEREN!
             </Link>
           </div>
         </div>

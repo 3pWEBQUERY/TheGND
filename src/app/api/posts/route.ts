@@ -57,7 +57,8 @@ export async function GET(request: NextRequest) {
                 email: true,
                 profile: {
                   select: {
-                    displayName: true
+                    displayName: true,
+                    avatar: true
                   }
                 }
               }

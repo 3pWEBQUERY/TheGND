@@ -438,7 +438,7 @@ export default function StoriesGallery() {
 
   return (
     <section className="py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="text-center mb-8">
           <h2 className="text-4xl font-thin tracking-wider text-gray-800 mb-4">NEUE STORIES</h2>
           <div className="w-24 h-px bg-pink-500 mx-auto"></div>
@@ -446,7 +446,119 @@ export default function StoriesGallery() {
         {error && (
           <div className="text-sm text-red-600">Fehler beim Laden der Stories: {error}</div>
         )}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        {/* Mobile: horizontal slider */}
+        <div className="md:hidden mb-6" role="region" aria-label="Neue Stories – Slider">
+          <div className="stories-scroll flex gap-4 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch] scroll-px-3 sm:scroll-px-6">
+            {/* Sponsored HOME_BANNER tile (if any) */}
+            {sponsoredUrl && (
+              <div
+                key="sponsored-mobile"
+                className="shrink-0 w-[45vw] aspect-[3/4] group overflow-hidden relative ring-2 ring-[var(--brand-pink)] bg-gray-200 snap-start"
+                title="Sponsored – Story Banner"
+                aria-label="Sponsored – Story Banner"
+              >
+                {/* Use a plain <img> because the CDN uses dynamic subdomains (e.g., *.ufs.sh) */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={sponsoredUrl}
+                  alt="Sponsored Story Banner"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="eager"
+                />
+                <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase tracking-widest px-2 py-1">Sponsored</div>
+                {sponsoredTargetUrl && (
+                  <a
+                    href={sponsoredTargetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute inset-0"
+                    aria-label="Gesponsertes Banner öffnen"
+                  />
+                )}
+              </div>
+            )}
+            {((groupedGridItems ?? Array.from({ length: 7 })) as any[]).map((story, idx) => {
+              if (!stories) {
+                return (
+                  <div key={idx} className="shrink-0 w-[45vw] aspect-[3/4] bg-gray-200 animate-pulse rounded snap-start" />
+                )
+              }
+
+              const authorName = (
+                story.author.displayName ?? story.author.email.split('@')[0]
+              ).toUpperCase()
+              const label = timeAgoISO(story.createdAt)
+              const coverUrl = story.author.avatar || story.image || (story.video ? videoPosters[story.id] : undefined)
+              const fetchPrio: 'high' | 'low' = idx < 4 ? 'high' : 'low'
+              const sizes = '(min-width: 1024px) 12vw, (min-width: 768px) 22vw, 45vw'
+              const initials = authorName
+                .split(/\s|\.|-|_/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((s: string) => s[0])
+                .join('') || authorName[0]
+
+              // Unseen indicator per author based on seenByAuthor state
+              const coverTs = new Date(story.createdAt).getTime()
+              const lastSeen = story.authorId ? seenByAuthor[story.authorId] ?? 0 : 0
+              const unseen = coverTs > lastSeen
+
+              return (
+                <div
+                  key={story.id}
+                  className={`shrink-0 w-[45vw] aspect-[3/4] bg-gray-200 group cursor-pointer overflow-hidden relative snap-start ${unseen ? 'ring-2 ring-[var(--brand-pink)]' : 'ring-1 ring-gray-200'}`}
+                  title={`${authorName} - ${story.content} (${label})`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${authorName} – Story öffnen (${label})`}
+                  onClick={() => viewStory(story)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      viewStory(story)
+                    }
+                  }}
+                >
+                  {coverUrl ? (
+                    <>
+                      <Image
+                        src={coverUrl}
+                        alt={story.content || authorName}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        fetchPriority={fetchPrio}
+                        sizes={sizes}
+                      />
+                      {story.video && (
+                        <div className="absolute bottom-2 right-2 bg-black/60 rounded-full p-1.5">
+                          <Play className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center brand-gradient">
+                      <div className="h-16 w-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/40">
+                        <span className="text-white text-xl font-light tracking-widest">{initials}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Story Info Overlay (nur bei Hover sichtbar) */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2">
+                    <div className="text-white text-xs font-light tracking-wider">
+                      {authorName}
+                    </div>
+                    <div className="text-gray-300 text-xs mt-1">{label}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Desktop/Tablet: grid */}
+        <div className="hidden md:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
           {/* Sponsored HOME_BANNER tile (if any) */}
           {sponsoredUrl && (
             <div
@@ -769,6 +881,11 @@ export default function StoriesGallery() {
           </div>
         )}
       </div>
+      {/* Hide scrollbar on the mobile slider */}
+      <style jsx>{`
+        .stories-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .stories-scroll::-webkit-scrollbar { display: none; }
+      `}</style>
     </section>
   )
 }

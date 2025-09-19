@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import NewsfeedComponent from '@/components/NewsfeedComponent'
+import FeedRightSidebar from '@/components/FeedRightSidebar'
 import GroupsDashboard from '@/components/GroupsDashboard'
 
 export default function FeedTabs() {
@@ -43,7 +44,14 @@ export default function FeedTabs() {
       </div>
 
       {subTab === 'aktuell' ? (
-        <NewsfeedComponent />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <NewsfeedComponent />
+          </div>
+          <div>
+            <FeedRightSidebar />
+          </div>
+        </div>
       ) : (
         <GroupsDashboard />
       )}

@@ -221,6 +221,10 @@ model User {
   userBadges          UserBadge[]
   userPerks           UserPerk[]
 
+  // Matching
+  matchActionsMade     MemberMatchAction[] @relation("MemberMatchMember")
+  matchActionsReceived MemberMatchAction[] @relation("MemberMatchEscort")
+
   // Profile visitors
   profileVisitsReceived ProfileVisit[] @relation("ProfileVisits")
   profileVisitsMade     ProfileVisit[] @relation("Visitor")
@@ -935,4 +939,25 @@ model UserPerk {
   @@unique([userId, perkId])
   @@index([perkId])
   @@map("user_perks")
+}
+
+// Matching system: store member swipe actions on escorts
+enum MatchActionType {
+  LIKE
+  PASS
+}
+
+model MemberMatchAction {
+  id        String          @id @default(cuid())
+  memberId  String
+  member    User            @relation("MemberMatchMember", fields: [memberId], references: [id], onDelete: Cascade)
+  escortId  String
+  escort    User            @relation("MemberMatchEscort", fields: [escortId], references: [id], onDelete: Cascade)
+  action    MatchActionType
+  createdAt DateTime        @default(now())
+
+  @@unique([memberId, escortId])
+  @@index([memberId])
+  @@index([escortId])
+  @@map("member_match_actions")
 }

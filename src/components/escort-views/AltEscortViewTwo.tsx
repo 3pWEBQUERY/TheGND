@@ -11,7 +11,7 @@ import MessageButton from '@/components/MessageButton'
 import ProfileComments from '@/components/ProfileComments'
 import OnlineBadge from '@/components/OnlineBadge'
 import { SERVICES_DE } from '@/data/services.de'
-import { ShieldCheck, BadgeCheck } from 'lucide-react'
+import VerifiedBadges from '@/components/VerifiedBadges'
 import React from 'react'
 
 function toStr(v: any) { return (v === null || v === undefined) ? '' : String(v).trim() }
@@ -61,10 +61,7 @@ export default function AltEscortViewTwo(props: {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl md:text-3xl font-light tracking-widest text-gray-900">{name ? (name.toUpperCase?.() ?? name) : 'ESCORT'}</h1>
                 {hasApprovedVerification && (
-                  <>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-rose-50 text-rose-700 border-rose-200"><ShieldCheck className="h-3.5 w-3.5" /> ALTERSVERIFIZIERT</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50 text-emerald-700 border-emerald-200"><BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT</span>
-                  </>
+                  <VerifiedBadges />
                 )}
               </div>
               {(city || country) && (<p className="text-sm text-gray-500 mt-1">{city || country}</p>)}

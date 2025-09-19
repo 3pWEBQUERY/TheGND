@@ -13,7 +13,8 @@ import ServiceLegend from '@/components/ServiceLegend'
 import { SERVICES_DE } from '@/data/services.de'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { Globe, ShieldCheck, BadgeCheck } from 'lucide-react'
+import { Globe } from 'lucide-react'
+import VerifiedBadges from '@/components/VerifiedBadges'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { SiOnlyfans } from 'react-icons/si'
 import RatingDonut from '@/components/RatingDonut'
@@ -439,14 +440,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
             <div className="flex items-center justify-center gap-3 mb-2">
               <h1 className="text-5xl md:text-6xl font-thin tracking-wider text-white">{name ? (name.toUpperCase?.() ?? name) : 'ESCORT'}</h1>
               {hasApprovedVerification && (
-                <div className="hidden md:flex items-center gap-2">
-                  <span title="Altersverifizierung bestätigt" className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-rose-50/90 text-rose-800 border-rose-200">
-                    <ShieldCheck className="h-3.5 w-3.5" /> ALTERSVERIFIZIERT
-                  </span>
-                  <span title="Profil verifiziert" className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50/90 text-emerald-800 border-emerald-200">
-                    <BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT
-                  </span>
-                </div>
+                <VerifiedBadges className="hidden md:flex" translucent />
               )}
             </div>
             {(city || country) && (
@@ -472,14 +466,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
               <div className="flex items-center gap-2">
                 {name && <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>}
                 {hasApprovedVerification && (
-                  <>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-rose-50 text-rose-700 border-rose-200">
-                      <ShieldCheck className="h-3.5 w-3.5" /> ALTERSVERIFIZIERT
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50 text-emerald-700 border-emerald-200">
-                      <BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT
-                    </span>
-                  </>
+                  <VerifiedBadges />
                 )}
               </div>
               {ratingCount > 0 && (

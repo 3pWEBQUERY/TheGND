@@ -11,7 +11,8 @@ import MessageButton from '@/components/MessageButton'
 import ProfileComments from '@/components/ProfileComments'
 import OnlineBadge from '@/components/OnlineBadge'
 import { SERVICES_DE } from '@/data/services.de'
-import { ShieldCheck, BadgeCheck, Globe } from 'lucide-react'
+import { Globe } from 'lucide-react'
+import VerifiedBadges from '@/components/VerifiedBadges'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { SiOnlyfans } from 'react-icons/si'
 import React from 'react'
@@ -59,12 +60,7 @@ export default function AltEscortViewOne(props: {
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl md:text-3xl font-light tracking-widest text-white drop-shadow">{name ? (name.toUpperCase?.() ?? name) : 'ESCORT'}</h1>
-                    {hasApprovedVerification && (
-                      <>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-rose-50 text-rose-700 border-rose-200"><ShieldCheck className="h-3.5 w-3.5" /> ALTERSVERIFIZIERT</span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50 text-emerald-700 border-emerald-200"><BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT</span>
-                      </>
-                    )}
+                    {hasApprovedVerification && (<VerifiedBadges />)}
                   </div>
                   {(city || country) && (<p className="text-sm text-white/90 mt-1">{city || country}</p>)}
                   {slogan && <p className="text-sm text-white/90 mt-1 italic">“{slogan}”</p>}
@@ -86,12 +82,7 @@ export default function AltEscortViewOne(props: {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-light tracking-widest text-gray-900">{name ? (name.toUpperCase?.() ?? name) : 'ESCORT'}</h1>
-                {hasApprovedVerification && (
-                  <>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-rose-50 text-rose-700 border-rose-200"><ShieldCheck className="h-3.5 w-3.5" /> ALTERSVERIFIZIERT</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest border bg-emerald-50 text-emerald-700 border-emerald-200"><BadgeCheck className="h-3.5 w-3.5" /> VERIFIZIERT</span>
-                  </>
-                )}
+                {hasApprovedVerification && (<VerifiedBadges />)}
               </div>
               {(city || country) && (<p className="text-sm text-gray-500 mt-1">{city || country}</p>)}
               {slogan && <p className="text-sm text-gray-600 mt-2 italic">“{slogan}”</p>}

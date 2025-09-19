@@ -176,6 +176,8 @@ model User {
   onboardingStatus  OnboardingStatus  @default(NOT_STARTED)
   isActive          Boolean           @default(true)
   isModerator       Boolean           @default(false)
+  // Presence tracking
+  lastSeenAt        DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -219,7 +221,25 @@ model User {
   userBadges          UserBadge[]
   userPerks           UserPerk[]
 
+  // Profile visitors
+  profileVisitsReceived ProfileVisit[] @relation("ProfileVisits")
+  profileVisitsMade     ProfileVisit[] @relation("Visitor")
+
   @@map("users")
+}
+
+// Track who visited whose profile
+model ProfileVisit {
+  id             String   @id @default(cuid())
+  profileUserId  String
+  visitorId      String?
+  profileUser    User     @relation("ProfileVisits", fields: [profileUserId], references: [id], onDelete: Cascade)
+  visitor        User?    @relation("Visitor", fields: [visitorId], references: [id], onDelete: SetNull)
+  visitedAt      DateTime @default(now())
+
+  @@index([profileUserId, visitedAt])
+  @@index([visitorId, visitedAt])
+  @@map("profile_visits")
 }
 
 // Profile Model with different fields based on UserType

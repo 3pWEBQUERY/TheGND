@@ -9,6 +9,7 @@ import ServiceLegend from '@/components/ServiceLegend'
 import RatingDonut from '@/components/RatingDonut'
 import MessageButton from '@/components/MessageButton'
 import ProfileComments from '@/components/ProfileComments'
+import OnlineBadge from '@/components/OnlineBadge'
 import { SERVICES_DE } from '@/data/services.de'
 import { ShieldCheck, BadgeCheck, Globe } from 'lucide-react'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
@@ -40,6 +41,7 @@ export default function AltEscortViewOne(props: {
 }) {
   const { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification } = props
   const { id: escortId, name, slogan, city, country, image, description, details, services, contact, location, socials } = data
+  const isOnline = !!data?.isOnline
 
   return (
     <div className="min-h-screen bg-white">
@@ -49,6 +51,8 @@ export default function AltEscortViewOne(props: {
         <div className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">
           <img src={image || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          {/* Online status bottom-right (live via presence API) */}
+          <OnlineBadge userId={escortId} initialOnline={isOnline} className="absolute bottom-4 right-4" />
           <div className="absolute bottom-0 left-0 right-0">
             <div className="max-w-6xl mx-auto px-6 py-4">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">

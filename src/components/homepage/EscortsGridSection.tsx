@@ -1,15 +1,17 @@
  'use client'
 
- import { useEffect, useState } from 'react'
- import Link from 'next/link'
- import { Button } from '@/components/ui/button'
- import { Star, ShieldCheck, BadgeCheck } from 'lucide-react'
- import type { EscortItem } from '@/types/escort'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Star, ShieldCheck, BadgeCheck } from 'lucide-react'
+import type { EscortItem } from '@/types/escort'
+import RatingDonut from '@/components/RatingDonut'
 
 export default function EscortsGridSection() {
   const [items, setItems] = useState<EscortItem[] | null>(null)
   const [ratingsMap, setRatingsMap] = useState<Record<string, { avg: number; count: number }>>({})
   const [loading, setLoading] = useState<boolean>(true)
+  const [presenceMap, setPresenceMap] = useState<Record<string, { online: boolean; lastSeenAt?: string | null }>>({})
 
   useEffect(() => {
     ;(async () => {
@@ -28,6 +30,25 @@ export default function EscortsGridSection() {
       }
     })()
   }, [])
+
+  // Presence map for items
+  useEffect(() => {
+    if (!items || items.length === 0) return
+    const ids = items.map((e) => e.id).filter(Boolean)
+    const unique = Array.from(new Set(ids))
+    if (unique.length === 0) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/presence?ids=${encodeURIComponent(unique.join(','))}`, { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (cancelled) return
+        setPresenceMap(data || {})
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [items])
 
   // Enrich ratings from comments API if not provided by search endpoint
   useEffect(() => {
@@ -141,6 +162,8 @@ export default function EscortsGridSection() {
                 {/* Image as link */}
                 <Link href={href} className="block">
                   <div className={`aspect-[2/3] sm:aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors ${frameClasses}`}>
+                    {/* Online indicator top-left */}
+                    <span className={`absolute top-2 left-2 h-3 w-3 rounded-full border-2 border-white ${presenceMap[e.id]?.online ? 'bg-emerald-500' : 'bg-gray-300'}`} title={presenceMap[e.id]?.online ? 'Online' : 'Offline'} />
                     {e.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
@@ -184,13 +207,26 @@ export default function EscortsGridSection() {
                       {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
                     </div>
                     {rating > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
-                        <span className="tracking-wide font-medium">{`${rating.toFixed(1)}/5`}</span>
-                        <span className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className={`h-4 w-4 ${i < stars ? 'text-pink-500' : 'text-gray-300'}`} fill="currentColor" />
-                          ))}
-                        </span>
+                      <div className="flex items-center">
+                        {/* Mobile: show donut with numeric value inside */}
+                        <div className="sm:hidden">
+                          <RatingDonut
+                            value={rating}
+                            showValue
+                            size={28}
+                            strokeWidth={4}
+                            fillColor="#ec4899" /* pink-500 */
+                          />
+                        </div>
+                        {/* Desktop/Tablet: original text + stars */}
+                        <div className="hidden sm:flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                          <span className="tracking-wide font-medium">{`${rating.toFixed(1)}/5`}</span>
+                          <span className="flex items-center">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} className={`h-4 w-4 ${i < stars ? 'text-pink-500' : 'text-gray-300'}`} fill="currentColor" />
+                            ))}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>

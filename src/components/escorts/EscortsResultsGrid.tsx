@@ -22,8 +22,27 @@ function slugify(input: string): string {
 
 export default function EscortsResultsGrid({ items, loading, total }: Props) {
   const [ratingsMap, setRatingsMap] = useState<Record<string, { avg: number; count: number }>>({})
+  const [presenceMap, setPresenceMap] = useState<Record<string, { online: boolean; lastSeenAt?: string | null }>>({})
 
   // Enrich ratings from comments API if not provided by search endpoint
+  useEffect(() => {
+    if (!items || items.length === 0) return
+    // fetch presence for shown items
+    const ids = items.map((e) => e.id).filter(Boolean)
+    const unique = Array.from(new Set(ids))
+    if (unique.length === 0) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/presence?ids=${encodeURIComponent(unique.join(','))}`, { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) setPresenceMap(data || {})
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [items])
+
   useEffect(() => {
     if (!items || items.length === 0) return
     const missing = items.filter((e: any) => {
@@ -125,6 +144,8 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
                 {/* Image as link */}
                 <Link href={href} className="block">
                   <div className={`aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors ${frameClasses}`}>
+                    {/* Online indicator top-left */}
+                    <span className={`absolute top-2 left-2 h-3 w-3 rounded-full border-2 border-white ${presenceMap[e.id]?.online ? 'bg-emerald-500' : 'bg-gray-300'}`} title={presenceMap[e.id]?.online ? 'Online' : 'Offline'} />
                     {e.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />

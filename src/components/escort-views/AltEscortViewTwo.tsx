@@ -9,6 +9,7 @@ import ServiceLegend from '@/components/ServiceLegend'
 import RatingDonut from '@/components/RatingDonut'
 import MessageButton from '@/components/MessageButton'
 import ProfileComments from '@/components/ProfileComments'
+import OnlineBadge from '@/components/OnlineBadge'
 import { SERVICES_DE } from '@/data/services.de'
 import { ShieldCheck, BadgeCheck } from 'lucide-react'
 import React from 'react'
@@ -37,6 +38,7 @@ export default function AltEscortViewTwo(props: {
 }) {
   const { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification } = props
   const { id: escortId, name, slogan, city, country, image, description, details, services, contact, location } = data
+  const isOnline = !!data?.isOnline
 
   return (
     <div className="min-h-screen bg-white">
@@ -47,6 +49,8 @@ export default function AltEscortViewTwo(props: {
         <div className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">
           <img src={image || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          {/* Online status bottom-right (live via presence API) */}
+          <OnlineBadge userId={escortId} initialOnline={isOnline} className="absolute bottom-4 right-4" />
         </div>
         <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10">
           <div className="bg-white border border-gray-200 p-6 md:p-8 flex flex-col md:flex-row gap-6">

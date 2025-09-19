@@ -21,8 +21,11 @@ import type React from 'react'
 import ProfileComments from '@/components/ProfileComments'
 import AltEscortViewOne from '@/components/escort-views/AltEscortViewOne'
 import AltEscortViewTwo from '@/components/escort-views/AltEscortViewTwo'
+import OnlineBadge from '@/components/OnlineBadge'
 
 export const dynamic = 'force-dynamic'
+
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000
 
 // Helpers for formatting (aligned with ProfileComponent)
 const toStr = (v: any) => (v === null || v === undefined) ? '' : String(v).trim()
@@ -186,9 +189,19 @@ async function getEscort(id: string) {
   } catch {}
 
   const primaryImage = getPrimaryImage(profile)
+  // Presence (use raw SQL to avoid Prisma Client validation if types not regenerated)
+  let isOnline = false
+  try {
+    const rows = await prisma.$queryRaw<Array<{ lastSeenAt: Date | null }>>`
+      SELECT "lastSeenAt" FROM "users" WHERE id = ${id} LIMIT 1
+    `
+    const ts = rows?.[0]?.lastSeenAt ? new Date(rows[0].lastSeenAt as any).getTime() : 0
+    isOnline = !!(ts && Date.now() - ts <= ONLINE_THRESHOLD_MS)
+  } catch {}
 
   return {
     id: user.id,
+    isOnline,
     profileView: profile?.profileView ?? 'STANDARD',
     name: profile?.displayName ?? null,
     slogan: profile?.slogan ?? null,
@@ -277,10 +290,21 @@ export default async function EscortProfilePage({ params, searchParams }: { para
     )
   }
 
-  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, services, contact, location, socials } = data
+  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, services, contact, location, socials, isOnline } = data
   const images = [image, ...mediaImages, ...gallery].filter(Boolean) as string[]
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
+
+  // Record profile visit (raw SQL for compatibility)
+  try {
+    if (escortId) {
+      const visitor = session?.user?.id && session.user.id !== escortId ? session.user.id : null
+      await prisma.$executeRaw`
+        INSERT INTO "profile_visits" ("profileUserId", "visitorId", "visitedAt")
+        VALUES (${escortId}, ${visitor}, NOW())
+      `
+    }
+  } catch {}
   // Profile rating (average of visible root comments)
   const ratingAgg: any = await (prisma as any).comment.aggregate({
     where: { targetUserId: escortId, isVisible: true, parentId: null, NOT: { rating: null } },
@@ -430,6 +454,8 @@ export default async function EscortProfilePage({ params, searchParams }: { para
             )}
             <div className="w-24 h-px bg-pink-500 mx-auto mt-3" />
           </div>
+          {/* Online status bottom-right (live via presence API) */}
+          <OnlineBadge userId={escortId} initialOnline={isOnline} className="absolute bottom-4 right-4" />
         </div>
       </section>
       <div className="max-w-5xl mx-auto px-6 py-10">

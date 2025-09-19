@@ -2,6 +2,7 @@
 
 import { canCreateStories } from '@/lib/validations'
 import { UserType } from '@prisma/client'
+import { useEffect, useState } from 'react'
 
 interface DashboardMobileNavigationProps {
   session: any
@@ -12,6 +13,41 @@ interface DashboardMobileNavigationProps {
 export default function DashboardMobileNavigation({ session, activeTab, setActiveTab }: DashboardMobileNavigationProps) {
   const userType = session.user.userType as UserType
   const canStories = canCreateStories(userType)
+  const [matchingCounts, setMatchingCounts] = useState<{ likes: number; mutual: number }>({ likes: 0, mutual: 0 })
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch('/api/matching/counts', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) setMatchingCounts({ likes: Number(data?.likes || 0), mutual: Number(data?.mutual || 0) })
+      } catch {}
+    }
+    load()
+    const id = setInterval(load, 60000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [session?.user?.id, userType])
+
+  // Realtime updates via SSE for mobile badge
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const es = new EventSource('/api/realtime/stream')
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data || '{}')
+        if (typeof data.likes === 'number' || typeof data.mutual === 'number') {
+          setMatchingCounts((prev) => ({
+            likes: typeof data.likes === 'number' ? data.likes : prev.likes,
+            mutual: typeof data.mutual === 'number' ? data.mutual : prev.mutual,
+          }))
+        }
+      } catch {}
+    }
+    es.onerror = () => { try { es.close() } catch {} }
+    return () => { try { es.close() } catch {} }
+  }, [session?.user?.id])
 
   return (
     <div className="md:hidden mb-8">
@@ -48,14 +84,25 @@ export default function DashboardMobileNavigation({ session, activeTab, setActiv
         >
           FORUM
         </button>
-        {userType === 'MEMBER' && (
+        {(userType === 'MEMBER' || userType === 'ESCORT') && (
           <button 
             onClick={() => setActiveTab('matching')}
             className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${
               activeTab === 'matching' ? 'text-pink-500 border-pink-500' : 'text-gray-600 border-transparent hover:text-pink-500'
             }`}
           >
-            MATCHING
+            <span className="inline-flex items-center gap-2">
+              MATCHING
+              {(() => {
+                const c = userType === 'ESCORT' ? matchingCounts.likes : (userType === 'MEMBER' ? matchingCounts.mutual : 0)
+                if (!c) return null
+                return (
+                  <span className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] leading-none">
+                    {c > 99 ? '99+' : c}
+                  </span>
+                )
+              })()}
+            </span>
           </button>
         )}
         <button 

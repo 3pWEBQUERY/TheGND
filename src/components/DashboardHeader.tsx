@@ -7,6 +7,7 @@ import { Bell, MessageCircle, UserPlus, Heart, MessageSquare, Rss } from 'lucide
 import { getUserTypeDisplayName, canCreateStories } from '@/lib/validations'
 import { UserType } from '@prisma/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import Image from 'next/image'
 
 interface DashboardHeaderProps {
   session: any
@@ -34,9 +35,64 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const [isAdmin, setIsAdmin] = useState(false)
   const [profileNavOpen, setProfileNavOpen] = useState(false)
   const profileNavRef = useRef<HTMLDivElement>(null)
+  const [matchingCounts, setMatchingCounts] = useState<{ likes: number; mutual: number }>({ likes: 0, mutual: 0 })
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [notifUnreadOnly, setNotifUnreadOnly] = useState(false)
+  const [notifThumbs, setNotifThumbs] = useState<Record<string, { avatar: string | null; galleryFirst: string | null; displayName: string }>>({})
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' })
+  }
+
+  const markNotificationRead = async (id: string) => {
+    try {
+      const res = await fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        setNotifications((prev) => {
+          const updated = prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+          return notifUnreadOnly ? updated.filter(n => !n.isRead) : updated
+        })
+        if (typeof data.unread === 'number') setUnreadCount(data.unread)
+      }
+    } catch {}
+  }
+
+  const markAllNotificationsRead = async () => {
+    try {
+      const res = await fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        setNotifications((prev) => notifUnreadOnly ? [] : prev.map((n) => ({ ...n, isRead: true })))
+        if (typeof data.unread === 'number') setUnreadCount(data.unread)
+      }
+    } catch {}
+  }
+
+  const linkify = (text: string) => {
+    if (!text) return null
+    // Strip embedded uid tokens from display text
+    const cleaned = text.replace(/\[uid:[^\]]+\]/g, '')
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const parts = cleaned.split(urlRegex)
+    return parts.map((part, idx) => {
+      if (part.startsWith('http://') || part.startsWith('https://')) {
+        return (
+          <a key={idx} href={part} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:underline break-all">
+            {part}
+          </a>
+        )
+      }
+      return <span key={idx}>{part}</span>
+    })
   }
 
   const userType = (session?.user?.userType as UserType) ?? 'MEMBER'
@@ -45,7 +101,8 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const loadNotifications = async () => {
     try {
       setNotifLoading(true)
-      const res = await fetch('/api/notifications?limit=20', { cache: 'no-store' })
+      const q = notifUnreadOnly ? '&unreadOnly=true' : ''
+      const res = await fetch(`/api/notifications?limit=20${q}`, { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setNotifications(data)
@@ -61,7 +118,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     if (notifOpen) {
       loadNotifications()
     }
-  }, [notifOpen])
+  }, [notifOpen, notifUnreadOnly])
 
   // Load avatar for header display
   useEffect(() => {
@@ -76,6 +133,41 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     if (session?.user?.id) loadAvatar()
   }, [session?.user?.id])
 
+  // Load thumbnails for notifications that embed [uid:<id>]
+  useEffect(() => {
+    if (!notifOpen || !notifications || notifications.length === 0) return
+    const ids = new Set<string>()
+    const uidRe = /\[uid:([a-zA-Z0-9_-]+)\]/g
+    for (const n of notifications) {
+      if (!n?.message) continue
+      let m
+      while ((m = uidRe.exec(n.message)) !== null) {
+        if (m[1]) ids.add(m[1])
+      }
+    }
+    if (ids.size === 0) return
+    const toLoad = Array.from(ids).filter((id) => !notifThumbs[id])
+    if (toLoad.length === 0) return
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/users/minimal?ids=${encodeURIComponent(toLoad.join(','))}`, { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!data?.users) return
+        setNotifThumbs((prev) => {
+          const next = { ...prev }
+          for (const u of data.users as any[]) {
+            next[u.id] = { avatar: u.avatar ?? null, galleryFirst: u.galleryFirst ?? null, displayName: u.displayName }
+          }
+          return next
+        })
+      } catch {}
+    }
+    load()
+    // we intentionally don't depend on notifThumbs to avoid refetch loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifOpen, notifications])
+
   // Load admin flag to conditionally show ACP link
   useEffect(() => {
     const loadAdmin = async () => {
@@ -88,6 +180,44 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     }
     loadAdmin()
   }, [])
+
+  // Load matching counts (badge) and refresh periodically
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch('/api/matching/counts', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) setMatchingCounts({ likes: Number(data?.likes || 0), mutual: Number(data?.mutual || 0) })
+      } catch {}
+    }
+    load()
+    const id = setInterval(load, 60000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [session?.user?.id, userType])
+
+  // Realtime updates via SSE
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const es = new EventSource('/api/realtime/stream')
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data || '{}')
+        if (typeof data.likes === 'number' || typeof data.mutual === 'number') {
+          setMatchingCounts((prev) => ({
+            likes: typeof data.likes === 'number' ? data.likes : prev.likes,
+            mutual: typeof data.mutual === 'number' ? data.mutual : prev.mutual,
+          }))
+        }
+        if (typeof data.unread === 'number') setUnreadCount(data.unread)
+      } catch {}
+    }
+    es.onerror = () => {
+      try { es.close() } catch {}
+    }
+    return () => { try { es.close() } catch {} }
+  }, [session?.user?.id])
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -213,14 +343,24 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                 FORUM
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'forum' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
-              {userType === 'MEMBER' && (
+              {(userType === 'MEMBER' || userType === 'ESCORT') && (
                 <Link 
                   href="/dashboard?tab=matching"
-                  className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
+                  className={`relative group inline-flex items-center gap-2 text-sm font-light tracking-widest uppercase transition-colors ${
                     activeTab === 'matching' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                   }`}
                 >
                   MATCHING
+                  {/* Badge for counts */}
+                  {(() => {
+                    const c = userType === 'ESCORT' ? matchingCounts.likes : (userType === 'MEMBER' ? matchingCounts.mutual : 0)
+                    if (!c) return null
+                    return (
+                      <span className="h-5 w-5 inline-flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] leading-none">
+                        {c > 99 ? '99+' : c}
+                      </span>
+                    )
+                  })()}
                   <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'matching' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                 </Link>
               )}
@@ -245,14 +385,20 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                 aria-expanded={notifOpen}
               >
                 <Bell className="h-5 w-5" />
-                {notifications.some(n => !n.isRead) && (
+                {(unreadCount > 0 || notifications.some(n => !n.isRead)) && (
                   <span className="absolute top-1 right-1 h-2 w-2 bg-pink-500 rounded-full"></span>
                 )}
               </button>
               {notifOpen && (
                 <div className="fixed left-1/2 -translate-x-1/2 top-20 md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:translate-x-0 w-80 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 shadow-lg z-50">
-                  <div className="p-4 border-b border-gray-100">
+                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                     <div className="text-sm font-thin tracking-wider text-gray-800">BENACHRICHTIGUNGEN</div>
+                    <button
+                      onClick={() => setNotifUnreadOnly(v => !v)}
+                      className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 border ${notifUnreadOnly ? 'bg-pink-500 text-white border-pink-500' : 'border-gray-300 text-gray-700'}`}
+                    >
+                      UNGELESENE
+                    </button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifLoading ? (
@@ -260,24 +406,47 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     ) : notifications.length === 0 ? (
                       <div className="p-6 text-center text-sm font-light tracking-wide text-gray-500">Keine Benachrichtigungen</div>
                     ) : (
-                      notifications.map(n => (
+                      notifications.map(n => {
+                        const m = n.message?.match(/\[uid:([a-zA-Z0-9_-]+)\]/)
+                        const uid = m?.[1]
+                        const t = uid ? notifThumbs[uid] : undefined
+                        const thumb = t?.avatar || t?.galleryFirst || null
+                        return (
                         <div key={n.id} className={`flex items-start gap-3 p-3 border-b border-gray-50 ${n.isRead ? '' : 'bg-pink-50/40'}`}>
                           <div className="mt-0.5 text-gray-500">
-                            {renderIcon(n.type)}
+                            {thumb ? (
+                              <div className="relative h-6 w-6 overflow-hidden bg-gray-100 border border-gray-200">
+                                <Image src={thumb} alt={t?.displayName || 'User'} fill className="object-cover" />
+                              </div>
+                            ) : (
+                              renderIcon(n.type)
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <div className="text-sm font-light tracking-wide text-gray-800 truncate">{n.title}</div>
                               <div className="text-xs font-light tracking-wide text-gray-400 ml-2 shrink-0">{formatTime(n.createdAt)}</div>
                             </div>
-                            <div className="text-xs font-light tracking-wide text-gray-600 truncate">{n.message}</div>
+                            <div className="text-xs font-light tracking-wide text-gray-600 truncate">{linkify(n.message)}</div>
+                            <div className="mt-1 text-right">
+                              {!n.isRead && (
+                                <button onClick={() => markNotificationRead(n.id)} className="text-[10px] font-medium tracking-widest text-pink-600 hover:underline uppercase">
+                                  Als gelesen
+                                </button>
+                              )}
+                            </div>
                           </div>
                           {!n.isRead && <span className="h-2 w-2 bg-pink-500 rounded-full mt-2"></span>}
                         </div>
-                      ))
+                      )})
                     )}
                   </div>
                   <div className="p-3 border-t border-gray-100 text-right">
+                    {notifications.some(n => !n.isRead) && (
+                      <button onClick={markAllNotificationsRead} className="mr-3 text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase">
+                        ALLE ALS GELESEN
+                      </button>
+                    )}
                     <Link
                       href="/notifications"
                       onClick={() => setNotifOpen(false)}

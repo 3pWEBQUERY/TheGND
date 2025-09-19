@@ -45,6 +45,59 @@ export async function POST(req: NextRequest) {
         RETURNING "action";
       `
       const ret = Array.isArray(rows) && rows[0] ? rows[0].action : action
+      // Auto-message on LIKE
+      if (ret === 'LIKE') {
+        try {
+          const me = await prisma.user.findUnique({ where: { id: session.user.id }, include: { profile: true } })
+          let content = 'Hallo! Ich habe dich geliked und würde dich gerne kennenlernen. Schreib mir gerne zurück!\n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages'
+          if (me?.profile?.preferences) {
+            try {
+              const pref = JSON.parse(me.profile.preferences)
+              if (pref && typeof pref.autoLikeMessage === 'string' && pref.autoLikeMessage.trim()) {
+                content = pref.autoLikeMessage
+              }
+            } catch {}
+          }
+          if (content) {
+            await prisma.message.create({ data: { senderId: session.user.id, receiverId: escortId, content } })
+          }
+          // Notification to ESCORT about like
+          try {
+            const senderName = me?.profile?.displayName ?? me?.email?.split('@')[0] ?? 'Ein Mitglied'
+            await prisma.notification.create({
+              data: {
+                userId: escortId,
+                type: 'like',
+                title: 'Neues Like',
+                message: `${senderName} hat dich geliked [uid:${session.user.id}]`,
+              }
+            })
+          } catch {}
+
+          // If escort already liked member -> mutual match, notify both
+          try {
+            const mutualRows = await prisma.$queryRaw<{ exists: boolean }[]>`
+              SELECT EXISTS(
+                SELECT 1 FROM "escort_match_actions"
+                WHERE "escortId" = ${escortId} AND "memberId" = ${session.user.id} AND action = 'LIKE'
+              ) as exists
+            `
+            const isMutual = Array.isArray(mutualRows) && mutualRows[0]?.exists
+            if (isMutual) {
+              // Notify member (self) about match (include messages + escort profile link)
+              const escortUser = await prisma.user.findUnique({ where: { id: escortId }, include: { profile: true } })
+              const escortName = escortUser?.profile?.displayName ?? escortUser?.email?.split('@')[0] ?? 'Escort'
+              const memberName = me?.profile?.displayName ?? me?.email?.split('@')[0] ?? 'Mitglied'
+              const slug = (escortName || 'escort').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+              const msgLink = 'http://localhost:3000/dashboard?tab=messages'
+              const profileLink = `http://localhost:3000/escorts/${escortId}/${slug}`
+              await prisma.notification.create({ data: { userId: session.user.id, type: 'like', title: 'Match', message: `Es ist ein Match mit ${escortName}. Nachrichten: ${msgLink} • Profil: ${profileLink} [uid:${escortId}]` } })
+              // Escort side: include at least messages link
+              await prisma.notification.create({ data: { userId: escortId, type: 'like', title: 'Match', message: `Es ist ein Match mit ${memberName}. Nachrichten: ${msgLink} [uid:${session.user.id}]` } })
+            }
+          } catch {}
+        } catch {}
+      }
       return NextResponse.json({ ok: true, action: ret }, { status: 200 })
     } catch (e: any) {
       return NextResponse.json({ ok: false, error: 'Fehler beim Speichern der Aktion' }, { status: 500 })

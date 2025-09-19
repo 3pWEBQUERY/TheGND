@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
     const preferredCountry = typeof pref.country === 'string' ? pref.country : undefined
     const preferredAppearance: Record<string, string | string[] | undefined> = pref.appearance || {}
     const preferredLanguages: string[] = Array.isArray(pref.languages) ? pref.languages.map((l: any) => String(l).toLowerCase()) : []
+    const preferredPiercings: string[] = Array.isArray(pref.piercings) ? pref.piercings.map((v: any) => String(v).toLowerCase()) : []
+    const preferredTattoos: string[] = Array.isArray(pref.tattoos) ? pref.tattoos.map((v: any) => String(v).toLowerCase()) : []
 
     // Exclude escorts already swiped (use raw SQL to avoid local Prisma client mismatch)
     let excludeIds: string[] = []
@@ -70,8 +72,17 @@ export async function GET(req: NextRequest) {
         breastSize: p?.breastSize,
         hairLength: p?.hairLength,
         eyeColor: p?.eyeColor,
+        breastType: p?.breastType,
+        intimateArea: p?.intimateArea,
+        clothingStyle: p?.clothingStyle,
+        clothingSize: p?.clothingSize,
+        shoeSize: p?.shoeSize,
+        height: p?.height,
+        weight: p?.weight,
       }
       const langs: string[] = parseJSON<string[]>(p?.languages ?? null, []).map((l) => String(l).toLowerCase())
+      const piercings: string[] = parseJSON<string[]>(p?.piercings ?? null, []).map((v) => String(v).toLowerCase())
+      const tattoos: string[] = parseJSON<string[]>(p?.tattoos ?? null, []).map((v) => String(v).toLowerCase())
 
       let score = 0
       // Services overlap
@@ -83,6 +94,16 @@ export async function GET(req: NextRequest) {
       if (preferredLanguages.length && langs.length) {
         const set = new Set(langs)
         for (const l of preferredLanguages) if (set.has(l)) score += 2
+      }
+      // Piercings overlap
+      if (preferredPiercings.length && piercings.length) {
+        const set = new Set(piercings)
+        for (const v of preferredPiercings) if (set.has(v)) score += 1
+      }
+      // Tattoos overlap
+      if (preferredTattoos.length && tattoos.length) {
+        const set = new Set(tattoos)
+        for (const v of preferredTattoos) if (set.has(v)) score += 1
       }
       // Appearance matches
       for (const key of Object.keys(preferredAppearance)) {

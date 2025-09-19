@@ -134,7 +134,7 @@ export default function NotificationsPage() {
                 unreadOnly ? 'border-pink-500 text-pink-600 bg-pink-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              {unreadOnly ? 'Nur UNGELESENE • AN' : 'Nur UNGELESENE'}
+              {unreadOnly ? 'UNGELESENE • AN' : 'UNGELESENE'}
             </button>
             <button
               type="button"

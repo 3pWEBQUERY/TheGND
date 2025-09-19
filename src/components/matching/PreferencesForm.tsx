@@ -15,8 +15,21 @@ export default function PreferencesForm() {
   const [appearance, setAppearance] = useState<Record<string, any>>({
     bodyType: '',
     hairColor: '',
-    eyeColor: ''
+    eyeColor: '',
+    hairLength: '',
+    breastType: '',
+    breastSize: '',
+    intimateArea: '',
+    clothingStyle: '',
+    clothingSize: '',
+    shoeSize: '',
+    height: '',
+    weight: '',
   })
+  const [languages, setLanguages] = useState<string>('')
+  const [piercings, setPiercings] = useState<string>('')
+  const [tattoos, setTattoos] = useState<string>('')
+  const [autoLikeMessage, setAutoLikeMessage] = useState<string>('Hallo! Danke fürs Vorbeischauen. Ich würde dich gerne kennenlernen. Schreib mir gerne zurück! \n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages')
 
   useEffect(() => {
     (async () => {
@@ -31,8 +44,21 @@ export default function PreferencesForm() {
           setAppearance({
             bodyType: p?.appearance?.bodyType || '',
             hairColor: p?.appearance?.hairColor || '',
-            eyeColor: p?.appearance?.eyeColor || ''
+            eyeColor: p?.appearance?.eyeColor || '',
+            hairLength: p?.appearance?.hairLength || '',
+            breastType: p?.appearance?.breastType || '',
+            breastSize: p?.appearance?.breastSize || '',
+            intimateArea: p?.appearance?.intimateArea || '',
+            clothingStyle: p?.appearance?.clothingStyle || '',
+            clothingSize: p?.appearance?.clothingSize || '',
+            shoeSize: p?.appearance?.shoeSize || '',
+            height: p?.appearance?.height || '',
+            weight: p?.appearance?.weight || '',
           })
+          setLanguages(Array.isArray(p.languages) ? p.languages.join(', ') : (typeof p.languages === 'string' ? p.languages : ''))
+          setPiercings(Array.isArray(p.piercings) ? p.piercings.join(', ') : (typeof p.piercings === 'string' ? p.piercings : ''))
+          setTattoos(Array.isArray(p.tattoos) ? p.tattoos.join(', ') : (typeof p.tattoos === 'string' ? p.tattoos : ''))
+          setAutoLikeMessage(typeof p.autoLikeMessage === 'string' && p.autoLikeMessage ? p.autoLikeMessage : autoLikeMessage)
         } else {
           setError(data?.error || 'Fehler beim Laden')
         }
@@ -53,10 +79,13 @@ export default function PreferencesForm() {
     setError(null)
     setOk(null)
     try {
+      const languagesArr = languages.split(',').map(s => s.trim()).filter(Boolean)
+      const piercingsArr = piercings.split(',').map(s => s.trim()).filter(Boolean)
+      const tattoosArr = tattoos.split(',').map(s => s.trim()).filter(Boolean)
       const res = await fetch('/api/matching/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ services, city, country, appearance })
+        body: JSON.stringify({ services, city, country, appearance, languages: languagesArr, piercings: piercingsArr, tattoos: tattoosArr, autoLikeMessage })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)

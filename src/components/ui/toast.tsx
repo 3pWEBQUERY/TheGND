@@ -2,10 +2,11 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
-type ToastItem = { id: string; message: string }
+type ToastVariant = 'info' | 'success' | 'error'
+type ToastItem = { id: string; message: string; variant: ToastVariant }
 
 type ToastContextValue = {
-  show: (message: string, opts?: { duration?: number }) => void
+  show: (message: string, opts?: { duration?: number; variant?: ToastVariant }) => void
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null)
@@ -13,10 +14,11 @@ const ToastContext = createContext<ToastContextValue | null>(null)
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([])
 
-  const show = useCallback((message: string, opts?: { duration?: number }) => {
+  const show = useCallback((message: string, opts?: { duration?: number; variant?: ToastVariant }) => {
     const id = (globalThis as any)?.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
     const duration = opts?.duration ?? 1500
-    setItems((prev) => [...prev, { id, message }])
+    const variant: ToastVariant = opts?.variant ?? 'info'
+    setItems((prev) => [...prev, { id, message, variant }])
     setTimeout(() => {
       setItems((prev) => prev.filter((i) => i.id !== id))
     }, duration)
@@ -47,7 +49,9 @@ export function Toaster({ items }: { items: ToastItem[] }) {
           key={t.id}
           role="status"
           aria-live="polite"
-          className="px-4 py-2 bg-gray-900 text-white text-xs tracking-widest shadow-md"
+          className={`px-4 py-2 text-white text-xs tracking-widest shadow-md ${
+            t.variant === 'success' ? 'bg-emerald-600' : t.variant === 'error' ? 'bg-red-600' : 'bg-gray-900'
+          }`}
         >
           {t.message}
         </div>

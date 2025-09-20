@@ -56,7 +56,7 @@ export default function DashboardClient() {
         setSuggestions(prev => prev.filter(s => s.id !== id))
         setGridAnim(prev => { const { [id]: _, ...rest } = prev; return rest })
       }, 260)
-      show(action === 'LIKE' ? 'Geliked' : 'Abgelehnt')
+      show(action === 'LIKE' ? 'Geliked' : 'Abgelehnt', { variant: action === 'LIKE' ? 'success' : 'info' })
     }
   }
 
@@ -70,7 +70,18 @@ export default function DashboardClient() {
         const d = await r.json()
         if (r.ok) setSuggestions(Array.isArray(d?.suggestions) ? d.suggestions : [])
       } catch {}
-      show('Letzte Aktion rückgängig gemacht')
+      show('Letzte Aktion rückgängig gemacht', { variant: 'info' })
+    } catch {}
+  }
+
+  const reloadSuggestions = async () => {
+    try {
+      const r = await fetch('/api/matching/suggestions?limit=24', { cache: 'no-store' })
+      const d = await r.json()
+      if (r.ok) {
+        setSuggestions(Array.isArray(d?.suggestions) ? d.suggestions : [])
+        show('Vorschläge aktualisiert', { variant: 'success' })
+      }
     } catch {}
   }
 
@@ -345,7 +356,15 @@ export default function DashboardClient() {
                       ) : matchError ? (
                         <div className="text-sm text-red-600">{matchError}</div>
                       ) : suggestions.length === 0 ? (
-                        <div className="text-sm text-gray-500">Keine Vorschläge verfügbar</div>
+                        <div className="text-sm text-gray-500">
+                          <div className="flex flex-col items-center justify-center gap-3 py-8">
+                            <div>Keine Vorschläge verfügbar</div>
+                            <div className="flex items-center gap-3">
+                              <button onClick={reloadSuggestions} className="px-3 py-1.5 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600">Neu laden</button>
+                              <button onClick={() => setShowPrefs(true)} className="px-3 py-1.5 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600">Präferenzen anpassen</button>
+                            </div>
+                          </div>
+                        </div>
                       ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                           {suggestions.map((s: any) => {
@@ -520,12 +539,12 @@ export default function DashboardClient() {
                                 <button onClick={async () => {
                                   await fetch('/api/matching/escort/swipe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: l.id, action: 'PASS' }) })
                                   setLikesReceived(prev => prev.filter(x => x.id !== l.id))
-                                  show('Abgelehnt')
+                                  show('Abgelehnt', { variant: 'info' })
                                 }} className="flex-1 text-xs px-3 py-2 border border-gray-300">ABLEHNEN</button>
                                 <button onClick={async () => {
                                   await fetch('/api/matching/escort/swipe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: l.id, action: 'LIKE' }) })
                                   setLikesReceived(prev => prev.map(x => x.id === l.id ? { ...x, liked_back: true } : x))
-                                  show('Geliked')
+                                  show('Geliked', { variant: 'success' })
                                   // reload mutual
                                   try { const r = await fetch('/api/matching/mutual?limit=24'); const d = await r.json(); if (r.ok) setMutual(Array.isArray(d?.matches) ? d.matches : []) } catch {}
                                 }} className="flex-1 text-xs px-3 py-2 bg-pink-500 text-white">LIKE ZURÜCK</button>

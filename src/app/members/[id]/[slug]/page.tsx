@@ -17,7 +17,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 
-interface PageProps {
+interface MemberPageProps {
   params: { id: string; slug: string }
 }
 
@@ -89,7 +89,7 @@ const badgeElementsDE = (v: any) => toArray(v).map((x: any, i: number) => (
   </span>
 ))
 
-export default async function MemberPublicPage({ params }: PageProps) {
+export default async function MemberPublicPage({ params }: MemberPageProps) {
   const { id, slug } = params
   const user = await prisma.user.findUnique({
     where: { id },

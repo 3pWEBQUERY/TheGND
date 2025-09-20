@@ -96,7 +96,7 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
     if (!id) return
     await onAction(id, 'LIKE')
     shift(id)
-    show('Geliked')
+    show('Geliked', { variant: 'success' })
   }
 
   const passTop = async () => {
@@ -104,7 +104,7 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
     if (!id) return
     await onAction(id, 'PASS')
     shift(id)
-    show('Abgelehnt')
+    show('Abgelehnt', { variant: 'info' })
   }
 
   const undo = async () => {
@@ -187,9 +187,9 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
         await onAction(id, dir as 'LIKE' | 'PASS')
         shift(id)
         if (dir === 'LIKE') {
-          show('Geliked')
+          show('Geliked', { variant: 'success' })
         } else {
-          show('Abgelehnt')
+          show('Abgelehnt', { variant: 'info' })
         }
       } else {
         // Reset

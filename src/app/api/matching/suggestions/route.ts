@@ -7,6 +7,18 @@ function parseJSON<T>(raw: string | null | undefined, fallback: T): T {
   try { return raw ? JSON.parse(raw) as T : fallback } catch { return fallback }
 }
 
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371 // km
+  const toRad = (d: number) => d * Math.PI / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon/2) * Math.sin(dLon/2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  return R * c
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session: any = await getServerSession(authOptions as any)
@@ -30,6 +42,13 @@ export async function GET(req: NextRequest) {
     const preferredLanguages: string[] = Array.isArray(pref.languages) ? pref.languages.map((l: any) => String(l).toLowerCase()) : []
     const preferredPiercings: string[] = Array.isArray(pref.piercings) ? pref.piercings.map((v: any) => String(v).toLowerCase()) : []
     const preferredTattoos: string[] = Array.isArray(pref.tattoos) ? pref.tattoos.map((v: any) => String(v).toLowerCase()) : []
+    const preferredRadiusKm: number | undefined = ((): number | undefined => {
+      if (typeof pref.radiusKm === 'number' && pref.radiusKm > 0) return pref.radiusKm
+      const n = Number(pref.radiusKm)
+      return Number.isFinite(n) && n > 0 ? n : undefined
+    })()
+    const centerLat: number | undefined = (typeof me?.profile?.latitude === 'number' ? me!.profile!.latitude! : undefined)
+    const centerLon: number | undefined = (typeof me?.profile?.longitude === 'number' ? me!.profile!.longitude! : undefined)
 
     // Exclude escorts already swiped (use raw SQL to avoid local Prisma client mismatch)
     let excludeIds: string[] = []
@@ -62,8 +81,19 @@ export async function GET(req: NextRequest) {
       take: 100
     })
 
+    // Optional geofilter by radius (requires member center and escort coords)
+    const geoFiltered = (preferredRadiusKm && centerLat != null && centerLon != null)
+      ? escorts.filter((u) => {
+          const lat = typeof u.profile?.latitude === 'number' ? u.profile.latitude : undefined
+          const lon = typeof u.profile?.longitude === 'number' ? u.profile.longitude : undefined
+          if (lat == null || lon == null) return false
+          const d = haversineKm(centerLat!, centerLon!, lat, lon)
+          return d <= preferredRadiusKm!
+        })
+      : escorts
+
     // Score escorts based on preferences
-    const scored = escorts.map((u) => {
+    const scored = geoFiltered.map((u) => {
       const p = u.profile
       const services: string[] = parseJSON<string[]>(p?.services ?? null, [])
       const appearance = {
@@ -120,6 +150,14 @@ export async function GET(req: NextRequest) {
       if (preferredCity && p?.city && p.city.toLowerCase().includes(preferredCity.toLowerCase())) score += 1
       // Country boost
       if (preferredCountry && p?.country && p.country.toLowerCase().includes(preferredCountry.toLowerCase())) score += 1
+
+      // Slight distance-based boost if geofilter is active and coords present
+      if (preferredRadiusKm && centerLat != null && centerLon != null && typeof p?.latitude === 'number' && typeof p?.longitude === 'number') {
+        const d = haversineKm(centerLat, centerLon, p.latitude, p.longitude)
+        // Closer gets up to +2 bonus
+        const bonus = Math.max(0, 2 - (d / Math.max(1, preferredRadiusKm)) * 2)
+        score += bonus
+      }
 
       return { user: u, score }
     })

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Heart, X, RefreshCw, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/toast'
 import Link from 'next/link'
 
 export type MatchSuggestion = {
@@ -27,7 +28,9 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const { show } = useToast()
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const autoReloadedRef = useRef(false)
 
   // For drag gestures
   const startX = useRef<number | null>(null)
@@ -55,6 +58,19 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
 
   useEffect(() => { load() }, [])
 
+  // If deck becomes empty, auto-reload once
+  useEffect(() => {
+    if (!loading && !error && cards.length === 0) {
+      if (!autoReloadedRef.current) {
+        autoReloadedRef.current = true
+        const t = setTimeout(() => { load() }, 1500)
+        return () => clearTimeout(t)
+      }
+    } else if (cards.length > 0) {
+      autoReloadedRef.current = false
+    }
+  }, [cards.length, loading, error])
+
   const onAction = async (id: string, action: 'LIKE' | 'PASS') => {
     try {
       setBusy(true)
@@ -80,6 +96,7 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
     if (!id) return
     await onAction(id, 'LIKE')
     shift(id)
+    show('Geliked')
   }
 
   const passTop = async () => {
@@ -87,6 +104,7 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
     if (!id) return
     await onAction(id, 'PASS')
     shift(id)
+    show('Abgelehnt')
   }
 
   const undo = async () => {
@@ -126,6 +144,19 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
       if (card) {
         const rot = currentX.current / 20
         card.style.transform = `translate(${currentX.current}px, ${currentY.current}px) rotate(${rot}deg)`
+        const likeBadge = card.querySelector('[data-like-badge="true"]') as HTMLElement | null
+        const passBadge = card.querySelector('[data-pass-badge="true"]') as HTMLElement | null
+        const v = Math.min(1, Math.abs(currentX.current) / 100)
+        if (currentX.current > 0) {
+          if (likeBadge) likeBadge.style.opacity = String(v)
+          if (passBadge) passBadge.style.opacity = '0'
+        } else if (currentX.current < 0) {
+          if (passBadge) passBadge.style.opacity = String(v)
+          if (likeBadge) likeBadge.style.opacity = '0'
+        } else {
+          if (likeBadge) likeBadge.style.opacity = '0'
+          if (passBadge) passBadge.style.opacity = '0'
+        }
       }
     }
     const handlePointerUp = async (e: PointerEvent) => {
@@ -148,9 +179,18 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
         setTimeout(() => {
           card.style.transition = ''
           card.style.transform = ''
+          const likeBadge = card.querySelector('[data-like-badge="true"]') as HTMLElement | null
+          const passBadge = card.querySelector('[data-pass-badge="true"]') as HTMLElement | null
+          if (likeBadge) likeBadge.style.opacity = '0'
+          if (passBadge) passBadge.style.opacity = '0'
         }, 220)
         await onAction(id, dir as 'LIKE' | 'PASS')
         shift(id)
+        if (dir === 'LIKE') {
+          show('Geliked')
+        } else {
+          show('Abgelehnt')
+        }
       } else {
         // Reset
         card.style.transition = 'transform 160ms ease-out'
@@ -158,6 +198,10 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
         setTimeout(() => {
           card.style.transition = ''
         }, 170)
+        const likeBadge = card.querySelector('[data-like-badge="true"]') as HTMLElement | null
+        const passBadge = card.querySelector('[data-pass-badge="true"]') as HTMLElement | null
+        if (likeBadge) likeBadge.style.opacity = '0'
+        if (passBadge) passBadge.style.opacity = '0'
       }
     }
 
@@ -172,6 +216,22 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
       el.removeEventListener('pointercancel', handlePointerUp)
     }
   }, [busy, topCardId])
+
+  // Keyboard shortcuts: Left = PASS, Right = LIKE
+  useEffect(() => {
+    const onKey = async (e: KeyboardEvent) => {
+      if (busy) return
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        await likeTop()
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        await passTop()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [busy, cards])
 
   if (loading) {
     return (
@@ -203,14 +263,14 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto" ref={containerRef}>
+    <div className="w-full max-w-md mx-auto" ref={containerRef} style={{ touchAction: 'pan-y' }}>
       <div className="relative h-[70vh] select-none">
         {cards.slice(0, 3).map((c, idx) => (
           <div
             key={c.id}
             data-id={c.id}
             data-top-card={idx === 0 ? 'true' : 'false'}
-            className="absolute inset-0 bg-white border border-gray-200 overflow-hidden"
+            className={`absolute inset-0 bg-white border border-gray-200 overflow-hidden ${idx === 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
             style={{
               borderRadius: 0,
               zIndex: 10 - idx,
@@ -223,6 +283,23 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
               ) : (
                 <div className="h-full w-full flex items-center justify-center text-gray-400">Kein Bild</div>
               )}
+              {/* Drag Indicators */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div
+                  data-pass-badge="true"
+                  className="absolute top-4 left-4 px-3 py-1 border-2 border-red-500 text-red-600 bg-white/80 text-sm font-semibold tracking-widest"
+                  style={{ opacity: 0, transform: 'rotate(-15deg)' }}
+                >
+                  NOPE
+                </div>
+                <div
+                  data-like-badge="true"
+                  className="absolute top-4 right-4 px-3 py-1 border-2 border-pink-500 text-pink-600 bg-white/80 text-sm font-semibold tracking-widest"
+                  style={{ opacity: 0, transform: 'rotate(15deg)' }}
+                >
+                  LIKE
+                </div>
+              </div>
             </div>
             <div className="p-4">
               <div className="flex items-center justify-between">
@@ -250,6 +327,7 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
       <div className="mt-3 flex items-center justify-center">
         <Button variant="ghost" onClick={undo} disabled={busy} className="text-xs tracking-widest"><Undo2 className="h-4 w-4 mr-2"/>Rückgängig</Button>
       </div>
+      
     </div>
   )
 }

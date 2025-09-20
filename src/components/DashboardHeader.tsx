@@ -39,6 +39,8 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifUnreadOnly, setNotifUnreadOnly] = useState(false)
   const [notifThumbs, setNotifThumbs] = useState<Record<string, { avatar: string | null; galleryFirst: string | null; displayName: string }>>({})
+  const [notifCursor, setNotifCursor] = useState<string | null>(null)
+  const [notifHasMore, setNotifHasMore] = useState(false)
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' })
@@ -98,14 +100,18 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const userType = (session?.user?.userType as UserType) ?? 'MEMBER'
   const canStories = canCreateStories(userType)
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (reset = false) => {
     try {
       setNotifLoading(true)
-      const q = notifUnreadOnly ? '&unreadOnly=true' : ''
-      const res = await fetch(`/api/notifications?limit=20${q}`, { cache: 'no-store' })
+      const qUnread = notifUnreadOnly ? '&unreadOnly=true' : ''
+      const qCursor = !reset && notifCursor ? `&cursor=${encodeURIComponent(notifCursor)}` : ''
+      const res = await fetch(`/api/notifications/list?limit=20${qUnread}${qCursor}`, { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
-        setNotifications(data)
+        const items = Array.isArray(data?.items) ? data.items : []
+        setNotifications(prev => reset ? items : [...prev, ...items])
+        setNotifCursor(data?.nextCursor ?? null)
+        setNotifHasMore(!!data?.nextCursor)
       }
     } catch (e) {
       // optional: console.error
@@ -116,7 +122,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
 
   useEffect(() => {
     if (notifOpen) {
-      loadNotifications()
+      loadNotifications(true)
     }
   }, [notifOpen, notifUnreadOnly])
 
@@ -401,7 +407,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     </button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
-                    {notifLoading ? (
+                    {notifLoading && notifications.length === 0 ? (
                       <div className="p-4 text-sm font-light tracking-wide text-gray-500">Wird geladen...</div>
                     ) : notifications.length === 0 ? (
                       <div className="p-6 text-center text-sm font-light tracking-wide text-gray-500">Keine Benachrichtigungen</div>
@@ -412,7 +418,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                         const t = uid ? notifThumbs[uid] : undefined
                         const thumb = t?.avatar || t?.galleryFirst || null
                         return (
-                        <div key={n.id} className={`flex items-start gap-3 p-3 border-b border-gray-50 ${n.isRead ? '' : 'bg-pink-50/40'}`}>
+                        <div key={n.id} className={`flex items-start gap-3 p-3 border-b border-gray-50 ${n.isRead ? '' : 'bg-pink-50/40'}`} onClickCapture={() => { if (!n.isRead) markNotificationRead(n.id) }}>
                           <div className="mt-0.5 text-gray-500">
                             {thumb ? (
                               <div className="relative h-6 w-6 overflow-hidden bg-gray-100 border border-gray-200">
@@ -441,7 +447,18 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                       )})
                     )}
                   </div>
-                  <div className="p-3 border-t border-gray-100 text-right">
+                  <div className="p-3 border-t border-gray-100 flex items-center justify-between">
+                    <div>
+                      {notifHasMore && (
+                        <button
+                          onClick={() => loadNotifications(false)}
+                          disabled={notifLoading}
+                          className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase"
+                        >
+                          MEHR LADEN
+                        </button>
+                      )}
+                    </div>
                     {notifications.some(n => !n.isRead) && (
                       <button onClick={markAllNotificationsRead} className="mr-3 text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase">
                         ALLE ALS GELESEN
@@ -450,7 +467,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     <Link
                       href="/notifications"
                       onClick={() => setNotifOpen(false)}
-                      className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase inline-block"
+                      className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors uppercase inline-block ml-auto"
                     >
                       ALLE ANZEIGEN
                     </Link>

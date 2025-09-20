@@ -4,6 +4,7 @@ import AuthProvider from "@/components/providers/auth-provider";
 import I18nProvider from "@/components/providers/i18n-provider";
 import MobileNavbar from "@/components/MobileNavbar";
 import PresenceHeartbeat from "@/components/providers/PresenceHeartbeat";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,9 +50,11 @@ export default function RootLayout({
       >
         <AuthProvider>
           <I18nProvider>
-            <PresenceHeartbeat />
-            <div className="pb-24 md:pb-0">{children}</div>
-            <MobileNavbar />
+            <ToastProvider>
+              <PresenceHeartbeat />
+              <div className="pb-24 md:pb-0">{children}</div>
+              <MobileNavbar />
+            </ToastProvider>
           </I18nProvider>
         </AuthProvider>
       </body>

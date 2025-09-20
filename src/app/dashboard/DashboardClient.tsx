@@ -18,8 +18,10 @@ import FeedTabs from '@/components/FeedTabs'
 import GamificationComponent from '@/components/GamificationComponent'
 import SwipeDeck from '@/components/matching/SwipeDeck'
 import Image from 'next/image'
+import { Heart, X, Undo2 } from 'lucide-react'
 import Link from 'next/link'
 import PreferencesForm from '@/components/matching/PreferencesForm'
+import { useToast } from '@/components/ui/toast'
 
 export default function DashboardClient() {
   const { data: session, status } = useSession()
@@ -35,6 +37,42 @@ export default function DashboardClient() {
   const [likesReceived, setLikesReceived] = useState<any[]>([])
   const [likesLoading, setLikesLoading] = useState(false)
   const [likesFilter, setLikesFilter] = useState<'all' | 'new' | 'liked_back'>('all')
+  const { show } = useToast()
+  const [gridAnim, setGridAnim] = useState<Record<string, 'LEFT' | 'RIGHT'>>({})
+
+  const gridSwipe = async (id: string, action: 'LIKE' | 'PASS') => {
+    try {
+      // start animation immediately
+      setGridAnim(prev => ({ ...prev, [id]: action === 'LIKE' ? 'RIGHT' : 'LEFT' }))
+      await fetch('/api/matching/swipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ escortId: id, action })
+      }).catch(() => null)
+    } catch {}
+    finally {
+      // remove after short delay to allow CSS transition
+      setTimeout(() => {
+        setSuggestions(prev => prev.filter(s => s.id !== id))
+        setGridAnim(prev => { const { [id]: _, ...rest } = prev; return rest })
+      }, 260)
+      show(action === 'LIKE' ? 'Geliked' : 'Abgelehnt')
+    }
+  }
+
+  const undoGrid = async () => {
+    try {
+      const res = await fetch('/api/matching/swipe/undo', { method: 'POST' })
+      await res.json().catch(() => null)
+      // Refresh suggestions
+      try {
+        const r = await fetch('/api/matching/suggestions?limit=24', { cache: 'no-store' })
+        const d = await r.json()
+        if (r.ok) setSuggestions(Array.isArray(d?.suggestions) ? d.suggestions : [])
+      } catch {}
+      show('Letzte Aktion rückgängig gemacht')
+    } catch {}
+  }
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -78,6 +116,27 @@ export default function DashboardClient() {
     }
     load()
   }, [activeTab, session])
+
+  // Keyboard shortcuts for desktop grid (Left=Pass, Right=Like)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (activeTab !== 'matching') return
+      if (showPrefs) return
+      if (!suggestions || suggestions.length === 0) return
+      if (session?.user?.userType !== 'MEMBER') return
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        const id = suggestions[0]?.id
+        if (id) gridSwipe(id, 'LIKE')
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        const id = suggestions[0]?.id
+        if (id) gridSwipe(id, 'PASS')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [activeTab, showPrefs, suggestions, session?.user?.userType])
 
   // Load mutual matches
   useEffect(() => {
@@ -280,6 +339,7 @@ export default function DashboardClient() {
 
                     {/* Desktop/Tablet: Grid */}
                     <div className="hidden md:block">
+                      <div className="mb-3 text-xs text-gray-500">Tipp: Nutze die Pfeiltasten ← (Pass) und → (Like)</div>
                       {matchLoading ? (
                         <div className="text-sm text-gray-500">Lade Vorschläge…</div>
                       ) : matchError ? (
@@ -288,34 +348,70 @@ export default function DashboardClient() {
                         <div className="text-sm text-gray-500">Keine Vorschläge verfügbar</div>
                       ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                          {suggestions.map((s: any) => (
-                            <Link key={s.id} href={`/escorts/${s.id}/${(s.displayName || 'escort').toLowerCase().replace(/[^a-z0-9]+/g,'-')}`} className="group">
-                              <div className="aspect-[3/4] bg-gray-100 border border-gray-200 relative overflow-hidden">
-                                {s.image || s.avatar ? (
-                                  <Image src={(s.image || s.avatar)!} alt={s.displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                                ) : (
-                                  <div className="h-full w-full flex items-center justify-center text-gray-400">Kein Bild</div>
-                                )}
-                              </div>
-                              <div className="px-2 py-3">
-                                <div className="flex items-center justify-between gap-3">
-                                  <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">{(s.displayName || '').toUpperCase()}</h3>
-                                  <div className="text-xs text-gray-500 whitespace-nowrap">{s.city || ''}{s.city && s.country ? ', ' : ''}{s.country || ''}</div>
-                                </div>
-                                {Array.isArray(s.services) && s.services.length > 0 && (
-                                  <div className="mt-2 flex flex-wrap gap-2">
-                                    {s.services.slice(0, 4).map((sv: string) => (
-                                      <span key={sv} className="px-2 py-1 text-[10px] uppercase tracking-widest bg-gray-100 text-gray-700">{sv}</span>
-                                    ))}
+                          {suggestions.map((s: any) => {
+                            const href = `/escorts/${s.id}/${(s.displayName || 'escort').toLowerCase().replace(/[^a-z0-9]+/g,'-')}`
+                            return (
+                              <Link key={s.id} href={href} className="group block relative">
+                                <div
+                                  className="aspect-[3/4] bg-gray-100 border border-gray-200 relative overflow-hidden"
+                                  style={gridAnim[s.id]
+                                    ? {
+                                        transform: gridAnim[s.id] === 'RIGHT' ? 'translateX(1000px) rotate(10deg)' : 'translateX(-1000px) rotate(-10deg)',
+                                        transition: 'transform 260ms ease-out, opacity 260ms ease-out',
+                                        opacity: 0,
+                                        pointerEvents: 'none'
+                                      }
+                                    : undefined}
+                                >
+                                  {s.image || s.avatar ? (
+                                    <Image src={(s.image || s.avatar)!} alt={s.displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                  ) : (
+                                    <div className="h-full w-full flex items-center justify-center text-gray-400">Kein Bild</div>
+                                  )}
+                                  {/* Overlay Controls */}
+                                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/40 to-transparent opacity-100 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center justify-center gap-4">
+                                      <button
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); gridSwipe(s.id, 'PASS') }}
+                                        aria-label="Ablehnen"
+                                        className="h-10 w-10 rounded-full bg-white/90 hover:bg-white text-gray-700 flex items-center justify-center shadow"
+                                      >
+                                        <X className="h-5 w-5" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); gridSwipe(s.id, 'LIKE') }}
+                                        aria-label="Like"
+                                        className="h-12 w-12 rounded-full bg-pink-500 hover:bg-pink-600 text-white flex items-center justify-center shadow"
+                                      >
+                                        <Heart className="h-6 w-6" />
+                                      </button>
+                                    </div>
                                   </div>
-                                )}
-                              </div>
-                            </Link>
-                          ))}
+                                </div>
+                                <div className="px-2 py-3">
+                                  <div className="flex items-center justify-between gap-3">
+                                    <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">{(s.displayName || '').toUpperCase()}</h3>
+                                    <div className="text-xs text-gray-500 whitespace-nowrap">{s.city || ''}{s.city && s.country ? ', ' : ''}{s.country || ''}</div>
+                                  </div>
+                                  {Array.isArray(s.services) && s.services.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      {s.services.slice(0, 4).map((sv: string) => (
+                                        <span key={sv} className="px-2 py-1 text-[10px] uppercase tracking-widest bg-gray-100 text-gray-700">{sv}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </Link>
+                            )
+                          })}
                         </div>
                       )}
                     </div>
 
+                    {/* Controls + Mutual Matches for MEMBER */}
+                    <div className="mt-8 flex items-center gap-3">
+                      <button onClick={undoGrid} className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 flex items-center gap-2"><Undo2 className="h-4 w-4"/>Rückgängig</button>
+                    </div>
                     {/* Mutual Matches for MEMBER */}
                     <div className="mt-12">
                       <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">MATCHES</h3>
@@ -326,13 +422,24 @@ export default function DashboardClient() {
                       ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                           {mutual.map((m: any) => (
-                            <Link key={m.id} href={`/escorts/${m.id}/${(m.displayName || 'escort').toLowerCase().replace(/[^a-z0-9]+/g,'-')}`} className="group">
-                              <div className="aspect-[3/4] bg-gray-100 border border-gray-200 relative overflow-hidden">
+                            <Link key={m.id} href={`/escorts/${m.id}/${(m.displayName || 'escort').toLowerCase().replace(/[^a-z0-9]+/g,'-')}`} className="group block relative">
+                              <div className="aspect-[3/4] bg-gray-100 border border-gray-200 relative overflow-hidden transition shadow-sm group-hover:shadow-lg">
                                 {m.image || m.avatar ? (
-                                  <Image src={(m.image || m.avatar)!} alt={m.displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                  <Image src={(m.image || m.avatar)!} alt={m.displayName} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                                 ) : (
                                   <div className="h-full w-full flex items-center justify-center text-gray-400">Kein Bild</div>
                                 )}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="flex items-center justify-center">
+                                    <button
+                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/dashboard?tab=messages&to=${m.id}`) }}
+                                      className="px-3 py-1.5 text-xs uppercase tracking-widest bg-white/90 hover:bg-white text-gray-800"
+                                    >
+                                      Nachricht
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                               <div className="px-2 py-3">
                                 <div className="flex items-center justify-between gap-3">
@@ -395,36 +502,33 @@ export default function DashboardClient() {
                             const img = l.avatar || thumb
                             return (
                           <div key={l.id} className="border border-gray-200">
-                            <div className="p-4 flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-3">
-                                <div className="relative h-10 w-10 overflow-hidden bg-gray-100 border border-gray-200">
-                                  {img ? (
-                                    <Image src={img} alt={l.displayName || l.email} fill className="object-cover" />
-                                  ) : (
-                                    <div className="h-full w-full flex items-center justify-center text-xs text-gray-400">IMG</div>
-                                  )}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="text-sm font-medium tracking-wider text-gray-900">{l.displayName || l.email}</div>
-                                    {l.liked_back && (
-                                      <span className="text-[10px] uppercase tracking-widest bg-pink-100 text-pink-700 px-2 py-0.5">MATCH</span>
-                                    )}
-                                  </div>
-                                  <div className="text-xs text-gray-500">{l.city || ''}{l.city && l.country ? ', ' : ''}{l.country || ''}</div>
-                                </div>
-                              </div>
+                            <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                              {img ? (
+                                <Image src={img} alt={l.displayName || l.email} fill className="object-cover" />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-xs text-gray-400">KEIN BILD</div>
+                              )}
+                            </div>
+                            <div className="p-4">
                               <div className="flex items-center gap-2">
+                                <div className="text-sm font-medium tracking-wider text-gray-900 truncate">{l.displayName || l.email}</div>
+                                {l.liked_back && (
+                                  <span className="text-[10px] uppercase tracking-widest bg-pink-100 text-pink-700 px-2 py-0.5">MATCH</span>
+                                )}
+                              </div>
+                              <div className="mt-3 flex items-center gap-2">
                                 <button onClick={async () => {
                                   await fetch('/api/matching/escort/swipe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: l.id, action: 'PASS' }) })
                                   setLikesReceived(prev => prev.filter(x => x.id !== l.id))
-                                }} className="text-xs px-3 py-1 border border-gray-300">ABLEHNEN</button>
+                                  show('Abgelehnt')
+                                }} className="flex-1 text-xs px-3 py-2 border border-gray-300">ABLEHNEN</button>
                                 <button onClick={async () => {
                                   await fetch('/api/matching/escort/swipe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: l.id, action: 'LIKE' }) })
                                   setLikesReceived(prev => prev.map(x => x.id === l.id ? { ...x, liked_back: true } : x))
+                                  show('Geliked')
                                   // reload mutual
                                   try { const r = await fetch('/api/matching/mutual?limit=24'); const d = await r.json(); if (r.ok) setMutual(Array.isArray(d?.matches) ? d.matches : []) } catch {}
-                                }} className="text-xs px-3 py-1 bg-pink-500 text-white">LIKE ZURÜCK</button>
+                                }} className="flex-1 text-xs px-3 py-2 bg-pink-500 text-white">LIKE ZURÜCK</button>
                               </div>
                             </div>
                           </div>
@@ -443,28 +547,41 @@ export default function DashboardClient() {
                       <div className="text-sm text-gray-500">Keine Matches</div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {mutual.map((m: any) => (
-                          <div key={m.id} className="border border-gray-200">
-                            <div className="p-4">
-                              <div className="flex items-center gap-2">
-                                <div className="relative h-6 w-6 overflow-hidden bg-gray-100 border border-gray-200">
-                                  {m.avatar ? (
-                                    <Image src={m.avatar} alt={m.displayName || m.email} fill className="object-cover" />
-                                  ) : (
-                                    <div className="h-full w-full flex items-center justify-center text-[10px] text-gray-400">IMG</div>
-                                  )}
+                        {mutual.map((m: any) => {
+                          const slug = (m.displayName || 'member').toLowerCase().replace(/[^a-z0-9]+/g,'-')
+                          const targetHref = `/members/${m.id}/${slug}`
+                          return (
+                          <Link key={m.id} href={targetHref} className="group block relative">
+                            <div className="aspect-[3/4] bg-gray-100 border border-gray-200 relative overflow-hidden transition shadow-sm group-hover:shadow-lg">
+                              {m.avatar ? (
+                                <Image src={m.avatar} alt={m.displayName || m.email} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-gray-400">Kein Bild</div>
+                              )}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                              <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex items-center justify-center">
+                                  <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/dashboard?tab=messages&to=${m.id}`) }}
+                                    className="px-3 py-1.5 text-xs uppercase tracking-widest bg-white/90 hover:bg-white text-gray-800"
+                                  >
+                                    Nachricht
+                                  </button>
                                 </div>
-                                <div className="text-sm font-medium tracking-wider text-gray-900">{m.displayName || m.email}</div>
                               </div>
+                            </div>
+                            <div className="p-4">
+                              <div className="text-sm font-medium tracking-wider text-gray-900 truncate">{m.displayName || m.email}</div>
                               <div className="text-xs text-gray-500">{m.city || ''}{m.city && m.country ? ', ' : ''}{m.country || ''}</div>
                             </div>
-                          </div>
-                        ))}
+                          </Link>
+                          )
+                        })}
                       </div>
-                    )}
-                  </div>
-                </>
-              )}
+                      )}
+                    </div>
+                  </>
+                )}
             </div>
           )}
 

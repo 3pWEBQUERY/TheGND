@@ -82,6 +82,28 @@ export async function POST(req: NextRequest) {
             const memberName = memberUser?.profile?.displayName ?? memberUser?.email?.split('@')[0] ?? 'Mitglied'
             await prisma.notification.create({ data: { userId: memberId, type: 'like', title: 'Match', message: `Es ist ein Match mit ${escortName} [uid:${session.user.id}]` } })
             await prisma.notification.create({ data: { userId: session.user.id, type: 'like', title: 'Match', message: `Es ist ein Match mit ${memberName} [uid:${memberId}]` } })
+
+            // Auto-message on MATCH (from member to escort) if enabled in member preferences
+            try {
+              let shouldSend = false
+              let content = 'Hallo! Ich habe dich geliked und würde dich gerne kennenlernen. Schreib mir gerne zurück!\n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages'
+              try {
+                const pref = memberUser?.profile?.preferences ? JSON.parse(memberUser.profile.preferences) : {}
+                if (pref && pref.autoMessageOnMatch === true && typeof pref.autoLikeMessage === 'string' && pref.autoLikeMessage.trim()) {
+                  content = pref.autoLikeMessage
+                  shouldSend = true
+                }
+              } catch {}
+              if (shouldSend) {
+                const recent = await prisma.message.findFirst({
+                  where: { senderId: memberId, receiverId: session.user.id },
+                  orderBy: { createdAt: 'desc' }
+                })
+                if (!recent || recent.content !== content) {
+                  await prisma.message.create({ data: { senderId: memberId, receiverId: session.user.id, content } })
+                }
+              }
+            } catch {}
           }
         } catch {}
       }

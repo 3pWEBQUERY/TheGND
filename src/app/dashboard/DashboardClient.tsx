@@ -25,6 +25,11 @@ import { useToast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import ServicesChips from '@/components/matching/ServicesChips'
 import * as Tooltip from '@radix-ui/react-tooltip'
+import dynamic from 'next/dynamic'
+
+const DynamicAutoMessage = dynamic(() => import('@/components/matching/AutoMessageSettings'), {
+  ssr: false,
+})
 
 export default function DashboardClient() {
   const { data: session, status } = useSession()
@@ -35,6 +40,7 @@ export default function DashboardClient() {
   const [matchError, setMatchError] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [showPrefs, setShowPrefs] = useState(false)
+  const [showAuto, setShowAuto] = useState(false)
   const [mutual, setMutual] = useState<any[]>([])
   const [mutualLoading, setMutualLoading] = useState(false)
   const [likesReceived, setLikesReceived] = useState<any[]>([])
@@ -162,6 +168,7 @@ export default function DashboardClient() {
     }
     const view = searchParams.get('view')
     setShowPrefs(view === 'prefs')
+    setShowAuto(view === 'auto-message')
   }, [searchParams])
 
   // Load matching suggestions when matching tab is active
@@ -384,33 +391,47 @@ export default function DashboardClient() {
           {activeTab === 'forum' && (
             <ForumDashboard />
           )}
-
           {activeTab === 'matching' && (
             <div className="">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-3xl font-thin tracking-wider text-gray-800">MATCHING</h2>
+                  <h2 className="text-3xl font-thin tracking-wider text-gray-800">{showAuto ? 'MATCHING AUTOMATISCHE NACHRICHT' : (showPrefs ? 'MATCHING PRÄFERENZEN' : 'MATCHING')}</h2>
                   <div className="w-16 h-px bg-pink-500 mt-3"></div>
                 </div>
                 {session.user.userType === 'MEMBER' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    aria-pressed={showPrefs}
-                    onClick={() => setShowPrefs((v) => !v)}
-                    className="uppercase tracking-widest text-gray-700 hover:border-pink-500 hover:text-pink-600"
-                  >
-                    {showPrefs ? 'VORSCHLÄGE' : 'PRÄFERENZEN'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push('/dashboard?tab=matching&view=auto-message')}
+                      className={`uppercase tracking-widest ${showAuto ? 'border-pink-500 text-pink-600' : 'text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}
+                    >
+                      AUTO-NACHRICHT
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-pressed={showPrefs}
+                      onClick={() => {
+                        const next = !showPrefs
+                        router.push(`/dashboard?tab=matching${next ? '&view=prefs' : ''}`)
+                        setShowPrefs(next)
+                      }}
+                      className="uppercase tracking-widest text-gray-700 hover:border-pink-500 hover:text-pink-600"
+                    >
+                      {showPrefs ? 'VORSCHLÄGE' : 'PRÄFERENZEN'}
+                    </Button>
+                  </div>
                 )}
               </div>
 
               {session.user.userType === 'MEMBER' ? (
-                showPrefs ? (
+                showAuto ? (
+                  <DynamicAutoMessage />
+                ) : showPrefs ? (
                   <PreferencesForm />
                 ) : (
                   <>
-                    {/* Mobile: Tinder-Style Swipe Deck */}
                     <div className="md:hidden">
                       <SwipeDeck fetchLimit={20} />
                     </div>

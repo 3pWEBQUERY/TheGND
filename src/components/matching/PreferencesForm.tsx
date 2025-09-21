@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button'
 import MultiSelect from '@/components/ui/multi-select'
 import { LANGUAGES_DE } from '@/data/languages.de'
 import Script from 'next/script'
-import { useRouter } from 'next/navigation'
+// removed router, no navigation from inside the form
 
 export default function PreferencesForm() {
-  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,7 +22,6 @@ export default function PreferencesForm() {
   const addressInputRef = useRef<HTMLInputElement | null>(null)
   const autocompleteRef = useRef<any>(null)
   const [radiusError, setRadiusError] = useState<string>('')
-  const [locSavedMsg, setLocSavedMsg] = useState<string>('')
   const [appearance, setAppearance] = useState<Record<string, any>>({
     bodyType: [] as string[],
     hairColor: [] as string[],
@@ -38,11 +36,9 @@ export default function PreferencesForm() {
     height: '',
     weight: '',
   })
-  const [languages, setLanguages] = useState<string>('')
   const [languagesSel, setLanguagesSel] = useState<string[]>([])
   const [piercings, setPiercings] = useState<string[]>([])
   const [tattoos, setTattoos] = useState<string[]>([])
-  const [autoLikeMessage, setAutoLikeMessage] = useState<string>('Hallo! Danke fürs Vorbeischauen. Ich würde dich gerne kennenlernen. Schreib mir gerne zurück! \n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages')
 
   // Options for richer appearance filters
   const bodyTypeOptions = [
@@ -135,8 +131,6 @@ export default function PreferencesForm() {
         if (res.ok) {
           const p = data?.preferences || {}
           setServices(Array.isArray(p.services) ? p.services : [])
-          setCity(typeof p.city === 'string' ? p.city : '')
-          setCountry(typeof p.country === 'string' ? p.country : '')
           setRadiusKm(typeof p.radiusKm === 'number' ? String(p.radiusKm) : (typeof p.radiusKm === 'string' ? p.radiusKm : ''))
           const a = p?.appearance || {}
           const toArr = (v: any) => Array.isArray(v) ? v : (v ? [String(v)] : [])
@@ -155,11 +149,9 @@ export default function PreferencesForm() {
             weight: a?.weight || '',
           })
           const langs = Array.isArray(p.languages) ? p.languages : (typeof p.languages === 'string' ? p.languages.split(',').map((s:string)=>s.trim()).filter(Boolean) : [])
-          setLanguages(langs.join(', '))
           setLanguagesSel(langs)
           setPiercings(Array.isArray(p.piercings) ? p.piercings : (typeof p.piercings === 'string' ? p.piercings.split(',').map((s: string) => s.trim()).filter(Boolean) : []))
           setTattoos(Array.isArray(p.tattoos) ? p.tattoos : (typeof p.tattoos === 'string' ? p.tattoos.split(',').map((s: string) => s.trim()).filter(Boolean) : []))
-          setAutoLikeMessage(typeof p.autoLikeMessage === 'string' && p.autoLikeMessage ? p.autoLikeMessage : autoLikeMessage)
         } else {
           setError(data?.error || 'Fehler beim Laden')
         }
@@ -226,7 +218,6 @@ export default function PreferencesForm() {
     setRadiusKm('')
     setMemberLocation(null)
     setRadiusError('')
-    setLocSavedMsg('')
     setAppearance({
       bodyType: [],
       hairColor: [],
@@ -241,18 +232,15 @@ export default function PreferencesForm() {
       height: '',
       weight: '',
     })
-    setLanguages('')
     setLanguagesSel([])
     setPiercings([])
     setTattoos([])
-    setOk(null)
     setError(null)
   }
 
   const submit = async () => {
     setSaving(true)
     setError(null)
-    setOk(null)
     try {
       // Save member center location if available (for radius filtering)
       if (memberLocation) {
@@ -269,16 +257,12 @@ export default function PreferencesForm() {
               }
             })
           })
-          if (resProf.ok) {
-            setLocSavedMsg('Standort gespeichert')
-            setTimeout(() => setLocSavedMsg(''), 3000)
-          }
+          // ignore response; location is persisted for radius filtering
         } catch {
           // non-fatal
         }
       }
-      const fromText = languages.split(',').map(s => s.trim()).filter(Boolean)
-      const languagesArr = languagesSel.length ? languagesSel : fromText
+      const languagesArr = languagesSel
       const piercingsArr = piercings
       const tattoosArr = tattoos
       // Validate radius (5–300 km)
@@ -298,7 +282,7 @@ export default function PreferencesForm() {
       const res = await fetch('/api/matching/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ services, city, country, radiusKm: radiusForPayload, appearance, languages: languagesArr, piercings: piercingsArr, tattoos: tattoosArr, autoLikeMessage })
+        body: JSON.stringify({ services, city, country, radiusKm: radiusForPayload, appearance, languages: languagesArr, piercings: piercingsArr, tattoos: tattoosArr })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
@@ -325,21 +309,7 @@ export default function PreferencesForm() {
           onLoad={onMapsLoaded}
         />
       )}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-3xl font-thin tracking-wider text-gray-900">PRÄFERENZEN</h2>
-          <div className="w-24 h-px bg-pink-500 mt-3" />
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard?tab=matching')}
-            className="text-xs font-light tracking-widest text-pink-600 hover:underline uppercase"
-          >
-            VORSCHLÄGE
-          </button>
-        </div>
-      </div>
+      {/* Heading and nav removed; outer dashboard header handles titles/tabs */}
 
       <div className="space-y-8">
         <div>
@@ -388,7 +358,6 @@ export default function PreferencesForm() {
               <div className="mt-1 flex items-center gap-3">
                 <p className="text-[11px] text-gray-500">Gültiger Bereich: 5–300 km</p>
                 {radiusError && <p className="text-[11px] text-red-600">{radiusError}</p>}
-                {locSavedMsg && <p className="text-[11px] text-emerald-600">{locSavedMsg}</p>}
               </div>
             </div>
           </div>

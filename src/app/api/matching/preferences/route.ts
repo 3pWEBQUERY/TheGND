@@ -30,12 +30,21 @@ export async function POST(req: NextRequest) {
 
     const data = await req.json()
     // Basic shape validation; keep flexible
-    const preferences = typeof data === 'object' && data ? data : {}
+    const incoming = typeof data === 'object' && data ? data : {}
+
+    // Load existing preferences to merge
+    const existingProfile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
+    let existing: any = {}
+    try {
+      existing = existingProfile?.preferences ? JSON.parse(existingProfile.preferences) : {}
+    } catch { existing = {} }
+
+    const merged = { ...existing, ...incoming }
 
     const profile = await prisma.profile.upsert({
       where: { userId: session.user.id },
-      update: { preferences: JSON.stringify(preferences) },
-      create: { userId: session.user.id, preferences: JSON.stringify(preferences) },
+      update: { preferences: JSON.stringify(merged) },
+      create: { userId: session.user.id, preferences: JSON.stringify(merged) },
     })
 
     return NextResponse.json({ message: 'Präferenzen gespeichert', preferences: JSON.parse(profile.preferences || '{}') }, { status: 200 })

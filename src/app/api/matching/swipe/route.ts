@@ -45,23 +45,10 @@ export async function POST(req: NextRequest) {
         RETURNING "action";
       `
       const ret = Array.isArray(rows) && rows[0] ? rows[0].action : action
-      // Auto-message on LIKE
       if (ret === 'LIKE') {
         try {
+          // Notify ESCORT about like
           const me = await prisma.user.findUnique({ where: { id: session.user.id }, include: { profile: true } })
-          let content = 'Hallo! Ich habe dich geliked und würde dich gerne kennenlernen. Schreib mir gerne zurück!\n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages'
-          if (me?.profile?.preferences) {
-            try {
-              const pref = JSON.parse(me.profile.preferences)
-              if (pref && typeof pref.autoLikeMessage === 'string' && pref.autoLikeMessage.trim()) {
-                content = pref.autoLikeMessage
-              }
-            } catch {}
-          }
-          if (content) {
-            await prisma.message.create({ data: { senderId: session.user.id, receiverId: escortId, content } })
-          }
-          // Notification to ESCORT about like
           try {
             const senderName = me?.profile?.displayName ?? me?.email?.split('@')[0] ?? 'Ein Mitglied'
             await prisma.notification.create({
@@ -74,7 +61,7 @@ export async function POST(req: NextRequest) {
             })
           } catch {}
 
-          // If escort already liked member -> mutual match, notify both
+          // Check mutual match and handle notifications + optional auto-message
           try {
             const mutualRows = await prisma.$queryRaw<{ exists: boolean }[]>`
               SELECT EXISTS(
@@ -84,7 +71,6 @@ export async function POST(req: NextRequest) {
             `
             const isMutual = Array.isArray(mutualRows) && mutualRows[0]?.exists
             if (isMutual) {
-              // Notify member (self) about match (include messages + escort profile link)
               const escortUser = await prisma.user.findUnique({ where: { id: escortId }, include: { profile: true } })
               const escortName = escortUser?.profile?.displayName ?? escortUser?.email?.split('@')[0] ?? 'Escort'
               const memberName = me?.profile?.displayName ?? me?.email?.split('@')[0] ?? 'Mitglied'
@@ -92,8 +78,29 @@ export async function POST(req: NextRequest) {
               const msgLink = 'http://localhost:3000/dashboard?tab=messages'
               const profileLink = `http://localhost:3000/escorts/${escortId}/${slug}`
               await prisma.notification.create({ data: { userId: session.user.id, type: 'like', title: 'Match', message: `Es ist ein Match mit ${escortName}. Nachrichten: ${msgLink} • Profil: ${profileLink} [uid:${escortId}]` } })
-              // Escort side: include at least messages link
               await prisma.notification.create({ data: { userId: escortId, type: 'like', title: 'Match', message: `Es ist ein Match mit ${memberName}. Nachrichten: ${msgLink} [uid:${session.user.id}]` } })
+
+              // Auto-message on MATCH (from member to escort) if enabled
+              let shouldSend = false
+              let content = 'Hallo! Ich habe dich geliked und würde dich gerne kennenlernen. Schreib mir gerne zurück!\n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages'
+              try {
+                const pref = me?.profile?.preferences ? JSON.parse(me.profile.preferences) : {}
+                if (pref && pref.autoMessageOnMatch === true && typeof pref.autoLikeMessage === 'string' && pref.autoLikeMessage.trim()) {
+                  content = pref.autoLikeMessage
+                  shouldSend = true
+                }
+              } catch {}
+              if (shouldSend) {
+                try {
+                  const recent = await prisma.message.findFirst({
+                    where: { senderId: session.user.id, receiverId: escortId },
+                    orderBy: { createdAt: 'desc' }
+                  })
+                  if (!recent || recent.content !== content) {
+                    await prisma.message.create({ data: { senderId: session.user.id, receiverId: escortId, content } })
+                  }
+                } catch {}
+              }
             }
           } catch {}
         } catch {}

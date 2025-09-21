@@ -22,6 +22,9 @@ import { Heart, X, Undo2 } from 'lucide-react'
 import Link from 'next/link'
 import PreferencesForm from '@/components/matching/PreferencesForm'
 import { useToast } from '@/components/ui/toast'
+import { Button } from '@/components/ui/button'
+import ServicesChips from '@/components/matching/ServicesChips'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 export default function DashboardClient() {
   const { data: session, status } = useSession()
@@ -83,6 +86,64 @@ export default function DashboardClient() {
         show('Vorschläge aktualisiert', { variant: 'success' })
       }
     } catch {}
+  }
+
+  const [resetting, setResetting] = useState<null | 'soft' | 'hard'>(null)
+  const [resetResult, setResetResult] = useState<null | { mode: 'soft' | 'hard'; count: number }>(null)
+
+  const reloadMutual = async () => {
+    try {
+      const res = await fetch('/api/matching/mutual?limit=24', { cache: 'no-store' })
+      const data = await res.json()
+      if (res.ok) setMutual(Array.isArray(data?.matches) ? data.matches : [])
+    } catch {}
+  }
+
+  const reloadLikesReceived = async () => {
+    try {
+      const res = await fetch('/api/matching/likes-received', { cache: 'no-store' })
+      const data = await res.json()
+      if (res.ok) setLikesReceived(Array.isArray(data?.likes) ? data.likes : [])
+    } catch {}
+  }
+
+  const resetMatching = async (mode: 'soft' | 'hard') => {
+    try {
+      if (mode === 'hard') {
+        if (!window.confirm('Möchtest du ALLE Likes/Pass-Entscheidungen zurücksetzen?')) return
+      } else {
+        if (!window.confirm('Möchtest du nur PASS-Entscheidungen zurücksetzen (Soft-Reset)?')) return
+      }
+      setResetting(mode)
+      setResetResult(null)
+      const res = await fetch('/api/matching/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        show(data?.error || 'Fehler beim Zurücksetzen', { variant: 'error' })
+        setResetting(null)
+        return
+      }
+      const scope = data?.scope || ''
+      const cleared = typeof data?.cleared === 'number' ? data.cleared : undefined
+      setResetResult({ mode: (data?.mode === 'soft' ? 'soft' : 'hard'), count: cleared ?? 0 })
+      show(`Zurückgesetzt${typeof cleared === 'number' ? ` (${cleared})` : ''}${data?.mode === 'soft' ? ' • Soft-Reset' : ''}`, { variant: 'success' })
+
+      if (session?.user?.userType === 'MEMBER') {
+        await reloadSuggestions()
+        await reloadMutual()
+        // inform SwipeDeck on mobile
+        try { window.dispatchEvent(new Event('matching:refresh')) } catch {}
+      } else if (session?.user?.userType === 'ESCORT') {
+        await reloadLikesReceived()
+        await reloadMutual()
+      }
+      setResetting(null)
+      // Hide result after a few seconds
+      setTimeout(() => setResetResult(null), 6000)
+    } catch (e) {
+      show('Fehler beim Zurücksetzen', { variant: 'error' })
+      setResetting(null)
+    }
   }
 
   useEffect(() => {
@@ -332,9 +393,15 @@ export default function DashboardClient() {
                   <div className="w-16 h-px bg-pink-500 mt-3"></div>
                 </div>
                 {session.user.userType === 'MEMBER' && (
-                  <button onClick={() => setShowPrefs((v) => !v)} className="text-xs font-light tracking-widest text-pink-600 hover:underline uppercase">
-                    {showPrefs ? 'Vorschläge' : 'Präferenzen'}
-                  </button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={showPrefs}
+                    onClick={() => setShowPrefs((v) => !v)}
+                    className="uppercase tracking-widest text-gray-700 hover:border-pink-500 hover:text-pink-600"
+                  >
+                    {showPrefs ? 'VORSCHLÄGE' : 'PRÄFERENZEN'}
+                  </Button>
                 )}
               </div>
 
@@ -413,11 +480,7 @@ export default function DashboardClient() {
                                     <div className="text-xs text-gray-500 whitespace-nowrap">{s.city || ''}{s.city && s.country ? ', ' : ''}{s.country || ''}</div>
                                   </div>
                                   {Array.isArray(s.services) && s.services.length > 0 && (
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                      {s.services.slice(0, 4).map((sv: string) => (
-                                        <span key={sv} className="px-2 py-1 text-[10px] uppercase tracking-widest bg-gray-100 text-gray-700">{sv}</span>
-                                      ))}
-                                    </div>
+                                    <ServicesChips services={s.services} maxVisible={5} />
                                   )}
                                 </div>
                               </Link>
@@ -428,9 +491,49 @@ export default function DashboardClient() {
                     </div>
 
                     {/* Controls + Mutual Matches for MEMBER */}
+                    <Tooltip.Provider delayDuration={100}>
                     <div className="mt-8 flex items-center gap-3">
-                      <button onClick={undoGrid} className="text-xs font-light tracking-widest text-gray-600 hover:text-pink-500 flex items-center gap-2"><Undo2 className="h-4 w-4"/>Rückgängig</button>
+                      <Button variant="outline" size="sm" onClick={undoGrid} className="uppercase tracking-widest text-gray-700 hover:border-gray-400 hover:text-pink-600"><Undo2 className="h-4 w-4"/>Rückgängig</Button>
+
+                      <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => resetMatching('soft')}
+                            disabled={!!resetting}
+                            className={`uppercase tracking-widest ${resetting ? 'text-gray-400' : 'text-gray-700 hover:border-amber-500 hover:text-amber-600'}`}
+                          >
+                            Soft-Reset
+                          </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Portal>
+                          <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md max-w-xs">
+                            Setzt nur PASS-Entscheidungen zurück. Likes bleiben erhalten. Hilfreich, wenn du versehentlich zu viele Pässe gegeben hast.
+                            <Tooltip.Arrow className="fill-gray-900" />
+                          </Tooltip.Content>
+                        </Tooltip.Portal>
+                      </Tooltip.Root>
+
+                      <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                          <Button variant="destructive" size="sm" onClick={() => resetMatching('hard')} disabled={!!resetting} className="uppercase tracking-widest">Zurücksetzen</Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Portal>
+                          <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md max-w-xs">
+                            Setzt ALLE Likes und PASS-Entscheidungen zurück. Dein Matching-Verlauf wird geleert und Vorschläge werden neu aufgebaut.
+                            <Tooltip.Arrow className="fill-gray-900" />
+                          </Tooltip.Content>
+                        </Tooltip.Portal>
+                      </Tooltip.Root>
+                      {resetting && (
+                        <span className="text-[11px] text-gray-500">Setze zurück… ({resetting === 'soft' ? 'Soft' : 'Hard'})</span>
+                      )}
+                      {!resetting && resetResult && (
+                        <span className="text-[11px] text-gray-600">Zurückgesetzt: {resetResult.count} Einträge {resetResult.mode === 'soft' ? '(Soft)' : '(Hard)'}</span>
+                      )}
                     </div>
+                    </Tooltip.Provider>
                     {/* Mutual Matches for MEMBER */}
                     <div className="mt-12">
                       <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">MATCHES</h3>
@@ -495,11 +598,39 @@ export default function DashboardClient() {
                           const newC = likesReceived.filter((l: any) => !l.liked_back).length
                           const likedC = likesReceived.filter((l: any) => !!l.liked_back).length
                           return (
-                            <>
+                            <Tooltip.Provider delayDuration={100}>
                               <button onClick={() => setLikesFilter('all')} className={`px-3 py-1 border ${likesFilter==='all' ? 'bg-pink-500 text-white border-pink-500' : 'border-gray-300 text-gray-700'}`}>ALLE ({allC})</button>
                               <button onClick={() => setLikesFilter('new')} className={`px-3 py-1 border ${likesFilter==='new' ? 'bg-pink-500 text-white border-pink-500' : 'border-gray-300 text-gray-700'}`}>NEU ({newC})</button>
                               <button onClick={() => setLikesFilter('liked_back')} className={`px-3 py-1 border ${likesFilter==='liked_back' ? 'bg-pink-500 text-white border-pink-500' : 'border-gray-300 text-gray-700'}`}>GEGENGELIKET ({likedC})</button>
-                            </>
+                              <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                  <Button variant="outline" size="sm" onClick={() => resetMatching('soft')} disabled={!!resetting} className={`ml-2 uppercase tracking-widest ${resetting ? 'text-gray-400' : 'text-gray-700 hover:border-amber-500 hover:text-amber-600'}`}>Soft-Reset</Button>
+                                </Tooltip.Trigger>
+                                <Tooltip.Portal>
+                                  <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md max-w-xs">
+                                    Setzt nur PASS-Entscheidungen zurück. Bereits erhaltene Likes bleiben bestehen.
+                                    <Tooltip.Arrow className="fill-gray-900" />
+                                  </Tooltip.Content>
+                                </Tooltip.Portal>
+                              </Tooltip.Root>
+                              <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                  <Button variant="destructive" size="sm" onClick={() => resetMatching('hard')} disabled={!!resetting} className="uppercase tracking-widest">Zurücksetzen</Button>
+                                </Tooltip.Trigger>
+                                <Tooltip.Portal>
+                                  <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md max-w-xs">
+                                    Setzt ALLE Likes und PASS-Entscheidungen zurück und leert den Verlauf.
+                                    <Tooltip.Arrow className="fill-gray-900" />
+                                  </Tooltip.Content>
+                                </Tooltip.Portal>
+                              </Tooltip.Root>
+                              {resetting && (
+                                <span className="ml-2 text-[11px] text-gray-500">Setze zurück… ({resetting === 'soft' ? 'Soft' : 'Hard'})</span>
+                              )}
+                              {!resetting && resetResult && (
+                                <span className="ml-2 text-[11px] text-gray-600">Zurückgesetzt: {resetResult.count} Einträge {resetResult.mode === 'soft' ? '(Soft)' : '(Hard)'}</span>
+                              )}
+                            </Tooltip.Provider>
                           )
                         })()}
                       </div>

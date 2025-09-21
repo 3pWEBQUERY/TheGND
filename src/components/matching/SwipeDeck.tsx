@@ -6,6 +6,7 @@ import { Heart, X, RefreshCw, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
 import Link from 'next/link'
+import ServicesChips from '@/components/matching/ServicesChips'
 
 export type MatchSuggestion = {
   id: string
@@ -70,6 +71,13 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
       autoReloadedRef.current = false
     }
   }, [cards.length, loading, error])
+
+  // Listen for global refresh event (triggered by reset button in DashboardClient)
+  useEffect(() => {
+    const handler = () => { load() }
+    window.addEventListener('matching:refresh', handler)
+    return () => window.removeEventListener('matching:refresh', handler)
+  }, [])
 
   const onAction = async (id: string, action: 'LIKE' | 'PASS') => {
     try {
@@ -277,7 +285,7 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
               transform: idx === 0 ? undefined : `scale(${1 - idx * 0.04}) translateY(${idx * 10}px)`
             }}
           >
-            <div className="relative h-2/3 bg-gray-100">
+            <div className="relative h-[86%] bg-gray-100">
               {c.image || c.avatar ? (
                 <Image src={(c.image || c.avatar)!} alt={c.displayName} fill className="object-cover" />
               ) : (
@@ -301,17 +309,13 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
                 </div>
               </div>
             </div>
-            <div className="p-4">
+            <div className="px-4 pt-2 pb-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-light tracking-widest text-gray-900 truncate">{c.displayName.toUpperCase()}</h3>
                 <div className="text-xs text-gray-500 whitespace-nowrap">{c.city || ''}{c.city && c.country ? ', ' : ''}{c.country || ''}</div>
               </div>
               {Array.isArray(c.services) && c.services.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {c.services.slice(0, 5).map((s) => (
-                    <span key={s} className="px-2 py-1 text-[10px] uppercase tracking-widest bg-gray-100 text-gray-700">{s}</span>
-                  ))}
-                </div>
+                <ServicesChips services={c.services} maxVisible={6} className="mt-1" />
               )}
             </div>
           </div>
@@ -324,9 +328,6 @@ export default function SwipeDeck({ fetchLimit = 20 }: SwipeDeckProps) {
         <Button onClick={likeTop} aria-label="Like" className="h-14 w-14 p-0 rounded-full bg-pink-500 hover:bg-pink-600"><Heart className="h-7 w-7 text-white"/></Button>
       </div>
       <div className="mt-3 text-center text-xs text-gray-500">Wische links für Pass, rechts für Like</div>
-      <div className="mt-3 flex items-center justify-center">
-        <Button variant="ghost" onClick={undo} disabled={busy} className="text-xs tracking-widest"><Undo2 className="h-4 w-4 mr-2"/>Rückgängig</Button>
-      </div>
       
     </div>
   )

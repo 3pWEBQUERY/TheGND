@@ -76,14 +76,6 @@ export default function DashboardMobileNavigation({ session, activeTab, setActiv
         >
           PROFIL
         </button>
-        <button 
-          onClick={() => setActiveTab('forum')}
-          className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${
-            activeTab === 'forum' ? 'text-pink-500 border-pink-500' : 'text-gray-600 border-transparent hover:text-pink-500'
-          }`}
-        >
-          FORUM
-        </button>
         {(userType === 'MEMBER' || userType === 'ESCORT') && (
           <button 
             onClick={() => setActiveTab('matching')}
@@ -105,6 +97,14 @@ export default function DashboardMobileNavigation({ session, activeTab, setActiv
             </span>
           </button>
         )}
+        <button 
+          onClick={() => setActiveTab('forum')}
+          className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${
+            activeTab === 'forum' ? 'text-pink-500 border-pink-500' : 'text-gray-600 border-transparent hover:text-pink-500'
+          }`}
+        >
+          FORUM
+        </button>
         <button 
           onClick={() => setActiveTab('messages')}
           className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${

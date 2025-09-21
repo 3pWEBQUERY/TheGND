@@ -340,15 +340,6 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                   </div>
                 )}
               </div>
-              <Link 
-                href="/dashboard?tab=forum"
-                className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
-                  activeTab === 'forum' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
-                }`}
-              >
-                FORUM
-                <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'forum' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </Link>
               {(userType === 'MEMBER' || userType === 'ESCORT') && (
                 <Link 
                   href="/dashboard?tab=matching"
@@ -370,6 +361,15 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                   <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'matching' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                 </Link>
               )}
+              <Link 
+                href="/dashboard?tab=forum"
+                className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
+                  activeTab === 'forum' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
+                }`}
+              >
+                FORUM
+                <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'forum' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+              </Link>
               <Link 
                 href="/dashboard?tab=messages"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${

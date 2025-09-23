@@ -27,10 +27,20 @@ export default function Tabs({ tabs, initialId, className }: Props) {
               <button
                 key={t.id}
                 onClick={() => setActive(t.id)}
-                className={`shrink-0 px-1 pb-3 text-xs tracking-widest ${isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-800'} relative`}
+                className={`group shrink-0 relative px-2 py-3 text-xs tracking-widest uppercase transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 ${
+                  isActive
+                    ? 'text-gray-900 bg-pink-50/50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-pink-50/40'
+                }`}
               >
                 <span>{t.label.toUpperCase()}</span>
-                <span className={`absolute left-0 -bottom-px h-0.5 ${isActive ? 'w-full bg-pink-500' : 'w-0 bg-transparent'} transition-all`} />
+                <span
+                  className={`pointer-events-none absolute left-0 bottom-0 h-0.5 transition-all ${
+                    isActive
+                      ? 'w-full bg-pink-500'
+                      : 'w-0 bg-transparent group-hover:w-full group-hover:bg-pink-300'
+                  }`}
+                />
               </button>
             )
           })}

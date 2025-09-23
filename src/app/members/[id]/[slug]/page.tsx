@@ -12,6 +12,7 @@ import ProfileFeed from '@/components/ProfileFeed'
 import ProfileComments from '@/components/ProfileComments'
 import RatingDonut from '@/components/RatingDonut'
 import OnlineBadge from '@/components/OnlineBadge'
+import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
 import { Globe } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -152,6 +153,16 @@ export default async function MemberPublicPage({ params }: any) {
 
   // FEED (Beiträge)
   const session = await getServerSession(authOptions)
+
+  // Is profile analytics enabled for this profile owner?
+  let analyticsEnabled = false
+  try {
+    const st = await (prisma as any).userAddonState.findUnique({
+      where: { userId_key: { userId: id, key: 'PROFILE_ANALYTICS' } },
+      select: { enabled: true },
+    })
+    analyticsEnabled = !!(st?.enabled)
+  } catch {}
   const feedInclude: any = {
     author: { select: { email: true, userType: true, profile: { select: { displayName: true, avatar: true } } } },
     _count: { select: { likes: true, comments: true } },
@@ -237,6 +248,7 @@ export default async function MemberPublicPage({ params }: any) {
 
   return (
     <div className="min-h-screen bg-white">
+      {analyticsEnabled && <ProfileAnalyticsTracker profileUserId={id} />}
       <MinimalistNavigation />
 
       {/* Hero Section (like escorts) */}

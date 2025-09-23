@@ -301,7 +301,7 @@ export default function PreferencesForm() {
   if (loading) return <div className="text-sm text-gray-500">Lade…</div>
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full">
       {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&language=de`}

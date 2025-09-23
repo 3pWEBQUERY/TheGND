@@ -69,7 +69,7 @@ export default function AutoMessageSettings() {
   if (loading) return <div className="text-sm text-gray-500">Lade…</div>
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full">
       <div className="space-y-4">
         <div className="space-y-3">
           <h3 className="text-sm font-medium tracking-widest text-gray-800 uppercase">Automatische Nachricht bei Match</h3>

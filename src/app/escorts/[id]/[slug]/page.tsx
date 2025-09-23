@@ -23,6 +23,7 @@ import ProfileComments from '@/components/ProfileComments'
 import AltEscortViewOne from '@/components/escort-views/AltEscortViewOne'
 import AltEscortViewTwo from '@/components/escort-views/AltEscortViewTwo'
 import OnlineBadge from '@/components/OnlineBadge'
+import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
 
 export const dynamic = 'force-dynamic'
 
@@ -296,6 +297,16 @@ export default async function EscortProfilePage({ params, searchParams }: { para
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
 
+  // Is profile analytics enabled for this profile owner?
+  let analyticsEnabled = false
+  try {
+    const st = await (prisma as any).userAddonState.findUnique({
+      where: { userId_key: { userId: escortId, key: 'PROFILE_ANALYTICS' } },
+      select: { enabled: true },
+    })
+    analyticsEnabled = !!(st?.enabled)
+  } catch {}
+
   // Record profile visit (raw SQL for compatibility)
   try {
     if (escortId) {
@@ -420,6 +431,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
 
   return (
     <div className="min-h-screen bg-white">
+      {analyticsEnabled && <ProfileAnalyticsTracker profileUserId={escortId} />}
       <MinimalistNavigation />
       {/* Hero Section */}
       <section className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">

@@ -18,6 +18,7 @@ import { authOptions } from '@/lib/auth'
 import ExpandableText from '@/components/ExpandableText'
 import type React from 'react'
 import ProfileComments from '@/components/ProfileComments'
+import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -160,6 +161,16 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
   const website = user.profile.website || null
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
+
+  // Is profile analytics enabled for this profile owner?
+  let analyticsEnabled = false
+  try {
+    const st = await (prisma as any).userAddonState.findUnique({
+      where: { userId_key: { userId: user.id, key: 'PROFILE_ANALYTICS' } },
+      select: { enabled: true },
+    })
+    analyticsEnabled = !!(st?.enabled)
+  } catch {}
   // Profile rating (average of visible root comments)
   const ratingAgg: any = await (prisma as any).comment.aggregate({
     where: { targetUserId: user.id, isVisible: true, parentId: null, NOT: { rating: null } },
@@ -243,6 +254,7 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="min-h-screen bg-white">
+      {analyticsEnabled && <ProfileAnalyticsTracker profileUserId={user.id} />}
       <MinimalistNavigation />
       {/* Breadcrumb JSON-LD */}
       <script

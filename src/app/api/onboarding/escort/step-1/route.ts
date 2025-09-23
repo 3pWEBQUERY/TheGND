@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is an escort
+    // Check if user is an escort (select minimal fields to avoid schema drift issues)
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: session.user.id },
+      select: { id: true, userType: true }
     })
 
     if (!user || user.userType !== 'ESCORT') {
@@ -52,10 +53,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Update user's onboarding status to IN_PROGRESS
+    // Update user's onboarding status to IN_PROGRESS (select minimal fields to avoid schema drift issues)
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { onboardingStatus: 'IN_PROGRESS' }
+      data: { onboardingStatus: 'IN_PROGRESS' },
+      select: { id: true }
     })
 
     return NextResponse.json(

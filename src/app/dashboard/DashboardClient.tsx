@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button'
 import ServicesChips from '@/components/matching/ServicesChips'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import dynamic from 'next/dynamic'
+import ProfileAnalyticsWidget from '@/components/analytics/ProfileAnalyticsWidget'
 
 const DynamicAutoMessage = dynamic(() => import('@/components/matching/AutoMessageSettings'), {
   ssr: false,
@@ -362,6 +363,9 @@ export default function DashboardClient() {
                   </div>
                 </div>
               </div>
+
+              {/* Profile Analytics (shown only if add-on PROFILE_ANALYTICS is globally active and enabled for user) */}
+              <ProfileAnalyticsWidget />
             </div>
           )}
           
@@ -623,34 +627,7 @@ export default function DashboardClient() {
                               <button onClick={() => setLikesFilter('all')} className={`px-3 py-1 border ${likesFilter==='all' ? 'bg-pink-500 text-white border-pink-500' : 'border-gray-300 text-gray-700'}`}>ALLE ({allC})</button>
                               <button onClick={() => setLikesFilter('new')} className={`px-3 py-1 border ${likesFilter==='new' ? 'bg-pink-500 text-white border-pink-500' : 'border-gray-300 text-gray-700'}`}>NEU ({newC})</button>
                               <button onClick={() => setLikesFilter('liked_back')} className={`px-3 py-1 border ${likesFilter==='liked_back' ? 'bg-pink-500 text-white border-pink-500' : 'border-gray-300 text-gray-700'}`}>GEGENGELIKET ({likedC})</button>
-                              <Tooltip.Root>
-                                <Tooltip.Trigger asChild>
-                                  <Button variant="outline" size="sm" onClick={() => resetMatching('soft')} disabled={!!resetting} className={`ml-2 uppercase tracking-widest ${resetting ? 'text-gray-400' : 'text-gray-700 hover:border-amber-500 hover:text-amber-600'}`}>Soft-Reset</Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Portal>
-                                  <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md max-w-xs">
-                                    Setzt nur PASS-Entscheidungen zurück. Bereits erhaltene Likes bleiben bestehen.
-                                    <Tooltip.Arrow className="fill-gray-900" />
-                                  </Tooltip.Content>
-                                </Tooltip.Portal>
-                              </Tooltip.Root>
-                              <Tooltip.Root>
-                                <Tooltip.Trigger asChild>
-                                  <Button variant="destructive" size="sm" onClick={() => resetMatching('hard')} disabled={!!resetting} className="uppercase tracking-widest">Zurücksetzen</Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Portal>
-                                  <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md max-w-xs">
-                                    Setzt ALLE Likes und PASS-Entscheidungen zurück und leert den Verlauf.
-                                    <Tooltip.Arrow className="fill-gray-900" />
-                                  </Tooltip.Content>
-                                </Tooltip.Portal>
-                              </Tooltip.Root>
-                              {resetting && (
-                                <span className="ml-2 text-[11px] text-gray-500">Setze zurück… ({resetting === 'soft' ? 'Soft' : 'Hard'})</span>
-                              )}
-                              {!resetting && resetResult && (
-                                <span className="ml-2 text-[11px] text-gray-600">Zurückgesetzt: {resetResult.count} Einträge {resetResult.mode === 'soft' ? '(Soft)' : '(Hard)'}</span>
-                              )}
+                              {/* Reset-Buttons (Soft/Hard) sind nur für MEMBER sichtbar – daher hier im ESCORT-View entfernt */}
                             </Tooltip.Provider>
                           )
                         })()}

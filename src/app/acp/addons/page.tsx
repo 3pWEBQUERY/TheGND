@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 // Types mirroring Prisma models
 type Addon = {
   id?: string
-  key?: 'ESCORT_OF_DAY' | 'ESCORT_OF_WEEK' | 'ESCORT_OF_MONTH' | 'CITY_BOOST'
+  key?: 'ESCORT_OF_DAY' | 'ESCORT_OF_WEEK' | 'ESCORT_OF_MONTH' | 'CITY_BOOST' | 'PROFILE_ANALYTICS'
   name: string
   description?: string | null
   active: boolean
@@ -31,7 +31,7 @@ export default function AdminAddonsPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
 
-  const addonKeys = useMemo(() => ['ESCORT_OF_DAY', 'ESCORT_OF_WEEK', 'ESCORT_OF_MONTH', 'CITY_BOOST'] as const, [])
+  const addonKeys = useMemo(() => ['ESCORT_OF_DAY', 'ESCORT_OF_WEEK', 'ESCORT_OF_MONTH', 'CITY_BOOST', 'PROFILE_ANALYTICS'] as const, [])
 
   const fetchAddons = async () => {
     setLoading(true)

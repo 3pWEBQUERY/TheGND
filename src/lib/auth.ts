@@ -35,17 +35,20 @@ export const authOptions = {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
+        const email = String(credentials.email).trim().toLowerCase()
 
+        // Select explicit fields to avoid schema drift
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email },
+          select: { id: true, email: true, password: true, userType: true, onboardingStatus: true }
         })
 
-        if (!user) {
+        if (!user || !user.password) {
           return null
         }
 
         const isPasswordValid = await bcrypt.compare(
-          credentials.password,
+          String(credentials.password),
           user.password
         )
 

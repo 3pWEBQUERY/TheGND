@@ -16,6 +16,7 @@ import ExpandableText from '@/components/ExpandableText'
 import ProfileComments from '@/components/ProfileComments'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -148,6 +149,16 @@ export default async function ClubStudioDetailPage({ params }: { params: Promise
 
   // Ratings & Feed
   const session = await getServerSession(authOptions)
+
+  // Is profile analytics enabled for this profile owner?
+  let analyticsEnabled = false
+  try {
+    const st = await (prisma as any).userAddonState.findUnique({
+      where: { userId_key: { userId: user.id, key: 'PROFILE_ANALYTICS' } },
+      select: { enabled: true },
+    })
+    analyticsEnabled = !!(st?.enabled)
+  } catch {}
   const ratingAgg: any = await (prisma as any).comment.aggregate({
     where: { targetUserId: user.id, isVisible: true, parentId: null, NOT: { rating: null } },
     _avg: { rating: true },
@@ -222,6 +233,7 @@ export default async function ClubStudioDetailPage({ params }: { params: Promise
 
   return (
     <div className="min-h-screen bg-white">
+      {analyticsEnabled && <ProfileAnalyticsTracker profileUserId={user.id} />}
       <MinimalistNavigation />
 
       {/* Hero */}

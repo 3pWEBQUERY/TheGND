@@ -15,7 +15,10 @@ export async function GET() {
       )
     }
 
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, userType: true }
+    })
     if (!user || user.userType !== 'ESCORT') {
       return NextResponse.json(
         { error: 'Nur Escorts können dieses Onboarding verwenden' },
@@ -67,7 +70,8 @@ export async function POST(request: NextRequest) {
 
     // Check if user is an escort
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: session.user.id },
+      select: { id: true, userType: true }
     })
 
     if (!user || user.userType !== 'ESCORT') {
@@ -98,7 +102,8 @@ export async function POST(request: NextRequest) {
     // Update onboarding status
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { onboardingStatus: 'IN_PROGRESS' }
+      data: { onboardingStatus: 'IN_PROGRESS' },
+      select: { id: true }
     })
 
     return NextResponse.json(

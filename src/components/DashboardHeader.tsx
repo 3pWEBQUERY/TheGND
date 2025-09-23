@@ -515,6 +515,9 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                     <Link href="/marketing" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       MARKETING
                     </Link>
+                    <Link href="/addons" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
+                      ADD-ONS
+                    </Link>
                     <Link href="/dashboard?tab=gamification" className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">
                       GAMIFIKATION
                     </Link>

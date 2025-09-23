@@ -6,6 +6,7 @@ import { UserType } from '@prisma/client'
 export async function POST(request: NextRequest) {
   try {
     const { email, password, userType } = await request.json()
+    const normEmail = String(email).trim().toLowerCase()
 
     // Validate input
     if (!email || !password || !userType) {
@@ -15,9 +16,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already exists
+    // Check if user already exists (select minimal fields to avoid schema drift issues)
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normEmail },
+      select: { id: true }
     })
 
     if (existingUser) {
@@ -33,20 +35,19 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normEmail,
         password: hashedPassword,
         userType: userType as UserType,
         onboardingStatus: 'NOT_STARTED'
-      }
+      },
+      // Return only safe fields explicitly to avoid selecting columns that might not exist yet
+      select: { id: true, email: true, userType: true, onboardingStatus: true }
     })
-
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json(
       { 
         message: 'User erfolgreich registriert',
-        user: userWithoutPassword 
+        user
       },
       { status: 201 }
     )

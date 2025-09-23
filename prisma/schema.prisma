@@ -148,6 +148,7 @@ enum AddonKey {
   ESCORT_OF_WEEK
   ESCORT_OF_MONTH
   CITY_BOOST
+  PROFILE_ANALYTICS
   @@map("addon_key")
 }
 
@@ -201,6 +202,7 @@ model User {
   // Membership relations
   memberships       UserMembership[]
   addonBookings     UserAddonBooking[]
+  addonStates       UserAddonState[]
 
   // Marketing orders
   marketingOrders   MarketingOrder[]
@@ -228,6 +230,10 @@ model User {
   // Profile visitors
   profileVisitsReceived ProfileVisit[] @relation("ProfileVisits")
   profileVisitsMade     ProfileVisit[] @relation("Visitor")
+
+  // Profile analytics relations
+  analyticsEventsAsTarget  ProfileAnalyticsEvent[] @relation("ProfileAnalyticsTarget")
+  analyticsEventsAsVisitor ProfileAnalyticsEvent[] @relation("ProfileAnalyticsVisitor")
 
   @@map("users")
 }
@@ -660,6 +666,22 @@ model UserAddonBooking {
   @@map("user_addon_bookings")
 }
 
+// Per-user toggle/state for add-ons (non-booking based)
+model UserAddonState {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key      AddonKey
+  enabled  Boolean  @default(false)
+  settings String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId, key])
+  @@map("user_addon_states")
+}
+
 // General app settings (admin-editable key-value store)
 model AppSetting {
   key       String   @id
@@ -842,6 +864,32 @@ model ForumPostReport {
 
   @@index([postId, status])
   @@map("forum_post_reports")
+}
+
+// Profile analytics event log
+model ProfileAnalyticsEvent {
+  id             String   @id @default(cuid())
+  profileUserId  String
+  profileUser    User     @relation("ProfileAnalyticsTarget", fields: [profileUserId], references: [id], onDelete: Cascade)
+  visitorId      String?
+  visitor        User?    @relation("ProfileAnalyticsVisitor", fields: [visitorId], references: [id], onDelete: SetNull)
+  sessionId      String
+  type           String   // view_start, view_end, click
+  path           String?
+  referrer       String?
+  country        String?
+  userAgent      String?
+  browser        String?
+  os             String?
+  device         String?
+  durationMs     Int?
+  meta           String?  // JSON payload for flexible fields (e.g., clicks)
+  createdAt      DateTime @default(now())
+
+  @@index([profileUserId, createdAt])
+  @@index([visitorId, createdAt])
+  @@index([sessionId, type])
+  @@map("profile_analytics_events")
 }
 
 // Gamification

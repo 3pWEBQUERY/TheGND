@@ -224,6 +224,7 @@ async function getEscort(id: string) {
     profileView: profile?.profileView ?? 'STANDARD',
     name: profile?.displayName ?? null,
     slogan: profile?.slogan ?? null,
+    age: (profile as any)?.age ?? null,
     city: profile?.city ?? null,
     country: profile?.country ?? null,
     description: profile?.description ?? null,
@@ -310,13 +311,22 @@ export default async function EscortProfilePage({ params, searchParams }: { para
     )
   }
 
-  const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, services, contact, location, socials, isOnline } = data
+  const { id: escortId, name, slogan, age, city, country, image, description, details, gallery, mediaImages, services, contact, location, socials, isOnline } = data
   const heroMobileLayout = (data as any)?.heroPrefs?.mobileLayout || 'cover'
   const heroMobileClass = heroMobileLayout === 'half'
     ? 'h-[70vh] min-h-[420px]'
     : (heroMobileLayout === 'compact' ? 'h-[55vh] min-h-[320px]' : 'h-screen h-[100svh]')
   const heroImage = ((data as any)?.heroPrefs?.imageUrl as string | null) || image
   const images = [image, ...mediaImages, ...gallery].filter(Boolean) as string[]
+  const galleryCount = (gallery || []).length
+  const heightNum = toStr(details.height).replace(/[^0-9]/g, '') || null
+  const bustLabel = (() => {
+    const num = toStr((details as any)?.breastSize)
+    const cup = toStr((details as any)?.cupSize).toUpperCase()
+    const both = `${num}${cup}`.trim()
+    return both || null
+  })()
+  const dressLabel = toStr((details as any)?.clothingSize || (details as any)?.dressSize) || null
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
 
@@ -546,6 +556,45 @@ export default async function EscortProfilePage({ params, searchParams }: { para
           <OnlineBadge userId={escortId} initialOnline={isOnline} className="absolute bottom-4 right-4" />
         </div>
       </section>
+      {/* Mobile-only Bottom Stats over Hero */}
+      <div className="md:hidden relative -mt-32">
+                <div className="relative px-4 pb-0 pt-1" style={{ paddingBottom: 'calc(2px + env(safe-area-inset-bottom))' }}>
+          <div className="flex items-end justify-between gap-4 text-white">
+            {typeof age === 'number' && (
+              <div className="flex flex-col items-center">
+                <div className="text-2xl font-light leading-none">{age}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-widest opacity-80">Jahre</div>
+              </div>
+            )}
+            <div className="h-8 w-px bg-white/30" />
+            {heightNum && (
+              <div className="flex flex-col items-center">
+                <div className="text-2xl font-light leading-none">{heightNum}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-widest opacity-80">cm</div>
+              </div>
+            )}
+            <div className="h-6 w-px bg-white/30" />
+            {bustLabel && (
+              <div className="flex flex-col items-center">
+                <div className="text-2xl font-light leading-none">{bustLabel}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-widest opacity-80">BH</div>
+              </div>
+            )}
+            <div className="h-6 w-px bg-white/30" />
+            {dressLabel && (
+              <div className="flex flex-col items-center">
+                <div className="text-2xl font-light leading-none">{dressLabel}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-widest opacity-80">KF</div>
+              </div>
+            )}
+            <div className="h-6 w-px bg-white/30" />
+            <div className="flex flex-col items-center">
+              <div className="text-2xl font-light leading-none">{galleryCount}</div>
+              <div className="mt-1 text-[10px] uppercase tracking-widest opacity-80">Galerie</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="max-w-5xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">

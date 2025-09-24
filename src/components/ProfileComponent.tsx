@@ -631,7 +631,11 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
       />
       {/* Right Sheet: Ansicht bearbeiten */}
       <Sheet open={showEditView} onOpenChange={setShowEditView}>
-        <SheetContent side="right" className="bg-white border-l border-gray-200">
+        <SheetContent
+          side="right"
+          className="bg-white border-l border-gray-200"
+          style={{ width: 'min(96vw, 1080px)', maxWidth: 'none' }}
+        >
           <SheetHeader className="p-6">
             <SheetTitle className="text-lg font-thin tracking-wider text-gray-800">ANSICHT BEARBEITEN</SheetTitle>
             <div className="text-sm text-gray-600">Passe das Hero-Bild und die mobile Hero-Ansicht deines öffentlichen Profils an.</div>

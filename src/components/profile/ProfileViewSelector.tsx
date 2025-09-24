@@ -10,9 +10,10 @@ type Props = {
   onSave: () => void
   saving: boolean
   savedAt?: number | null
+  onEdit?: () => void
 }
 
-export default function ProfileViewSelector({ selected, onChange, onSave, saving, savedAt }: Props) {
+export default function ProfileViewSelector({ selected, onChange, onSave, saving, savedAt, onEdit }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-none">
       <div className="p-4 sm:p-8">
@@ -41,6 +42,9 @@ export default function ProfileViewSelector({ selected, onChange, onSave, saving
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button onClick={onSave} disabled={!selected || saving} className={`px-5 py-2 text-xs tracking-widest uppercase ${saving ? 'bg-pink-400' : 'bg-pink-500 hover:bg-pink-600'} text-white`}>
             {saving ? 'SPEICHERN…' : 'AUSWAHL SPEICHERN'}
+          </button>
+          <button type="button" onClick={onEdit} className="px-5 py-2 text-xs tracking-widest uppercase border border-gray-300 hover:border-pink-500 text-gray-800">
+            ANSICHT BEARBEITEN
           </button>
           {savedAt && (
             <span className="text-xs text-emerald-600">Gespeichert</span>

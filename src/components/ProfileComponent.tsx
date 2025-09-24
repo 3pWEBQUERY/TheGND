@@ -19,6 +19,8 @@ import ProfileViewSelector from '@/components/profile/ProfileViewSelector'
 import ProfileGalleryGrid from '@/components/profile/ProfileGalleryGrid'
 import ProfileVisitorsTab from '@/components/profile/ProfileVisitorsTab'
 import ProfileTabsBar from '@/components/profile/ProfileTabsBar'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
+import { uploadFiles } from '@/utils/uploadthing'
 
 interface ProfileData {
   user: {
@@ -36,7 +38,7 @@ interface ProfileData {
       location?: string
       age?: number
       gender?: Gender
-      preferences?: string
+      preferences?: any
       slogan?: string
       nationality?: string | string[]
       languages?: string[]
@@ -87,6 +89,12 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const [anonCount, setAnonCount] = useState<number>(0)
   const [loadingVisitors, setLoadingVisitors] = useState(false)
   const [visitorDays, setVisitorDays] = useState<number>(30)
+  // Edit view sheet
+  const [showEditView, setShowEditView] = useState(false)
+  const [heroMobileLayout, setHeroMobileLayout] = useState<'cover' | 'half' | 'compact'>('cover')
+  const [savingHeroPrefs, setSavingHeroPrefs] = useState(false)
+  const [heroUploads, setHeroUploads] = useState<string[]>([])
+  const [uploadingHero, setUploadingHero] = useState(false)
 
 
   const isOwnProfile = !userId || userId === session?.user?.id
@@ -168,6 +176,16 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         } else {
           setSelectedView('STANDARD')
         }
+        // initialize hero mobile layout from preferences if present
+        try {
+          const prefs = (data?.user?.profile as any)?.preferences || {}
+          const mobile = prefs?.hero?.mobileLayout
+          if (mobile === 'cover' || mobile === 'half' || mobile === 'compact') {
+            setHeroMobileLayout(mobile)
+          } else {
+            setHeroMobileLayout('cover')
+          }
+        } catch {}
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -330,6 +348,12 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
     return [...(normalizedFromMedia as any[]), ...normalizedFromGallery]
   })()
 
+  // Merge temporary hero uploads so they appear in the grid immediately after upload
+  const heroGridItems = ([
+    ...heroUploads.map((url) => ({ type: 'image', url } as any)),
+    ...(mediaItems as any[]),
+  ]) as any[]
+
   // Entfernt ein Medium aus media oder gallery und persistiert die Änderung
   const handleDeleteMedia = async (item: any, index: number) => {
     if (!profile) return
@@ -415,6 +439,93 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
     }
   }
 
+  const handleSetHeroImage = async (url: string) => {
+    if (!profile) return
+    try {
+      const currentPrefs = ((profile as any)?.preferences) || {}
+      const nextPrefs = { ...currentPrefs, hero: { ...(currentPrefs.hero || {}), imageUrl: url } }
+      const resp = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileData: { preferences: nextPrefs } }),
+      })
+      if (!resp.ok) {
+        console.error('Fehler beim Setzen des Hero-Bilds')
+        return
+      }
+      setProfileData((prev) => {
+        if (!prev) return prev
+        const next: ProfileData = {
+          ...prev,
+          user: {
+            ...prev.user,
+            profile: { ...(prev.user.profile as any), preferences: nextPrefs } as any,
+          },
+        }
+        return next
+      })
+    } catch (e) {
+      console.error('Hero-Bild setzen fehlgeschlagen:', e)
+    }
+  }
+
+  // Upload a custom hero image and select it immediately
+  const handleUploadHero = async (file: File) => {
+    try {
+      setUploadingHero(true)
+      const res = await uploadFiles('postImages', { files: [file] })
+      const url = Array.isArray(res) ? (res[0]?.url as string | undefined) : undefined
+      if (url) {
+        // Show immediately in grid
+        setHeroUploads((prev: string[]) => [url, ...prev])
+        // Persist as hero image selection
+        await handleSetHeroImage(url)
+      }
+    } catch (e) {
+      console.error('Hero-Upload fehlgeschlagen:', e)
+    } finally {
+      setUploadingHero(false)
+    }
+  }
+
+  const handleSaveHeroPrefs = async () => {
+    if (!profile) return
+    try {
+      setSavingHeroPrefs(true)
+      const currentPrefs = ((profile as any)?.preferences) || {}
+      const nextPrefs = {
+        ...currentPrefs,
+        hero: { ...(currentPrefs.hero || {}), mobileLayout: heroMobileLayout },
+      }
+      const resp = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileData: { preferences: nextPrefs } }),
+      })
+      if (!resp.ok) {
+        console.error('Fehler beim Speichern der Ansicht-Einstellungen')
+        return
+      }
+      // reflect in local state
+      setProfileData((prev) => {
+        if (!prev) return prev
+        const next: ProfileData = {
+          ...prev,
+          user: {
+            ...prev.user,
+            profile: { ...(prev.user.profile as any), preferences: nextPrefs } as any,
+          },
+        }
+        return next
+      })
+      setShowEditView(false)
+    } catch (e) {
+      console.error('Speichern fehlgeschlagen:', e)
+    } finally {
+      setSavingHeroPrefs(false)
+    }
+  }
+
   return (
       <div>
         <div className="max-w-7xl mx-auto space-y-8 px-6 overflow-x-hidden">
@@ -451,20 +562,21 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         </div>
       </div>
       
-      {/* Escort View Selection (owner only) */}
-      {isOwnProfile && userType === 'ESCORT' && (
+      {/* Profile View Selection (owner only, non-MEMBER) */}
+      {isOwnProfile && userType !== 'MEMBER' && (
         <ProfileViewSelector
           selected={selectedView}
           onChange={(v) => setSelectedView(v)}
           onSave={handleSaveProfileView}
           saving={savingView}
           savedAt={savedViewAt}
+          onEdit={() => setShowEditView(true)}
         />
       )}
 
       {/* Profile Tabs */}
       <div className="bg-white border border-gray-100 rounded-none">
-        <ProfileTabsBar active={activeTab as any} onChange={(key) => setActiveTab(key)} />
+        <ProfileTabsBar active={activeTab as any} onChange={(key: string) => setActiveTab(key)} />
         
         {/* Tab Content */}
         <div className="p-4 sm:p-8">
@@ -517,7 +629,94 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         } : null}
         onClose={() => setLightboxIndex(null)}
       />
-      </div>
+      {/* Right Sheet: Ansicht bearbeiten */}
+      <Sheet open={showEditView} onOpenChange={setShowEditView}>
+        <SheetContent side="right" className="bg-white border-l border-gray-200">
+          <SheetHeader className="p-6">
+            <SheetTitle className="text-lg font-thin tracking-wider text-gray-800">ANSICHT BEARBEITEN</SheetTitle>
+            <div className="text-sm text-gray-600">Passe das Hero-Bild und die mobile Hero-Ansicht deines öffentlichen Profils an.</div>
+          </SheetHeader>
+          <div className="px-6 pb-6 space-y-8 overflow-y-auto">
+            {/* Hero Image Picker */}
+            <div>
+              <div className="text-xs font-light tracking-widest text-gray-600 mb-2">HERO-BILD</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {(heroGridItems as any[]).map((item, idx) => {
+                  const url = (item as any).url
+                  const heroCurrent = ((profile as any)?.preferences?.hero?.imageUrl) || null
+                  const isActive = !!url && url === heroCurrent
+                  const isVideo = (item as any).type === 'video'
+                  return (
+                    <button
+                      key={url + '-' + idx}
+                      type="button"
+                      onClick={() => !isVideo && url && handleSetHeroImage(url)}
+                      className={`relative aspect-[3/4] border ${isActive ? 'border-pink-500' : 'border-gray-200'} overflow-hidden group ${isVideo ? 'opacity-50 cursor-not-allowed' : 'hover:border-pink-500'}`}
+                      title={isVideo ? 'Videos können nicht als Hero-Bild gesetzt werden' : (isActive ? 'Aktuelles Hero-Bild' : 'Als Hero-Bild setzen')}
+                    >
+                      {item.type === 'image' ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={url} alt="Hero Auswahl" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">Video</div>
+                      )}
+                      {isActive && (
+                        <span className="absolute top-1 right-1 bg-pink-500 text-white text-[10px] px-1 py-0.5">AKTIV</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="mt-2 text-xs text-gray-500">Tipp: Wähle ein vertikales Bild für die beste Darstellung.</div>
+              <div className="mt-3">
+                <label className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-300 text-xs tracking-widest uppercase text-gray-800 hover:border-pink-500 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) handleUploadHero(f)
+                    }}
+                  />
+                  {uploadingHero ? 'HOCHLADEN…' : 'EIGENES BILD HOCHLADEN'}
+                </label>
+                {uploadingHero && <span className="ml-2 text-xs text-gray-500">Bitte warten…</span>}
+              </div>
+            </div>
+
+            {/* Mobile Hero Layout */}
+            <div>
+              <div className="text-xs font-light tracking-widest text-gray-600 mb-2">MOBILE HERO-ANSICHT</div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm text-gray-800">
+                  <input type="radio" name="mobile-hero" className="accent-pink-500" checked={heroMobileLayout === 'cover'} onChange={() => setHeroMobileLayout('cover')} />
+                  Vollbild (empfohlen)
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-800">
+                  <input type="radio" name="mobile-hero" className="accent-pink-500" checked={heroMobileLayout === 'half'} onChange={() => setHeroMobileLayout('half')} />
+                  Halb-Höhe
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-800">
+                  <input type="radio" name="mobile-hero" className="accent-pink-500" checked={heroMobileLayout === 'compact'} onChange={() => setHeroMobileLayout('compact')} />
+                  Kompakt
+                </label>
+              </div>
+            </div>
+          </div>
+          <SheetFooter className="p-6">
+            <button
+              type="button"
+              onClick={handleSaveHeroPrefs}
+              disabled={savingHeroPrefs}
+              className={`px-5 py-2 text-xs tracking-widest uppercase ${savingHeroPrefs ? 'bg-pink-400' : 'bg-pink-500 hover:bg-pink-600'} text-white`}
+            >
+              {savingHeroPrefs ? 'SPEICHERN…' : 'EINSTELLUNGEN SPEICHERN'}
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
-  )
+  </div>
+)
 }

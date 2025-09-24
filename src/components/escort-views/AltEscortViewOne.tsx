@@ -47,14 +47,19 @@ export default function AltEscortViewOne(props: {
   const { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification, similarItems = [] } = props
   const { id: escortId, name, slogan, city, country, image, description, details, services, contact, location, socials } = data
   const isOnline = !!data?.isOnline
+  const heroMobileLayout = (data as any)?.heroPrefs?.mobileLayout || 'cover'
+  const heroMobileClass = heroMobileLayout === 'half'
+    ? 'h-[70vh] min-h-[420px]'
+    : (heroMobileLayout === 'compact' ? 'h-[55vh] min-h-[320px]' : 'h-screen h-[100svh]')
+  const heroImage = ((data as any)?.heroPrefs?.imageUrl as string | null) || image
 
   return (
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
       {/* Hero */}
       <section className="relative">
-        <div className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">
-          <img src={image || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover" />
+        <div className={`relative ${heroMobileClass} md:h-[50vh] md:min-h-[400px]`}>
+          <img src={heroImage || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           {/* Online status bottom-right (live via presence API) */}
           <OnlineBadge userId={escortId} initialOnline={isOnline} className="absolute bottom-4 right-4" />

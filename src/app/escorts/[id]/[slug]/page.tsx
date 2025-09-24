@@ -183,6 +183,21 @@ async function getEscort(id: string) {
       if (Array.isArray(s)) services = s.filter((x: any) => typeof x === 'string')
     }
   } catch {}
+  // Preferences: read hero settings
+  let heroMobileLayout: 'cover' | 'half' | 'compact' = 'cover'
+  let heroImageUrl: string | null = null
+  try {
+    if ((profile as any)?.preferences) {
+      const prefs = JSON.parse((profile as any).preferences)
+      const mobile = prefs?.hero?.mobileLayout
+      if (mobile === 'cover' || mobile === 'half' || mobile === 'compact') {
+        heroMobileLayout = mobile
+      }
+      if (typeof prefs?.hero?.imageUrl === 'string' && prefs.hero.imageUrl.trim()) {
+        heroImageUrl = prefs.hero.imageUrl.trim()
+      }
+    }
+  } catch {}
   // Parse social media
   let socials: Record<string, string> = {}
   try {
@@ -228,6 +243,7 @@ async function getEscort(id: string) {
       zipCode: profile?.zipCode ?? null,
       placeId: profile?.locationPlaceId ?? null,
     },
+    heroPrefs: { mobileLayout: heroMobileLayout, imageUrl: heroImageUrl },
     contact: {
       phone: profile?.phone ?? null,
       website: profile?.website ?? null,
@@ -295,6 +311,11 @@ export default async function EscortProfilePage({ params, searchParams }: { para
   }
 
   const { id: escortId, name, slogan, city, country, image, description, details, gallery, mediaImages, services, contact, location, socials, isOnline } = data
+  const heroMobileLayout = (data as any)?.heroPrefs?.mobileLayout || 'cover'
+  const heroMobileClass = heroMobileLayout === 'half'
+    ? 'h-[70vh] min-h-[420px]'
+    : (heroMobileLayout === 'compact' ? 'h-[55vh] min-h-[320px]' : 'h-screen h-[100svh]')
+  const heroImage = ((data as any)?.heroPrefs?.imageUrl as string | null) || image
   const images = [image, ...mediaImages, ...gallery].filter(Boolean) as string[]
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
@@ -495,12 +516,12 @@ export default async function EscortProfilePage({ params, searchParams }: { para
       {analyticsEnabled && <ProfileAnalyticsTracker profileUserId={escortId} />}
       <MinimalistNavigation />
       {/* Hero Section */}
-      <section className="relative h-screen h-[100svh] md:h-[50vh] md:min-h-[400px]">
+      <section className={`relative ${heroMobileClass} md:h-[50vh] md:min-h-[400px]`}>
         {/* Background image with dark overlay */}
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={image || '/escort.png'}
+            src={heroImage || '/escort.png'}
             alt={(name ?? 'Escort') + ' Hero'}
             className="h-full w-full object-cover"
           />

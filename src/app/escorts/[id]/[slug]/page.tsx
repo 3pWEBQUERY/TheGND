@@ -701,7 +701,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
                       </div>
                     </div>
                     {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
-                      <div className="border border-gray-200">
+                      <div className="border border-gray-200 -mx-6 sm:mx-0">
                         <iframe
                           title="Standort"
                           className="w-full h-96"

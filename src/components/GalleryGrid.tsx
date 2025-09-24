@@ -13,6 +13,24 @@ export default function GalleryGrid({ images, altBase, className = "" }: Props) 
   const [index, setIndex] = useState<number>(0)
   const [originalSize, setOriginalSize] = useState(true)
 
+  // Build an absolute URL for the image (handles relative /uploads/... paths)
+  const toAbsoluteUrl = (u: string): string => {
+    if (!u) return ""
+    if (/^https?:\/\//i.test(u)) return u
+    try {
+      if (typeof window !== 'undefined') {
+        return new URL(u, window.location.origin).toString()
+      }
+    } catch {}
+    return u
+  }
+
+  // Use Google Lens upload-by-URL to trigger reverse image search directly
+  const googleLensUrl = (u: string): string => {
+    const abs = toAbsoluteUrl(u)
+    return `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(abs)}`
+  }
+
   const openAt = (i: number) => {
     setIndex(i)
     setOriginalSize(true)
@@ -50,9 +68,21 @@ export default function GalleryGrid({ images, altBase, className = "" }: Props) 
             key={`${src}-${i}`}
             type="button"
             onClick={() => openAt(i)}
-            className="aspect-[3/4] bg-gray-200 overflow-hidden group"
+            className="relative aspect-[3/4] bg-gray-200 overflow-hidden group"
             aria-label="Bild in voller Größe ansehen"
           >
+            {/* Google Reverse Image Search badge */}
+            <a
+              href={googleLensUrl(src)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-1 right-1 z-10 px-2 py-1 text-[10px] tracking-widest uppercase border border-white/70 bg-white/90 text-gray-800 hover:bg-white hover:border-white shadow-sm"
+              title="Google Check"
+              aria-label="Google Check (Rückwärts-Bildersuche)"
+            >
+              GOOGLE CHECK
+            </a>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={altBase ?? ''} className="w-full h-full object-cover group-hover:opacity-95 transition-opacity" />
           </button>
@@ -72,6 +102,17 @@ export default function GalleryGrid({ images, altBase, className = "" }: Props) 
               <span>{index + 1} / {images.length}</span>
             </div>
             <div className="flex items-center gap-2">
+              <a
+                href={googleLensUrl(images[index])}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 border border-white/30 hover:border-white rounded-none"
+                onClick={(e) => e.stopPropagation()}
+                title="Google Check (Rückwärts-Bildersuche)"
+                aria-label="Google Check (Rückwärts-Bildersuche)"
+              >
+                GOOGLE CHECK
+              </a>
               <a
                 href={images[index]}
                 target="_blank"

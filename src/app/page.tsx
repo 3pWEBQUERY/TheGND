@@ -10,6 +10,7 @@ import JoinCtaSection from '@/components/homepage/JoinCtaSection'
 import VisionSection from '@/components/homepage/VisionSection'
 import StoriesGallery from '@/components/homepage/StoriesGallery'
 import Footer from '@/components/homepage/Footer'
+import FeaturedPlacesSection from '@/components/homepage/FeaturedPlacesSection'
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -28,6 +29,7 @@ export default function Home() {
       <MinimalistNavigation />
       <HeroSection />
       <StoriesGallery />
+      <FeaturedPlacesSection />
       <EscortsGridSection />
       <VisionSection />
       <AgencyGridSection />

@@ -139,7 +139,7 @@ export default function CommentsComponent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto px-6">
       <div className="mb-6">
         <div className="text-2xl font-thin tracking-wider text-gray-800 mb-2 flex items-center gap-2">
           <MessageSquare className="h-5 w-5" /> KOMMENTARE

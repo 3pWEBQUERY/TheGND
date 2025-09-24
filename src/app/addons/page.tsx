@@ -22,7 +22,7 @@ export default function AddonsPage() {
   return (
     <div className="min-h-screen bg-white">
       <DashboardHeader session={session} activeTab="addons" setActiveTab={() => {}} />
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-7xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-light tracking-widest text-gray-900">ADD-ONS</h1>
         <p className="mt-2 text-sm text-gray-600">Aktiviere oder deaktiviere optionale Erweiterungen für dein Profil.</p>
         <div className="mt-8">
@@ -33,3 +33,4 @@ export default function AddonsPage() {
     </div>
   )
 }
+

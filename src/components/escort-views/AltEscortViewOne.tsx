@@ -3,7 +3,7 @@ import Footer from '@/components/homepage/Footer'
 import SimpleSlider from '@/components/SimpleSlider'
 import Tabs from '@/components/Tabs'
 import ProfileFeed from '@/components/ProfileFeed'
-import ExpandableText from '@/components/ExpandableText'
+import TranslatableDescription from '@/components/TranslatableDescription'
 import ServiceTag from '@/components/ServiceTag'
 import ServiceLegend from '@/components/ServiceLegend'
 import RatingDonut from '@/components/RatingDonut'
@@ -12,6 +12,8 @@ import ProfileComments from '@/components/ProfileComments'
 import OnlineBadge from '@/components/OnlineBadge'
 import { SERVICES_DE } from '@/data/services.de'
 import { Globe } from 'lucide-react'
+import Link from 'next/link'
+import { BadgeCheck, ShieldCheck } from 'lucide-react'
 import VerifiedBadges from '@/components/VerifiedBadges'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { SiOnlyfans } from 'react-icons/si'
@@ -29,6 +31,7 @@ const translateTokenDE = (token: string): string => { const t = token.toLowerCas
 const formatEnumListDE = (v: any): string => toArray(v).map((x) => translateTokenDE(String(x))).filter(Boolean).join(', ')
 const badgeElementsDE = (v: any) => { const arr = toArray(v); return arr.map((x: any, i: number) => (<span key={`${String(x)}-${i}`} className="inline-flex items-center px-2.5 py-1 border border-gray-200 bg-gray-50 text-gray-700 text-xs rounded-none">{translateTokenDE(String(x))}</span>)) }
 const brandColor = (key: string): string => { const k = key.toLowerCase(); if (k === 'whatsapp') return '#25D366'; if (k === 'instagram') return '#E4405F'; if (k === 'facebook') return '#1877F2'; if (k === 'twitter' || k === 'x') return '#1DA1F2'; if (k === 'youtube') return '#FF0000'; if (k === 'linkedin') return '#0A66C2'; if (k === 'telegram') return '#26A5E4'; if (k === 'tiktok') return '#000000'; if (k === 'snapchat') return '#FFFC00'; if (k === 'onlyfans') return '#00AEF0'; return '#6B7280' }
+function slugify(input: string): string { return input.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') }
 
 export default function AltEscortViewOne(props: {
   data: any,
@@ -39,8 +42,9 @@ export default function AltEscortViewOne(props: {
   dist: Record<number, number>,
   distTotal: number,
   hasApprovedVerification: boolean,
+  similarItems?: Array<{ id: string; name: string | null; city: string | null; country: string | null; image: string | null; isVerified?: boolean; isAgeVerified?: boolean }>,
 }) {
-  const { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification } = props
+  const { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification, similarItems = [] } = props
   const { id: escortId, name, slogan, city, country, image, description, details, services, contact, location, socials } = data
   const isOnline = !!data?.isOnline
 
@@ -167,7 +171,7 @@ export default function AltEscortViewOne(props: {
                         {description && (
                           <div className="mt-8">
                             <h3 className="text-base font-light tracking-widest text-gray-800">BESCHREIBUNG</h3>
-                            <ExpandableText text={description} limit={600} className="text-sm text-gray-700 mt-3 leading-relaxed" buttonClassName="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600" />
+                            <TranslatableDescription text={description} limit={600} className="text-sm text-gray-700 mt-3 leading-relaxed" buttonClassName="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600" />
                           </div>
                         )}
                       </div>
@@ -262,6 +266,58 @@ export default function AltEscortViewOne(props: {
                 ]}
               />
             </div>
+
+            {/* ANDERE ANZEIGEN (Similar Escorts) */}
+            {similarItems.length > 0 && (
+              <div className="bg-white border border-gray-200 p-6">
+                <h2 className="text-lg font-light tracking-widest text-gray-800">ANDERE ANZEIGEN</h2>
+                <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {similarItems.map((e) => {
+                    const slugged = e.name ? slugify(e.name) : 'escort'
+                    const href = `/escorts/${e.id}/${slugged}`
+                    return (
+                      <div key={e.id} className="group cursor-pointer rounded-none">
+                        <Link href={href} className="block">
+                          <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            {e.image ? (
+                              <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="h-full w-full bg-gray-300" />
+                            )}
+                            {(e.isVerified || e.isAgeVerified) && (
+                              <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
+                                {e.isVerified && (
+                                  <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                                    <BadgeCheck className="h-4 w-4" />
+                                  </span>
+                                )}
+                                {e.isAgeVerified && (
+                                  <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
+                                    <ShieldCheck className="h-4 w-4" />
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                        <div className="px-3 py-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Link href={href} className="block truncate">
+                              <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">{(e.name?.toUpperCase?.() ?? e.name) || '—'}</h3>
+                            </Link>
+                            {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
+                          </div>
+                          {(e.city || e.country) && (
+                            <div className="mt-1 text-sm text-gray-700">{e.city || e.country}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Media Gallery (Slider, no auto-slide) */}
             <div className="bg-white border border-gray-200 p-6">

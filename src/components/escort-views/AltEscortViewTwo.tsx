@@ -3,7 +3,7 @@ import Footer from '@/components/homepage/Footer'
 import GalleryGrid from '@/components/GalleryGrid'
 import Tabs from '@/components/Tabs'
 import ProfileFeed from '@/components/ProfileFeed'
-import ExpandableText from '@/components/ExpandableText'
+import TranslatableDescription from '@/components/TranslatableDescription'
 import ServiceTag from '@/components/ServiceTag'
 import ServiceLegend from '@/components/ServiceLegend'
 import RatingDonut from '@/components/RatingDonut'
@@ -13,6 +13,8 @@ import OnlineBadge from '@/components/OnlineBadge'
 import { SERVICES_DE } from '@/data/services.de'
 import VerifiedBadges from '@/components/VerifiedBadges'
 import React from 'react'
+import Link from 'next/link'
+import { BadgeCheck, ShieldCheck } from 'lucide-react'
 
 function toStr(v: any) { return (v === null || v === undefined) ? '' : String(v).trim() }
 function withUnit(v: any, unit: string) { const s = toStr(v); if (!s) return ''; const low = s.toLowerCase(); if (low.includes(unit.toLowerCase())) return s; if (/^\d+(?:[\.,]\d+)?$/.test(s)) return `${s.replace(',', '.')} ${unit}`; return s }
@@ -25,6 +27,7 @@ const capitalizeWords = (s: string) => s.replace(/\b\w/g, (c: string) => c.toUpp
 const translateTokenDE = (token: string): string => { const t = token.toLowerCase().replace(/[_\-\s]+/g, ''); const map: Record<string, string> = { slim: 'Schlank', petite: 'Zierlich', athletic: 'Athletisch', fit: 'Fit', average: 'Durchschnittlich', curvy: 'Kurvig', bbw: 'Mollig', blonde: 'Blond', blond: 'Blond', brunette: 'Brünett', brown: 'Braun', black: 'Schwarz', red: 'Rot', auburn: 'Kupfer', chestnut: 'Kastanienbraun', darkbrown: 'Dunkelbraun', lightbrown: 'Hellbraun', grey: 'Grau', gray: 'Grau', silver: 'Silber', dyed: 'Gefärbt', highlights: 'Strähnen', short: 'Kurz', medium: 'Mittel', shoulderlength: 'Schulterlang', long: 'Lang', verylong: 'Sehr lang', bob: 'Bob', blue: 'Blau', green: 'Grün', hazel: 'Hasel', amber: 'Bernstein', natural: 'Natürlich', implants: 'Implantat', implant: 'Implantat', enhanced: 'Vergrößert', shaved: 'Rasiert', fullyshaved: 'Komplett rasiert', partiallyshaved: 'Teilrasiert', trimmed: 'Getrimmt', naturalhair: 'Natürlich', landingstrip: 'Landing Strip', brazilian: 'Brasilianisch', waxed: 'Gewaxt', ears: 'Ohren', navel: 'Bauchnabel', nipples: 'Brustwarzen', tongue: 'Zunge', nose: 'Nase', lip: 'Lippe', eyebrow: 'Augenbraue', intimate: 'Intim', arms: 'Arme', legs: 'Beine', back: 'Rücken', chest: 'Brust', neck: 'Nacken', shoulder: 'Schulter', small: 'Klein', large: 'Groß', elegant: 'Elegant', casual: 'Lässig', sexy: 'Sexy', business: 'Business', sporty: 'Sportlich', chic: 'Chic', street: 'Streetwear', classic: 'Klassisch' }; return map[t] || capitalizeWords(token.replace(/[_-]+/g, ' ').toLowerCase()) }
 const formatEnumListDE = (v: any): string => toArray(v).map((x) => translateTokenDE(String(x))).filter(Boolean).join(', ')
 const badgeElementsDE = (v: any) => { const arr = toArray(v); return arr.map((x: any, i: number) => (<span key={`${String(x)}-${i}`} className="inline-flex items-center px-2.5 py-1 border border-gray-200 bg-gray-50 text-gray-700 text-xs rounded-none">{translateTokenDE(String(x))}</span>)) }
+function slugify(input: string): string { return input.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') }
 
 export default function AltEscortViewTwo(props: {
   data: any,
@@ -35,8 +38,9 @@ export default function AltEscortViewTwo(props: {
   dist: Record<number, number>,
   distTotal: number,
   hasApprovedVerification: boolean,
+  similarItems?: Array<{ id: string; name: string | null; city: string | null; country: string | null; image: string | null; isVerified?: boolean; isAgeVerified?: boolean }>,
 }) {
-  const { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification } = props
+  const { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification, similarItems = [] } = props
   const { id: escortId, name, slogan, city, country, image, description, details, services, contact, location } = data
   const isOnline = !!data?.isOnline
 
@@ -104,7 +108,7 @@ export default function AltEscortViewTwo(props: {
             </div>
             <div>
               {description ? (
-                <ExpandableText text={description} limit={600} className="text-sm text-gray-700 leading-relaxed" buttonClassName="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600" />
+                <TranslatableDescription text={description} limit={600} className="text-sm text-gray-700 leading-relaxed" buttonClassName="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600" />
               ) : (
                 <div className="text-sm text-gray-500">Keine Beschreibung vorhanden.</div>
               )}
@@ -153,6 +157,58 @@ export default function AltEscortViewTwo(props: {
             ]}
           />
         </div>
+
+        {/* ANDERE ANZEIGEN (Similar Escorts) */}
+        {similarItems.length > 0 && (
+          <div className="bg-white border border-gray-200 p-6">
+            <h2 className="text-lg font-light tracking-widest text-gray-800">ANDERE ANZEIGEN</h2>
+            <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {similarItems.map((e) => {
+                const slugged = e.name ? slugify(e.name) : 'escort'
+                const href = `/escorts/${e.id}/${slugged}`
+                return (
+                  <div key={e.id} className="group cursor-pointer rounded-none">
+                    <Link href={href} className="block">
+                      <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {e.image ? (
+                          <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full bg-gray-300" />
+                        )}
+                        {(e.isVerified || e.isAgeVerified) && (
+                          <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
+                            {e.isVerified && (
+                              <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                                <BadgeCheck className="h-4 w-4" />
+                              </span>
+                            )}
+                            {e.isAgeVerified && (
+                              <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
+                                <ShieldCheck className="h-4 w-4" />
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                    <div className="px-3 py-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Link href={href} className="block truncate">
+                          <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">{(e.name?.toUpperCase?.() ?? e.name) || '—'}</h3>
+                        </Link>
+                        {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
+                      </div>
+                      {(e.city || e.country) && (
+                        <div className="mt-1 text-sm text-gray-700">{e.city || e.country}</div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Location */}
         {location && (

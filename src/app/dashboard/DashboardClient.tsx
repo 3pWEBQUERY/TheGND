@@ -300,7 +300,7 @@ export default function DashboardClient() {
         {/* Content Area */}
         <div className="">
           {activeTab === 'dashboard' && (
-            <div className="max-w-4xl mx-auto space-y-8">
+            <div className="space-y-8">
               {/* Dashboard Welcome */}
               <div className="bg-white border border-gray-100 rounded-none">
                 <div className="p-8">

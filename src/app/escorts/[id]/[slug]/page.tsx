@@ -7,13 +7,15 @@ import MessageButton from '@/components/MessageButton'
 import GalleryGrid from '@/components/GalleryGrid'
 import Tabs from '@/components/Tabs'
 import ProfileFeed from '@/components/ProfileFeed'
-import ExpandableText from '@/components/ExpandableText'
+import TranslatableDescription from '@/components/TranslatableDescription'
 import ServiceTag from '@/components/ServiceTag'
 import ServiceLegend from '@/components/ServiceLegend'
 import { SERVICES_DE } from '@/data/services.de'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Globe } from 'lucide-react'
+import Link from 'next/link'
+import { BadgeCheck, ShieldCheck } from 'lucide-react'
 import VerifiedBadges from '@/components/VerifiedBadges'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { SiOnlyfans } from 'react-icons/si'
@@ -420,7 +422,66 @@ export default async function EscortProfilePage({ params, searchParams }: { para
     selectedView = candidate
   }
 
-  const sharedProps = { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification }
+  // Find similar escorts (same city first, then same country), exclude current profile
+  let similarItems: Array<{ id: string; name: string | null; city: string | null; country: string | null; image: string | null; isVerified?: boolean; isAgeVerified?: boolean }> = []
+  try {
+    const city = data.city || null
+    const country = data.country || null
+    // Helper to map a user+profile to card item
+    const mapToItem = (u: any) => ({
+      id: u.id,
+      name: u.profile?.displayName ?? null,
+      city: u.profile?.city ?? null,
+      country: u.profile?.country ?? null,
+      image: getPrimaryImage(u.profile) || null,
+      isVerified: (u.profile?.visibility ?? '') === 'VERIFIED',
+      isAgeVerified: (u.profile?.visibility ?? '') === 'VERIFIED',
+    })
+    const byCity = await prisma.user.findMany({
+      where: {
+        isActive: true,
+        userType: 'ESCORT',
+        id: { not: data.id },
+        profile: {
+          is: {
+            city: city ?? undefined,
+            visibility: { in: ['PUBLIC', 'VERIFIED'] as any },
+          },
+        },
+      },
+      take: 12,
+      orderBy: { createdAt: 'desc' },
+      include: { profile: true },
+    })
+    similarItems = byCity.map(mapToItem)
+    if (similarItems.length < 12 && country) {
+      const more = await prisma.user.findMany({
+        where: {
+          isActive: true,
+          userType: 'ESCORT',
+          id: { not: data.id },
+          profile: {
+            is: {
+              country,
+              visibility: { in: ['PUBLIC', 'VERIFIED'] as any },
+            },
+          },
+        },
+        take: 12,
+        orderBy: { createdAt: 'desc' },
+        include: { profile: true },
+      })
+      // append non-duplicates up to 12
+      const seen = new Set(similarItems.map((x) => x.id))
+      for (const u of more) {
+        if (seen.has(u.id)) continue
+        similarItems.push(mapToItem(u))
+        if (similarItems.length >= 12) break
+      }
+    }
+  } catch {}
+
+  const sharedProps = { data, images, postsForFeed, ratingAvg, ratingCount, dist, distTotal, hasApprovedVerification, similarItems }
 
   if (selectedView === 'ALT1') {
     return <AltEscortViewOne {...sharedProps} />
@@ -608,7 +669,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
                     {description && (
                       <div className="mt-8">
                         <h2 className="text-lg font-light tracking-widest text-gray-800">BESCHREIBUNG</h2>
-                        <ExpandableText
+                        <TranslatableDescription
                           text={description}
                           limit={600}
                           className="text-sm text-gray-700 mt-3 leading-relaxed"
@@ -736,6 +797,57 @@ export default async function EscortProfilePage({ params, searchParams }: { para
             ]}
           />
         </div>
+        {/* ANDERE ANZEIGEN (Similar Escorts) */}
+        {similarItems.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-lg font-light tracking-widest text-gray-800">ANDERE ANZEIGEN</h2>
+            <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {similarItems.map((e) => {
+                const slugged = e.name ? slugify(e.name) : 'escort'
+                const href = `/escorts/${e.id}/${slugged}`
+                return (
+                  <div key={e.id} className="group cursor-pointer rounded-none">
+                    <Link href={href} className="block">
+                      <div className="aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {e.image ? (
+                          <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full bg-gray-300" />
+                        )}
+                        {(e.isVerified || e.isAgeVerified) && (
+                          <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
+                            {e.isVerified && (
+                              <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                                <BadgeCheck className="h-4 w-4" />
+                              </span>
+                            )}
+                            {e.isAgeVerified && (
+                              <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
+                                <ShieldCheck className="h-4 w-4" />
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                    <div className="px-3 py-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Link href={href} className="block truncate">
+                          <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">{(e.name?.toUpperCase?.() ?? e.name) || '—'}</h3>
+                        </Link>
+                        {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
+                      </div>
+                      {(e.city || e.country) && (
+                        <div className="mt-1 text-sm text-gray-700">{e.city || e.country}</div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
       </div>
       <Footer />
     </div>

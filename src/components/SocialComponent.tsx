@@ -264,7 +264,7 @@ export default function SocialComponent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 px-6">
+    <div className="max-w-7xl mx-auto space-y-8 px-6">
       {/* Social Stats */}
       <div className="bg-white border border-gray-100 rounded-none">
         <div className="p-8">

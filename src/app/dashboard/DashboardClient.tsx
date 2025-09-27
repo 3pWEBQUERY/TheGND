@@ -14,6 +14,7 @@ import CommentsComponent from '@/components/CommentsComponent'
 import DashboardHeader from '@/components/DashboardHeader'
 import DashboardMobileNavigation from '@/components/DashboardMobileNavigation'
 import ForumDashboard from '@/components/ForumDashboard'
+import JobsDashboard from '@/components/jobs/JobsDashboard'
 import FeedTabs from '@/components/FeedTabs'
 import GamificationComponent from '@/components/GamificationComponent'
 import SwipeDeck from '@/components/matching/SwipeDeck'
@@ -394,6 +395,13 @@ export default function DashboardClient() {
           
           {activeTab === 'forum' && (
             <ForumDashboard />
+          )}
+          {activeTab === 'jobs' && (
+            (userType === 'AGENCY' || userType === 'CLUB' || userType === 'STUDIO') ? (
+              <JobsDashboard />
+            ) : (
+              <div className="p-8 bg-white border border-gray-200 text-sm text-gray-700">Nur Agenturen, Clubs oder Studios können Jobs verwalten.</div>
+            )
           )}
           {activeTab === 'matching' && (
             <div className="">

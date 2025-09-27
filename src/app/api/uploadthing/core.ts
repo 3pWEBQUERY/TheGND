@@ -107,6 +107,26 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
     }),
+
+  // Uploader for Job media (images only)
+  jobMedia: f({
+    image: { maxFileSize: "8MB", maxFileCount: 6 },
+  })
+    .middleware(async () => {
+      const session = (await getServerSession(authOptions as any)) as any
+      if (!session?.user?.id) {
+        throw new UploadThingError("Unauthorized")
+      }
+      // Ensure user is AGENCY/CLUB/STUDIO
+      const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { userType: true } })
+      if (!user || !["AGENCY", "CLUB", "STUDIO"].includes(user.userType)) {
+        throw new UploadThingError("Forbidden")
+      }
+      return { userId: session.user.id }
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

@@ -5,6 +5,38 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Job categories available for posting
+enum JobCategory {
+  ESCORT
+  CLEANING
+  SECURITY
+  HOUSEKEEPING
+}
+
+// Jobs posted by Agencies, Clubs, and Studios
+model Job {
+  id            String      @id @default(cuid())
+  title         String
+  shortDesc     String      // short description
+  description   String      // full description
+  category      JobCategory
+  location      String?
+  city          String?
+  country       String?
+  salaryInfo    String?     // free text
+  contactInfo   String?     // email/phone/url
+  media         String?     // JSON array of media URLs
+  isActive      Boolean     @default(true)
+  postedById    String
+  postedBy      User        @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([category, createdAt])
+  @@index([postedById, createdAt])
+  @@map("jobs")
+}
+
 // Feed Groups (user-created discussion groups similar to Facebook)
 
 enum GroupPrivacy {
@@ -234,6 +266,9 @@ model User {
   // Profile analytics relations
   analyticsEventsAsTarget  ProfileAnalyticsEvent[] @relation("ProfileAnalyticsTarget")
   analyticsEventsAsVisitor ProfileAnalyticsEvent[] @relation("ProfileAnalyticsVisitor")
+
+  // Jobs posted by this user (AGENCY/CLUB/STUDIO only)
+  jobsPosted        Job[]
 
   @@map("users")
 }

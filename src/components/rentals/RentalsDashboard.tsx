@@ -8,39 +8,39 @@ import { useUploadThing } from '@/utils/uploadthing'
 import { useToast } from '@/components/ui/toast'
 
 const CATEGORIES = [
-  { value: 'ESCORT', label: 'Escort' },
-  { value: 'CLEANING', label: 'Reinigungskraft' },
-  { value: 'SECURITY', label: 'Security' },
-  { value: 'HOUSEKEEPING', label: 'Hausdame' },
+  { value: 'APARTMENT', label: 'Apartment' },
+  { value: 'ROOM', label: 'Zimmer' },
+  { value: 'STUDIO', label: 'Studio' },
+  { value: 'EVENT_SPACE', label: 'Eventfläche' },
 ] as const
 
-type MyJob = {
+type MyRental = {
   id: string
   title: string
   shortDesc: string
-  category: string
   description?: string
+  category: string
+  location?: string
   city?: string
   country?: string
-  location?: string
   media?: string[]
   isActive?: boolean
   createdAt?: string
-  salaryInfo?: string
+  priceInfo?: string
   contactInfo?: string
 }
 
-export default function JobsDashboard() {
-  const { startUpload, isUploading } = useUploadThing('jobMedia')
+export default function RentalsDashboard() {
+  const { startUpload, isUploading } = useUploadThing('rentalMedia')
   const toast = useToast()
   const [title, setTitle] = useState('')
   const [shortDesc, setShortDesc] = useState('')
   const [description, setDescription] = useState('')
-  const [category, setCategory] = useState<string>('ESCORT')
+  const [category, setCategory] = useState<string>('APARTMENT')
   const [location, setLocation] = useState('')
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('')
-  const [salaryInfo, setSalaryInfo] = useState('')
+  const [priceInfo, setPriceInfo] = useState('')
   const [contactInfo, setContactInfo] = useState('')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
@@ -51,8 +51,8 @@ export default function JobsDashboard() {
   const [errors, setErrors] = useState<string[]>([])
   const [message, setMessage] = useState<string | null>(null)
 
-  const [myJobs, setMyJobs] = useState<MyJob[] | null>(null)
-  const [loadingJobs, setLoadingJobs] = useState(false)
+  const [myRentals, setMyRentals] = useState<MyRental[] | null>(null)
+  const [loadingRentals, setLoadingRentals] = useState(false)
 
   const pickFiles = () => fileRef.current?.click()
 
@@ -99,11 +99,11 @@ export default function JobsDashboard() {
     setTitle('')
     setShortDesc('')
     setDescription('')
-    setCategory('ESCORT')
+    setCategory('APARTMENT')
     setLocation('')
     setCity('')
     setCountry('')
-    setSalaryInfo('')
+    setPriceInfo('')
     setContactInfo('')
     setSelectedFiles([])
     setMediaUrls([])
@@ -127,23 +127,19 @@ export default function JobsDashboard() {
         location: location.trim() || undefined,
         city: city.trim() || undefined,
         country: country.trim() || undefined,
-        salaryInfo: salaryInfo.trim() || undefined,
+        priceInfo: priceInfo.trim() || undefined,
         contactInfo: contactInfo.trim() || undefined,
         media: mediaUrls,
       }
-      const url = editingId ? `/api/jobs/${editingId}` : '/api/jobs'
+      const url = editingId ? `/api/rentals/${editingId}` : '/api/rentals'
       const method = editingId ? 'PATCH' : 'POST'
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const out = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(out?.error || 'Fehler beim Speichern')
-      setMessage(editingId ? 'Job aktualisiert' : 'Job gespeichert')
-      toast.show(editingId ? 'Job aktualisiert' : 'Job gespeichert', { variant: 'success' })
+      setMessage(editingId ? 'Angebot aktualisiert' : 'Angebot gespeichert')
+      toast.show(editingId ? 'Angebot aktualisiert' : 'Angebot gespeichert', { variant: 'success' })
       resetForm()
-      await loadMyJobs()
+      await loadMyRentals()
     } catch (e: any) {
       setErrors([e?.message || 'Fehler beim Speichern'])
       toast.show('Fehler beim Speichern', { variant: 'error' })
@@ -152,59 +148,55 @@ export default function JobsDashboard() {
     }
   }
 
-  const loadMyJobs = async () => {
-    setLoadingJobs(true)
+  const loadMyRentals = async () => {
+    setLoadingRentals(true)
     try {
-      const res = await fetch('/api/jobs?mine=1', { cache: 'no-store' })
+      const res = await fetch('/api/rentals?mine=1', { cache: 'no-store' })
       const data = await res.json()
-      if (res.ok) setMyJobs(Array.isArray(data?.items) ? data.items : [])
+      if (res.ok) setMyRentals(Array.isArray(data?.items) ? data.items : [])
     } catch {
-      setMyJobs([])
+      setMyRentals([])
     } finally {
-      setLoadingJobs(false)
+      setLoadingRentals(false)
     }
   }
 
-  useEffect(() => { loadMyJobs() }, [])
+  useEffect(() => { loadMyRentals() }, [])
 
-  const beginEdit = (job: MyJob) => {
-    setEditingId(job.id)
-    setTitle(job.title || '')
-    setShortDesc(job.shortDesc || '')
-    setDescription(job.description || '')
-    setCategory(job.category || 'ESCORT')
-    setLocation(job.location || '')
-    setCity(job.city || '')
-    setCountry(job.country || '')
-    setSalaryInfo(job.salaryInfo || '')
-    setContactInfo(job.contactInfo || '')
-    setMediaUrls(Array.isArray(job.media) ? job.media : [])
+  const beginEdit = (r: MyRental) => {
+    setEditingId(r.id)
+    setTitle(r.title || '')
+    setShortDesc(r.shortDesc || '')
+    setDescription(r.description || '')
+    setCategory(r.category || 'APARTMENT')
+    setLocation(r.location || '')
+    setCity(r.city || '')
+    setCountry(r.country || '')
+    setPriceInfo(r.priceInfo || '')
+    setContactInfo(r.contactInfo || '')
+    setMediaUrls(Array.isArray(r.media) ? r.media : [])
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const setActive = async (id: string, active: boolean) => {
     try {
-      const res = await fetch(`/api/jobs/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: active }),
-      })
+      const res = await fetch(`/api/rentals/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: active }) })
       if (!res.ok) throw new Error('Aktualisierung fehlgeschlagen')
-      await loadMyJobs()
-      toast.show(active ? 'Job aktiviert' : 'Job deaktiviert', { variant: 'success' })
+      await loadMyRentals()
+      toast.show(active ? 'Angebot aktiviert' : 'Angebot deaktiviert', { variant: 'success' })
     } catch (e: any) {
       setErrors([e?.message || 'Fehler beim Aktualisieren'])
       toast.show('Fehler beim Aktualisieren', { variant: 'error' })
     }
   }
 
-  const deleteJob = async (id: string) => {
-    if (!confirm('Diesen Job wirklich löschen?')) return
+  const deleteRental = async (id: string) => {
+    if (!confirm('Dieses Angebot wirklich löschen?')) return
     try {
-      const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/rentals/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Löschen fehlgeschlagen')
-      await loadMyJobs()
-      toast.show('Job gelöscht', { variant: 'success' })
+      await loadMyRentals()
+      toast.show('Angebot gelöscht', { variant: 'success' })
     } catch (e: any) {
       setErrors([e?.message || 'Fehler beim Löschen'])
       toast.show('Fehler beim Löschen', { variant: 'error' })
@@ -214,7 +206,7 @@ export default function JobsDashboard() {
   return (
     <div className="space-y-8">
       <div className="bg-white border border-gray-200 p-6">
-        <h2 className="text-2xl font-thin tracking-wider text-gray-800 mb-2">JOB ERSTELLEN</h2>
+        <h2 className="text-2xl font-thin tracking-wider text-gray-800 mb-2">ANGEBOT ERSTELLEN</h2>
         <div className="w-16 h-px bg-pink-500 mb-6" />
 
         {errors.length > 0 && (
@@ -258,8 +250,8 @@ export default function JobsDashboard() {
             <Input value={country} onChange={(e) => setCountry(e.target.value)} className="rounded-none border-gray-300" />
           </div>
           <div>
-            <label className="block text-xs tracking-widest text-gray-600 mb-2">VERGÜTUNG</label>
-            <Input value={salaryInfo} onChange={(e) => setSalaryInfo(e.target.value)} className="rounded-none border-gray-300" />
+            <label className="block text-xs tracking-widest text-gray-600 mb-2">PREIS</label>
+            <Input value={priceInfo} onChange={(e) => setPriceInfo(e.target.value)} className="rounded-none border-gray-300" />
           </div>
           <div className="md:col-span-2">
             <label className="block text-xs tracking-widest text-gray-600 mb-2">KONTAKT</label>
@@ -282,7 +274,7 @@ export default function JobsDashboard() {
                 {mediaUrls.map((u) => (
                   <div key={u} className="relative border border-gray-200">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={u} alt="Job Media" className="w-full h-28 object-cover" />
+                    <img src={u} alt="Rental Media" className="w-full h-28 object-cover" />
                     <button type="button" onClick={() => removeMedia(u)} className="absolute top-1 right-1 text-[10px] uppercase tracking-widest bg-white/90 border border-gray-300 px-2 py-0.5">Löschen</button>
                   </div>
                 ))}
@@ -292,52 +284,37 @@ export default function JobsDashboard() {
         </div>
 
         <div className="mt-6 flex items-center gap-3">
-          <Button onClick={save} disabled={saving} className="rounded-none bg-pink-600 hover:bg-pink-700">{saving ? (editingId ? 'Aktualisiert…' : 'Speichert…') : (editingId ? 'Job aktualisieren' : 'Job speichern')}</Button>
+          <Button onClick={save} disabled={saving} className="rounded-none bg-pink-600 hover:bg-pink-700">{saving ? (editingId ? 'Aktualisiert…' : 'Speichert…') : (editingId ? 'Angebot aktualisieren' : 'Angebot speichern')}</Button>
           {editingId && (
             <button type="button" onClick={resetForm} className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600">Abbrechen</button>
           )}
         </div>
       </div>
 
-      {/* Meine Jobs */}
+      {/* Meine Angebote */}
       <div className="bg-white border border-gray-200 p-6">
-        <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">MEINE JOBS</h3>
-        {loadingJobs ? (
+        <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">MEINE ANGEBOTE</h3>
+        {loadingRentals ? (
           <div className="text-sm text-gray-500">Lade…</div>
-        ) : myJobs && myJobs.length > 0 ? (
+        ) : myRentals && myRentals.length > 0 ? (
           <ul className="space-y-3">
-            {myJobs.map(j => (
-              <li key={j.id} className="flex items-center justify-between border border-gray-200 px-3 py-2">
+            {myRentals.map(r => (
+              <li key={r.id} className="flex items-center justify-between border border-gray-200 px-3 py-2">
                 <div className="min-w-0">
-                  <div className="text-sm font-medium tracking-wider text-gray-900 truncate">{j.title}</div>
-                  <div className="text-xs text-gray-500 truncate">{j.category} · {j.city || ''}{j.city && j.country ? ', ' : ''}{j.country || ''}</div>
+                  <div className="text-sm font-medium tracking-wider text-gray-900 truncate">{r.title}</div>
+                  <div className="text-xs text-gray-500 truncate">{r.category} · {r.city || ''}{r.city && r.country ? ', ' : ''}{r.country || ''}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[11px] uppercase tracking-widest ${j.isActive ? 'text-emerald-600' : 'text-gray-500'}`}>{j.isActive ? 'AKTIV' : 'INAKTIV'}</span>
-                  <button
-                    onClick={() => beginEdit(j)}
-                    className="px-2 py-1 text-[11px] uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600"
-                  >
-                    Bearbeiten
-                  </button>
-                  <button
-                    onClick={() => setActive(j.id, !j.isActive)}
-                    className="px-2 py-1 text-[11px] uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600"
-                  >
-                    {j.isActive ? 'Deaktivieren' : 'Aktivieren'}
-                  </button>
-                  <button
-                    onClick={() => deleteJob(j.id)}
-                    className="px-2 py-1 text-[11px] uppercase tracking-widest border border-red-300 text-red-600 hover:bg-red-50"
-                  >
-                    Löschen
-                  </button>
+                  <span className={`text-[11px] uppercase tracking-widest ${r.isActive ? 'text-emerald-600' : 'text-gray-500'}`}>{r.isActive ? 'AKTIV' : 'INAKTIV'}</span>
+                  <button onClick={() => beginEdit(r)} className="px-2 py-1 text-[11px] uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600">Bearbeiten</button>
+                  <button onClick={() => setActive(r.id, !r.isActive)} className="px-2 py-1 text-[11px] uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600">{r.isActive ? 'Deaktivieren' : 'Aktivieren'}</button>
+                  <button onClick={() => deleteRental(r.id)} className="px-2 py-1 text-[11px] uppercase tracking-widest border border-red-300 text-red-600 hover:bg-red-50">Löschen</button>
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <div className="text-sm text-gray-500">Keine Jobs erstellt.</div>
+          <div className="text-sm text-gray-500">Keine Angebote erstellt.</div>
         )}
       </div>
     </div>

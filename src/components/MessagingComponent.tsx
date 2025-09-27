@@ -393,6 +393,11 @@ export default function MessagingComponent() {
               })()}
             </div>
             <div className="flex-1 p-4 overflow-y-auto">
+              {prefill && selectedConversation === prefill.id && messages.length === 0 && (
+                <div className="mb-3 text-[11px] font-light tracking-widest text-gray-600 bg-gray-50 border border-gray-200 px-3 py-2">
+                  Neue Unterhaltung mit {prefill.name || 'Nutzer'} gestartet. Schreibe eine Nachricht…
+                </div>
+              )}
               <div className="space-y-3">
                 {messages.map(message => {
                   const isOwnMessage = message.senderId === session?.user?.id
@@ -562,6 +567,11 @@ export default function MessagingComponent() {
 
             {/* Messages */}
             <div className="flex-1 p-6 overflow-y-auto">
+              {prefill && selectedConversation === prefill.id && messages.length === 0 && (
+                <div className="mb-4 text-[11px] font-light tracking-widest text-gray-600 bg-gray-50 border border-gray-200 px-3 py-2">
+                  Neue Unterhaltung mit {prefill.name || 'Nutzer'} gestartet. Schreibe eine Nachricht…
+                </div>
+              )}
               <div className="space-y-4">
                 {messages.map(message => {
                   const isOwnMessage = message.senderId === session?.user?.id

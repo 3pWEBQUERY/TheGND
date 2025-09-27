@@ -4,20 +4,18 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
-export const runtime = 'nodejs'
-
-const createJobSchema = z.object({
+const createRentalSchema = z.object({
   title: z.string().min(3).max(120),
   shortDesc: z.string().min(10).max(260),
   description: z.string().min(20).max(8000),
-  category: z.enum(['ESCORT','CLEANING','SECURITY','HOUSEKEEPING']),
+  category: z.enum(['APARTMENT','ROOM','STUDIO','EVENT_SPACE']),
   location: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
-  salaryInfo: z.string().optional(),
+  priceInfo: z.string().optional(),
   contactInfo: z.string().optional(),
-  media: z.array(z.string().url()).max(6).optional(),
-  isActive: z.boolean().optional().default(true),
+  media: z.array(z.string().url()).max(10).optional(),
+  isActive: z.boolean().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -39,9 +37,7 @@ export async function GET(request: NextRequest) {
       if (!userId) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
-    const where: any = {
-      isActive: true,
-    }
+    const where: any = { isActive: true }
     if (q) {
       where.OR = [
         { title: { contains: q, mode: 'insensitive' } },
@@ -49,49 +45,47 @@ export async function GET(request: NextRequest) {
         { description: { contains: q, mode: 'insensitive' } },
       ]
     }
-    if (category && ['ESCORT','CLEANING','SECURITY','HOUSEKEEPING'].includes(category)) {
+    if (category && ['APARTMENT','ROOM','STUDIO','EVENT_SPACE'].includes(category)) {
       where.category = category as any
     }
     if (city) where.city = { contains: city, mode: 'insensitive' }
     if (country) where.country = { contains: country, mode: 'insensitive' }
     if (userId) where.postedById = userId
 
-    const jobs = await (prisma as any).job.findMany({
+    const rentals = await (prisma as any).rental.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
-      include: {
-        postedBy: { include: { profile: true } },
-      },
+      include: { postedBy: { include: { profile: true } } },
     })
 
-    const items = (jobs as any[]).map((j: any) => ({
-      id: j.id,
-      title: j.title,
-      shortDesc: j.shortDesc,
-      description: j.description,
-      category: j.category,
-      location: j.location,
-      city: j.city,
-      country: j.country,
-      salaryInfo: j.salaryInfo,
-      contactInfo: j.contactInfo,
-      media: (() => { try { return j.media ? JSON.parse(j.media) : [] } catch { return [] } })(),
-      isActive: j.isActive,
-      createdAt: j.createdAt,
+    const items = (rentals as any[]).map((r: any) => ({
+      id: r.id,
+      title: r.title,
+      shortDesc: r.shortDesc,
+      description: r.description,
+      category: r.category,
+      location: r.location,
+      city: r.city,
+      country: r.country,
+      priceInfo: r.priceInfo,
+      contactInfo: r.contactInfo,
+      media: (() => { try { const a = r.media ? JSON.parse(r.media) : []; return Array.isArray(a) ? a : [] } catch { return [] } })(),
+      isActive: r.isActive,
+      createdAt: r.createdAt,
       postedBy: {
-        id: j.postedById,
-        userType: (j as any).postedBy.userType,
-        displayName: (j as any).postedBy.profile?.displayName ?? null,
-        avatar: (j as any).postedBy.profile?.avatar ?? null,
-        companyName: (j as any).postedBy.profile?.companyName ?? null,
+        id: r.postedById,
+        userType: (r as any).postedBy.userType,
+        displayName: (r as any).postedBy.profile?.displayName ?? null,
+        avatar: (r as any).postedBy.profile?.avatar ?? null,
+        companyName: (r as any).postedBy.profile?.companyName ?? null,
       },
     }))
 
     return NextResponse.json({ items, page, limit })
   } catch (e) {
-    console.error('GET /api/jobs error:', e)
+    console.error('GET /api/rentals error:', e)
     return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
@@ -104,17 +98,17 @@ export async function POST(request: NextRequest) {
     }
     const user = await (prisma as any).user.findUnique({ where: { id: session.user.id }, select: { userType: true } })
     if (!user || !['AGENCY','CLUB','STUDIO'].includes(user.userType as any)) {
-      return NextResponse.json({ error: 'Nur Agenturen, Clubs oder Studios können Jobs erstellen' }, { status: 403 })
+      return NextResponse.json({ error: 'Nur Agenturen, Clubs oder Studios können Mieten erstellen' }, { status: 403 })
     }
 
     const json = await request.json().catch(() => null)
-    const parsed = createJobSchema.safeParse(json)
+    const parsed = createRentalSchema.safeParse(json)
     if (!parsed.success) {
       return NextResponse.json({ error: 'Ungültige Daten', details: parsed.error.issues }, { status: 400 })
     }
     const data = parsed.data
 
-    const job = await (prisma as any).job.create({
+    const rental = await (prisma as any).rental.create({
       data: {
         title: data.title,
         shortDesc: data.shortDesc,
@@ -123,7 +117,7 @@ export async function POST(request: NextRequest) {
         location: data.location,
         city: data.city,
         country: data.country,
-        salaryInfo: data.salaryInfo,
+        priceInfo: data.priceInfo,
         contactInfo: data.contactInfo,
         media: data.media ? JSON.stringify(data.media) : null,
         isActive: data.isActive ?? true,
@@ -131,9 +125,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ id: job.id }, { status: 201 })
+    return NextResponse.json({ ok: true, id: (rental as any).id })
   } catch (e) {
-    console.error('POST /api/jobs error:', e)
+    console.error('POST /api/rentals error:', e)
     return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

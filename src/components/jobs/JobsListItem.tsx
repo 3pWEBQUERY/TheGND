@@ -1,5 +1,9 @@
+"use client"
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
+import { useToast } from '@/components/ui/toast'
 
 export type JobItem = {
   id: string
@@ -15,6 +19,9 @@ export type JobItem = {
 }
 
 export default function JobsListItem({ job }: { job: JobItem }) {
+  const [shareBusy, setShareBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const toast = useToast()
   const cover = (job.media && job.media[0]) || job.postedBy?.avatar || null
   const location = [job.city || '', job.country || ''].filter(Boolean).join(', ')
   const company = job.postedBy?.companyName || job.postedBy?.displayName || ''
@@ -23,6 +30,30 @@ export default function JobsListItem({ job }: { job: JobItem }) {
     job.category === 'CLEANING' ? 'Reinigungskraft' :
     job.category === 'SECURITY' ? 'Security' : 'Hausdame'
   )
+
+  const jobUrl = `/jobs/${job.id}`
+
+  const onShare = async () => {
+    try {
+      setShareBusy(true)
+      const title = job.title
+      const text = job.shortDesc || job.title
+      const url = typeof window !== 'undefined' ? `${window.location.origin}${jobUrl}` : jobUrl
+      if (navigator.share) {
+        await navigator.share({ title, text, url })
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        toast.show('Link kopiert', { variant: 'success' })
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+      }
+    } catch {
+      toast.show('Teilen fehlgeschlagen', { variant: 'error' })
+    }
+    finally {
+      setShareBusy(false)
+    }
+  }
 
   return (
     <div className="w-full border border-gray-200 bg-white hover:shadow-sm transition-shadow">
@@ -55,9 +86,19 @@ export default function JobsListItem({ job }: { job: JobItem }) {
 
         {/* Right: vertical buttons */}
         <div className="p-4 md:p-6 flex flex-col items-stretch justify-center gap-2 border-l border-gray-100">
-          <Link href={`/jobs/${job.id}`} className="px-3 py-2 text-xs uppercase tracking-widest text-center bg-pink-500 hover:bg-pink-600 text-white">Details</Link>
-          <button className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600">Kontakt</button>
-          <button className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600">Teilen</button>
+          <Link href={jobUrl} className="px-3 py-2 text-xs uppercase tracking-widest text-center bg-pink-500 hover:bg-pink-600 text-white">Details</Link>
+          {job.postedBy?.id ? (
+            <Link
+              href={`/dashboard?tab=messages&to=${encodeURIComponent(job.postedBy.id)}${job.postedBy.displayName ? `&toName=${encodeURIComponent(job.postedBy.displayName)}` : ''}${job.postedBy.avatar ? `&toAvatar=${encodeURIComponent(job.postedBy.avatar)}` : ''}`}
+              className="px-3 py-2 text-xs uppercase tracking-widest text-center border border-gray-300 hover:border-pink-500 hover:text-pink-600"
+              data-analytics="job_contact"
+            >
+              Kontakt
+            </Link>
+          ) : (
+            <button disabled className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-200 text-gray-400">Kontakt</button>
+          )}
+          <button onClick={onShare} disabled={shareBusy} className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600 disabled:opacity-60" data-analytics="job_share">{shareBusy ? '…' : copied ? 'Kopiert' : 'Teilen'}</button>
         </div>
       </div>
     </div>

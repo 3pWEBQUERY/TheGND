@@ -74,6 +74,26 @@ export const ourFileRouter = {
       return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
     }),
 
+  // Uploader for Rental media (images only)
+  rentalMedia: f({
+    image: { maxFileSize: "8MB", maxFileCount: 10 },
+  })
+    .middleware(async () => {
+      const session = (await getServerSession(authOptions as any)) as any
+      if (!session?.user?.id) {
+        throw new UploadThingError("Unauthorized")
+      }
+      // Ensure user is AGENCY/CLUB/STUDIO
+      const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { userType: true } })
+      if (!user || !["AGENCY", "CLUB", "STUDIO"].includes(user.userType)) {
+        throw new UploadThingError("Forbidden")
+      }
+      return { userId: session.user.id }
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
+    }),
+
   // Uploader for Verification documents (images + optional video)
   verificationDocs: f({
     image: { maxFileSize: "16MB", maxFileCount: 3 },

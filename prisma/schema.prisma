@@ -13,6 +13,14 @@ enum JobCategory {
   HOUSEKEEPING
 }
 
+// Rental categories available for posting
+enum RentalCategory {
+  APARTMENT
+  ROOM
+  STUDIO
+  EVENT_SPACE
+}
+
 // Jobs posted by Agencies, Clubs, and Studios
 model Job {
   id            String      @id @default(cuid())
@@ -35,6 +43,30 @@ model Job {
   @@index([category, createdAt])
   @@index([postedById, createdAt])
   @@map("jobs")
+}
+
+// Rentals posted by Agencies, Clubs, and Studios
+model Rental {
+  id            String          @id @default(cuid())
+  title         String
+  shortDesc     String
+  description   String
+  category      RentalCategory
+  location      String?
+  city          String?
+  country       String?
+  priceInfo     String?
+  contactInfo   String?
+  media         String?
+  isActive      Boolean         @default(true)
+  postedById    String
+  postedBy      User            @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([category, createdAt])
+  @@index([postedById, createdAt])
+  @@map("rentals")
 }
 
 // Feed Groups (user-created discussion groups similar to Facebook)
@@ -269,6 +301,8 @@ model User {
 
   // Jobs posted by this user (AGENCY/CLUB/STUDIO only)
   jobsPosted        Job[]
+  // Rentals posted by this user (AGENCY/CLUB/STUDIO only)
+  rentalsPosted     Rental[]
 
   @@map("users")
 }

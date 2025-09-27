@@ -1,6 +1,7 @@
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import Footer from '@/components/homepage/Footer'
 import Image from 'next/image'
+import Link from 'next/link'
 
 async function getJob(id: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/jobs/${id}`, { cache: 'no-store' })
@@ -51,6 +52,35 @@ export default async function JobDetailPage({ params }: { params: { id: string }
                 {(!job.media || job.media.length === 0) && !job.postedBy?.avatar && (
                   <div className="h-40 border border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-500">KEIN BILD</div>
                 )}
+                {job?.postedBy?.id && (
+                  <div className="border border-gray-200 bg-white p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 bg-gray-100 flex items-center justify-center overflow-hidden">
+                        {job.postedBy.avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={job.postedBy.avatar} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-sm font-light tracking-widest text-gray-600">
+                            {(job.postedBy.displayName || job.postedBy.companyName || 'N').charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-sm font-light tracking-wide text-gray-800">
+                          {job.postedBy.companyName || job.postedBy.displayName || 'Nutzer'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <Link
+                        href={`/dashboard?tab=messages&to=${encodeURIComponent(job.postedBy.id)}${job.postedBy.displayName ? `&toName=${encodeURIComponent(job.postedBy.displayName)}` : ''}${job.postedBy.avatar ? `&toAvatar=${encodeURIComponent(job.postedBy.avatar)}` : ''}`}
+                        className="w-full inline-block text-center px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600"
+                      >
+                        Kontakt
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -66,6 +96,18 @@ export default async function JobDetailPage({ params }: { params: { id: string }
                   {job.city && <span className="px-2 py-1 border border-gray-300">{job.city}{job.country ? `, ${job.country}` : ''}</span>}
                   {job.postedBy?.companyName && <span className="px-2 py-1 border border-gray-300">{job.postedBy.companyName}</span>}
                 </div>
+
+                {/* Actions */}
+                {job?.postedBy?.id && (
+                  <div className="mb-6 flex flex-wrap gap-3">
+                    <Link
+                      href={`/dashboard?tab=messages&to=${encodeURIComponent(job.postedBy.id)}${job.postedBy.displayName ? `&toName=${encodeURIComponent(job.postedBy.displayName)}` : ''}${job.postedBy.avatar ? `&toAvatar=${encodeURIComponent(job.postedBy.avatar)}` : ''}`}
+                      className="px-4 py-2 text-xs uppercase tracking-widest bg-pink-500 hover:bg-pink-600 text-white"
+                    >
+                      Kontakt aufnehmen
+                    </Link>
+                  </div>
+                )}
 
                 <div className="prose prose-p:my-3 prose-ul:my-2 prose-li:my-0 text-gray-800 max-w-none">
                   <p style={{ whiteSpace: 'pre-wrap' }}>{job.description}</p>

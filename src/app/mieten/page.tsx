@@ -1,14 +1,14 @@
-'use client'
+"use client"
 
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import Footer from '@/components/homepage/Footer'
-import JobsHero from '@/components/homepage/JobsHero'
-import JobsList from '@/components/jobs/JobsList'
-import JobsSearch from '@/components/jobs/JobsSearch'
+import RentalsHero from '@/components/homepage/RentalsHero'
+import RentalsSearch from '@/components/rentals/RentalsSearch'
+import RentalsList from '@/components/rentals/RentalsList'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function JobsPage() {
+export default function MietenPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [q, setQ] = useState('')
@@ -39,15 +39,15 @@ export default function JobsPage() {
   }, [q, category, city, country])
 
   const onSubmit = () => {
-    router.replace(`/jobs${qs ? `?${qs}` : ''}`)
+    router.replace(`/mieten${qs ? `?${qs}` : ''}`)
   }
 
   return (
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
-      <JobsHero />
-      <JobsSearch q={q} setQ={setQ} category={category} setCategory={setCategory} city={city} setCity={setCity} country={country} setCountry={setCountry} onSubmit={onSubmit} />
-      <JobsList q={q} category={category} city={city} country={country} />
+      <RentalsHero />
+      <RentalsSearch q={q} setQ={setQ} category={category} setCategory={setCategory} city={city} setCity={setCity} country={country} setCountry={setCountry} onSubmit={onSubmit} />
+      <RentalsList q={q} category={category} city={city} country={country} />
       <Footer />
     </div>
   )

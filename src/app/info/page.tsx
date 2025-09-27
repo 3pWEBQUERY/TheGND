@@ -16,7 +16,7 @@ import SicherheitSupportTab from './tabs/SicherheitSupportTab'
 import FaqTab from './tabs/FaqTab'
 
 export const metadata: Metadata = {
-  title: 'Info – THEGND',
+  title: 'Informationen – THEGND',
   description:
     'Alles über THEGND: Funktionen, Seiten, Mitgliedschaften, Marketing und Sicherheit – elegant erklärt.',
 }

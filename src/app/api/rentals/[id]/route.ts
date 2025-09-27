@@ -4,9 +4,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id
+    const { id } = await ctx.params
     const rental = await (prisma as any).rental.findUnique({
       where: { id },
       include: { postedBy: { include: { profile: true } } },
@@ -57,12 +57,12 @@ const patchSchema = z.object({
   media: z.array(z.string().url()).max(10).optional(),
 })
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
-    const id = params.id
+    const { id } = await ctx.params
     const rental = await (prisma as any).rental.findUnique({ where: { id }, select: { postedById: true } })
     if (!rental) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     if (rental.postedById !== session.user.id) return NextResponse.json({ error: 'Verboten' }, { status: 403 })
@@ -93,12 +93,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
-    const id = params.id
+    const { id } = await ctx.params
     const rental = await (prisma as any).rental.findUnique({ where: { id }, select: { postedById: true } })
     if (!rental) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     if (rental.postedById !== session.user.id) return NextResponse.json({ error: 'Verboten' }, { status: 403 })

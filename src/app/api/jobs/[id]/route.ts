@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export const runtime = 'nodejs'
+
+export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id
+    const { id } = await ctx.params
     const job = await (prisma as any).job.findUnique({
       where: { id },
       include: { postedBy: { include: { profile: true } } },
@@ -56,12 +58,12 @@ const patchSchema = z.object({
   contactInfo: z.string().optional(),
 })
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
-    const id = params.id
+    const { id } = await ctx.params
     const job = await (prisma as any).job.findUnique({ where: { id }, select: { postedById: true } })
     if (!job) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     if (job.postedById !== session.user.id) return NextResponse.json({ error: 'Verboten' }, { status: 403 })
@@ -91,12 +93,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
-    const id = params.id
+    const { id } = await ctx.params
     const job = await (prisma as any).job.findUnique({ where: { id }, select: { postedById: true } })
     if (!job) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     if (job.postedById !== session.user.id) return NextResponse.json({ error: 'Verboten' }, { status: 403 })

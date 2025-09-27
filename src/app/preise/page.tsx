@@ -977,7 +977,7 @@ export default function PreisePage() {
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/2.jpg"
+            src="/price.jpg"
             alt="Hero Background"
             className="absolute inset-0 h-full w-full object-cover"
           />

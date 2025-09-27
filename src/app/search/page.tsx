@@ -19,7 +19,7 @@ function SearchHero() {
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/2.jpg"
+          src="/search.jpg"
           alt="Search Hero"
           className="absolute inset-0 h-full w-full object-cover"
         />

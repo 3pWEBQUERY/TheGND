@@ -450,14 +450,14 @@ export default function StoriesGallery({ userType, q }: { userType?: string; q?:
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="text-center mb-8">
-          <h2 className="text-4xl font-thin tracking-wider text-gray-800 mb-4">NEUE STORIES</h2>
+          <h2 className="text-4xl font-thin tracking-wider text-gray-800 mb-4">STORIES DER 24H</h2>
           <div className="w-24 h-px bg-pink-500 mx-auto"></div>
         </div>
         {error && (
           <div className="text-sm text-red-600">Fehler beim Laden der Stories: {error}</div>
         )}
         {/* Mobile: horizontal slider */}
-        <div className="md:hidden mb-6" role="region" aria-label="Neue Stories – Slider">
+        <div className="md:hidden mb-6" role="region" aria-label="Stories der 24h – Slider">
           <div className="stories-scroll flex gap-4 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch] scroll-px-3 sm:scroll-px-6">
             {/* Sponsored HOME_BANNER tile (if any) */}
             {sponsoredUrl && (

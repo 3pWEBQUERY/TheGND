@@ -42,8 +42,8 @@ function StoriesPageInner() {
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
       <StoriesHero />
-      <StoriesGallery userType="ESCORT" q={q} />
       <StoriesSearch q={q} setQ={setQ} onSubmit={onSubmit} />
+      <StoriesGallery userType="ESCORT" q={q} />
       <Footer />
     </div>
   )

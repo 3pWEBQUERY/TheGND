@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { applyWatermarkToImageBuffer } from '@/lib/watermark'
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,15 +54,23 @@ export async function POST(request: NextRequest) {
       // Directory might already exist
     }
 
-    // Generate unique filename
-    const fileExtension = file.name.split('.').pop()
-    const uniqueFilename = `${uuidv4()}.${fileExtension}`
+    // Generate unique filename (output is JPEG after watermarking)
+    const uniqueFilename = `${uuidv4()}.jpg`
     const filePath = join(uploadsDir, uniqueFilename)
 
-    // Convert file to buffer and save
+    // Convert file to buffer, watermark, and save
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
+
+    // Get displayName for watermark (fallback to email username)
+    let displayName: string | undefined
+    try {
+      const prof = await prisma.profile.findUnique({ where: { userId: session.user.id }, select: { displayName: true } })
+      displayName = prof?.displayName || (session.user.email?.split('@')[0] ?? undefined)
+    } catch {}
+
+    const output = await applyWatermarkToImageBuffer(buffer, displayName)
+    await writeFile(filePath, output)
 
     // Update user profile with new image path
     const imageUrl = `/uploads/profiles/${uniqueFilename}`

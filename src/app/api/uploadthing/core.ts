@@ -1,5 +1,12 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { applyWatermarkToImageBuffer } from "@/lib/watermark";
+import { mkdir, writeFile } from "fs/promises";
+import { join } from "path";
+import { v4 as uuidv4 } from "uuid";
 
 const f = createUploadthing();
 
@@ -9,13 +16,51 @@ export const ourFileRouter = {
     image: { maxFileSize: "16MB", maxFileCount: 10 },
     video: { maxFileSize: "256MB", maxFileCount: 2 },
   })
-    .middleware(async ({ req }) => {
-      // TODO: integrate auth if needed (e.g., with next-auth)
-      return {};
+    .middleware(async () => {
+      // Require session; extract displayName for watermark text
+      const session = (await getServerSession(authOptions as any)) as any
+      if (!session?.user?.id) {
+        throw new UploadThingError("Unauthorized")
+      }
+      // Get profile to read displayName – fall back to email
+      let displayName: string | null = null
+      try {
+        const prof = await prisma.profile.findUnique({ where: { userId: session.user.id }, select: { displayName: true } })
+        displayName = prof?.displayName ?? null
+      } catch {}
+      const fallbackName = (session.user as any).email?.split("@")[0] ?? ""
+      return { userId: session.user.id, displayName: displayName || fallbackName }
     })
-    .onUploadComplete(async ({ file }) => {
-      // Return data the client can use
-      return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
+    .onUploadComplete(async ({ file, metadata }) => {
+      const originalUrl = (file as any).ufsUrl || (file as any).url
+      const type = file.type || ''
+
+      // For images: download, watermark, store locally in /public/uploads/onboarding/[userId]/
+      if (type.startsWith('image/')) {
+        try {
+          const res = await fetch(originalUrl)
+          if (!res.ok) throw new Error(`Failed to fetch uploaded image: ${res.status}`)
+          const arrayBuf = await res.arrayBuffer()
+          const inputBuf = Buffer.from(arrayBuf)
+
+          const watermarked = await applyWatermarkToImageBuffer(inputBuf, metadata?.displayName as string | undefined)
+
+          const baseDir = join(process.cwd(), 'public', 'uploads', 'onboarding', String(metadata?.userId || 'unknown'))
+          await mkdir(baseDir, { recursive: true })
+          const filename = `${uuidv4()}.jpg`
+          const filePath = join(baseDir, filename)
+          await writeFile(filePath, watermarked)
+
+          const localUrl = `/uploads/onboarding/${metadata?.userId || 'unknown'}/${filename}`
+          return { url: localUrl, type: 'image/jpeg' }
+        } catch (e) {
+          // If watermarking fails, fall back to original
+          return { url: originalUrl, type }
+        }
+      }
+
+      // For non-images (e.g., videos): pass through
+      return { url: originalUrl, type }
     }),
 
   // Uploader for Newsfeed post images

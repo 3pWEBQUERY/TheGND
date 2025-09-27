@@ -1,10 +1,12 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import Footer from '@/components/homepage/Footer'
 import StoriesHero from '@/components/homepage/StoriesHero'
 import StoriesGallery from '@/components/homepage/StoriesGallery'
+import StoriesSearch from '@/components/stories/StoriesSearch'
 
 export default function StoriesPage() {
   return (
@@ -15,11 +17,33 @@ export default function StoriesPage() {
 }
 
 function StoriesPageInner() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [q, setQ] = useState('')
+
+  useEffect(() => {
+    const sp = searchParams
+    const initialQ = sp?.get('q')?.trim() || ''
+    setQ(initialQ)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const queryString = useMemo(() => {
+    const params = new URLSearchParams()
+    if (q.trim()) params.set('q', q.trim())
+    return params.toString()
+  }, [q])
+
+  const onSubmit = () => {
+    router.replace(`/stories${queryString ? `?${queryString}` : ''}`)
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
       <StoriesHero />
-      <StoriesGallery userType="ESCORT" />
+      <StoriesGallery userType="ESCORT" q={q} />
+      <StoriesSearch q={q} setQ={setQ} onSubmit={onSubmit} />
       <Footer />
     </div>
   )

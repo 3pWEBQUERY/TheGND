@@ -39,7 +39,7 @@ function formatTimeRemaining(expiresAt?: string) {
   return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
 }
 
-export default function StoriesGallery({ userType }: { userType?: string }) {
+export default function StoriesGallery({ userType, q }: { userType?: string; q?: string }) {
   const [stories, setStories] = useState<StoryItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
@@ -66,7 +66,12 @@ export default function StoriesGallery({ userType }: { userType?: string }) {
 
   useEffect(() => {
     let active = true
-    fetch(`/api/stories/latest${userType ? `?userType=${encodeURIComponent(userType)}` : ''}`)
+    {
+      const qs = new URLSearchParams()
+      if (userType) qs.set('userType', userType)
+      if (q) qs.set('q', q)
+      const url = `/api/stories/latest${qs.toString() ? `?${qs.toString()}` : ''}`
+      fetch(url)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
@@ -77,10 +82,11 @@ export default function StoriesGallery({ userType }: { userType?: string }) {
       .catch((e) => {
         if (active) setError(e.message)
       })
+    }
     return () => {
       active = false
     }
-  }, [userType])
+  }, [userType, q])
 
   // Load active approved marketing asset for HOME_BANNER
   useEffect(() => {
@@ -124,7 +130,11 @@ export default function StoriesGallery({ userType }: { userType?: string }) {
     let cancelled = false
     const revalidate = async () => {
       try {
-        const res = await fetch(`/api/stories/latest${userType ? `?userType=${encodeURIComponent(userType)}` : ''}`, { cache: 'no-store' })
+        const qs = new URLSearchParams()
+        if (userType) qs.set('userType', userType)
+        if (q) qs.set('q', q)
+        const url = `/api/stories/latest${qs.toString() ? `?${qs.toString()}` : ''}`
+        const res = await fetch(url, { cache: 'no-store' })
         if (!res.ok) return
         const data = await res.json()
         if (!cancelled) setStories(data.stories)
@@ -141,7 +151,7 @@ export default function StoriesGallery({ userType }: { userType?: string }) {
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVis)
     }
-  }, [userType])
+  }, [userType, q])
 
   // Revalidate marketing asset periodically and on focus as well (every 60s)
   useEffect(() => {
@@ -558,7 +568,7 @@ export default function StoriesGallery({ userType }: { userType?: string }) {
         </div>
 
         {/* Desktop/Tablet: grid */}
-        <div className="hidden md:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="hidden md:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {/* Sponsored HOME_BANNER tile (if any) */}
           {sponsoredUrl && (
             <div

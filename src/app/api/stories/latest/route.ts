@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userType = searchParams.get('userType')?.toUpperCase() || null
+    const q = (searchParams.get('q') || '').trim()
     const now = new Date()
     const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     const stories = await prisma.story.findMany({
@@ -17,6 +18,15 @@ export async function GET(request: NextRequest) {
               author: {
                 userType: userType as any,
               },
+            }
+          : {}),
+        ...(q
+          ? {
+              OR: [
+                { content: { contains: q, mode: 'insensitive' } },
+                { author: { profile: { displayName: { contains: q, mode: 'insensitive' } } } },
+                { author: { email: { contains: q, mode: 'insensitive' } } },
+              ],
             }
           : {}),
       },

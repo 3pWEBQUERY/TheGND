@@ -1,0 +1,53 @@
+{
+  "app": { "name": "THEGND" },
+  "nav": {
+    "agb": "VOORWAARDEN",
+    "privacy": "PRIVACY",
+    "imprint": "IMPRESSUM",
+    "discover": "ONTDEK",
+    "search": "ZOEKEN",
+    "pricing": "PRIJZEN",
+    "info": "INFO",
+    "signin": "INLOGGEN",
+    "signup": "REGISTREREN"
+  },
+  "sections": {
+    "categories": "CATEGORIEËN",
+    "content": "INHOUD"
+  },
+  "categories": {
+    "escorts": "ESCORTS",
+    "agencies": "BUREAUS",
+    "clubsStudios": "CLUBS & STUDIO'S"
+  },
+  "content": {
+    "stories": "STORIES",
+    "feeds": "FEEDS",
+    "jobs": "BANEN",
+    "rent": "HUREN"
+  },
+  "labels": {
+    "highlight": "HIGHLIGHT",
+    "magazine": "MAGAZINE"
+  },
+  "texts": {
+    "discoveryHighlight": "Ontdek geverifieerde profielen",
+    "magazineTeaser": "Nieuws & Stories"
+  },
+  "cta": {
+    "viewNow": "Nu bekijken",
+    "readMore": "Meer lezen"
+  },
+  "misc": {
+    "adBanner": "Advertentiebanner"
+  },
+  "legal": {
+    "header": "Juridische informatie",
+    "imprint": { "title": "IMPRESSUM" },
+    "privacy": { "title": "PRIVACY" },
+    "terms": { "title": "VOORWAARDEN" }
+  },
+  "footer": {
+    "tagline": "Vind je Girls Next Door op THEGND."
+  }
+}

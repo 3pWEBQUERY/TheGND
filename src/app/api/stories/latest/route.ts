@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const userType = searchParams.get('userType')?.toUpperCase() || null
     const now = new Date()
     const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     const stories = await prisma.story.findMany({
@@ -10,6 +12,13 @@ export async function GET() {
         isActive: true,
         expiresAt: { gt: now },
         createdAt: { gte: dayAgo },
+        ...(userType
+          ? {
+              author: {
+                userType: userType as any,
+              },
+            }
+          : {}),
       },
       orderBy: { createdAt: 'desc' },
       take: 200,

@@ -39,7 +39,7 @@ function formatTimeRemaining(expiresAt?: string) {
   return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
 }
 
-export default function StoriesGallery() {
+export default function StoriesGallery({ userType }: { userType?: string }) {
   const [stories, setStories] = useState<StoryItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
@@ -66,7 +66,7 @@ export default function StoriesGallery() {
 
   useEffect(() => {
     let active = true
-    fetch('/api/stories/latest')
+    fetch(`/api/stories/latest${userType ? `?userType=${encodeURIComponent(userType)}` : ''}`)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
@@ -80,7 +80,7 @@ export default function StoriesGallery() {
     return () => {
       active = false
     }
-  }, [])
+  }, [userType])
 
   // Load active approved marketing asset for HOME_BANNER
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function StoriesGallery() {
     let cancelled = false
     const revalidate = async () => {
       try {
-        const res = await fetch('/api/stories/latest', { cache: 'no-store' })
+        const res = await fetch(`/api/stories/latest${userType ? `?userType=${encodeURIComponent(userType)}` : ''}`, { cache: 'no-store' })
         if (!res.ok) return
         const data = await res.json()
         if (!cancelled) setStories(data.stories)
@@ -141,7 +141,7 @@ export default function StoriesGallery() {
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVis)
     }
-  }, [])
+  }, [userType])
 
   // Revalidate marketing asset periodically and on focus as well (every 60s)
   useEffect(() => {

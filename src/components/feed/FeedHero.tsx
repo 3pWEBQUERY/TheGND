@@ -5,7 +5,7 @@ export default function FeedHero({ title = 'FEED' }: { title?: string }) {
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/1.jpg"
+          src="/feed.jpg"
           alt="Feed Hero"
           className="h-full w-full object-cover"
         />

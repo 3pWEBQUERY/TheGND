@@ -213,6 +213,7 @@ enum AddonKey {
   ESCORT_OF_MONTH
   CITY_BOOST
   PROFILE_ANALYTICS
+  COUNTRY_BLOCK
   @@map("addon_key")
 }
 

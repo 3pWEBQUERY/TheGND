@@ -26,6 +26,7 @@ import AltEscortViewOne from '@/components/escort-views/AltEscortViewOne'
 import AltEscortViewTwo from '@/components/escort-views/AltEscortViewTwo'
 import OnlineBadge from '@/components/OnlineBadge'
 import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
+import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -329,6 +330,51 @@ export default async function EscortProfilePage({ params, searchParams }: { para
   const dressLabel = toStr((details as any)?.clothingSize || (details as any)?.dressSize) || null
   // Fetch recent posts for FEED tab with author and counts
   const session = await getServerSession(authOptions)
+
+  // Country blocking: if owner enabled COUNTRY_BLOCK and viewer country is in blocked list, show restricted message
+  let isBlockedForViewer = false
+  try {
+    const st = await (prisma as any).userAddonState.findUnique({
+      where: { userId_key: { userId: id, key: 'COUNTRY_BLOCK' } },
+      select: { enabled: true, settings: true },
+    })
+    if (st?.enabled) {
+      let viewerCtry: string | null = null
+      try {
+        const h = await headers()
+        viewerCtry = (h.get('x-vercel-ip-country') || h.get('cf-ipcountry') || h.get('x-geo-country') || null)
+      } catch {}
+      // allow override via query param for testing: ?ctry=DE
+      const qctry = typeof sp?.ctry === 'string' ? sp.ctry : Array.isArray(sp?.ctry) ? sp.ctry?.[0] : undefined
+      if (!viewerCtry && qctry) viewerCtry = qctry
+      const blocked = (() => {
+        try {
+          const parsed = st.settings ? JSON.parse(st.settings) : null
+          const arr = parsed?.blocked
+          return Array.isArray(arr) ? arr.map((x: any) => String(x).toUpperCase()) : []
+        } catch { return [] }
+      })()
+      const v = (viewerCtry || '').toUpperCase()
+      const isOwner = session?.user?.id === id
+      if (!isOwner && v && blocked.includes(v)) isBlockedForViewer = true
+    }
+  } catch {}
+
+  if (isBlockedForViewer) {
+    return (
+      <div className="min-h-screen bg-white">
+        <MinimalistNavigation />
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <h1 className="text-xl tracking-widest text-gray-800">PROFIL IN DEINEM LAND NICHT VERFÜGBAR</h1>
+          <p className="mt-3 text-sm text-gray-600 max-w-2xl">Der Profilinhaber hat dieses Profil für deinen Standort eingeschränkt.</p>
+          <div className="mt-6">
+            <Link href="/escorts" className="text-xs uppercase tracking-widest text-pink-600 hover:underline">Zurück zur Übersicht</Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
 
   // Is profile analytics enabled for this profile owner?
   let analyticsEnabled = false

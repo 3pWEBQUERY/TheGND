@@ -41,6 +41,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const [notifThumbs, setNotifThumbs] = useState<Record<string, { avatar: string | null; galleryFirst: string | null; displayName: string }>>({})
   const [notifCursor, setNotifCursor] = useState<string | null>(null)
   const [notifHasMore, setNotifHasMore] = useState(false)
+  const [countryBlockEnabled, setCountryBlockEnabled] = useState(false)
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' })
@@ -186,6 +187,22 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     }
     loadAdmin()
   }, [])
+
+  // Load add-on states to determine if LÄNDERSPERRE should be shown
+  useEffect(() => {
+    const loadAddons = async () => {
+      try {
+        if (!session?.user?.id) return
+        const res = await fetch('/api/addons/state', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        const st = Array.isArray(data) ? data : []
+        const found = st.find((s: any) => s?.key === 'COUNTRY_BLOCK' && !!s?.enabled)
+        setCountryBlockEnabled(!!found)
+      } catch {}
+    }
+    loadAddons()
+  }, [session?.user?.id])
 
   // Load matching counts (badge) and refresh periodically
   useEffect(() => {
@@ -335,6 +352,9 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                       <Link href="/dashboard?tab=comments" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">KOMMENTARE</Link>
                       {canStories && (
                         <Link href="/dashboard?tab=stories" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">STORIES</Link>
+                      )}
+                      {userType === 'ESCORT' && countryBlockEnabled && (
+                        <Link href="/addons/laendersperre" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">LÄNDERSPERRE</Link>
                       )}
                     </div>
                   </div>

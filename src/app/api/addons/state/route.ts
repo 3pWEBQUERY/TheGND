@@ -22,13 +22,29 @@ export async function POST(req: Request) {
   const { key, enabled, settings } = body || {}
   if (!key) return NextResponse.json({ error: 'Missing key' }, { status: 400 })
   try {
-    const saved = await (prisma as any).userAddonState.upsert({
-      where: { userId_key: { userId: session.user.id, key } as any },
-      update: { enabled: !!enabled, settings: settings ? JSON.stringify(settings) : null },
-      create: { userId: session.user.id, key, enabled: !!enabled, settings: settings ? JSON.stringify(settings) : null },
-    })
+    const s = settings ? JSON.stringify(settings) : null
+    const rows = await (prisma as any).$queryRaw<any[]>`
+      INSERT INTO "user_addon_states" ("id", "userId", "key", "enabled", "settings", "createdAt", "updatedAt")
+      VALUES (
+        ('c' || md5(random()::text || clock_timestamp()::text)),
+        ${session.user.id},
+        CAST(${key} AS "addon_key"),
+        ${!!enabled},
+        ${s},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT ("userId", "key") DO UPDATE
+      SET "enabled" = EXCLUDED."enabled",
+          "settings" = EXCLUDED."settings",
+          "updatedAt" = NOW()
+      RETURNING *;
+    `
+    const saved = Array.isArray(rows) ? rows[0] : rows
     return NextResponse.json(saved)
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
+    console.error('addons/state POST error (raw upsert):', e)
+    const msg = (e as any)?.message || 'Failed to save'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

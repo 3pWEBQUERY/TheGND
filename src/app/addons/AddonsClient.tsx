@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-type AddonKey = 'PROFILE_ANALYTICS'
+type AddonKey = 'PROFILE_ANALYTICS' | 'COUNTRY_BLOCK'
 
 type AddonState = {
   id: string
@@ -26,6 +26,11 @@ export default function AddonsClient() {
       key: 'PROFILE_ANALYTICS' as const,
       title: 'Profil-Analytics',
       description: 'Umfassende Statistiken zu deinem Profil: Besucherzahlen, Länder, Browser/Devices, Verweildauer, Klickziele – inkl. identifizierbarer Besucher (Avatar & Anzeigename) sofern eingeloggt.'
+    },
+    {
+      key: 'COUNTRY_BLOCK' as const,
+      title: 'Ländersperre (ESCORTS)',
+      description: 'Sperre dein Profil für ausgewählte Länder der Welt. Verwaltung unter LÄNDERSPERRE im Profil-Menü.'
     },
   ], [])
 

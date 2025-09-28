@@ -14,8 +14,10 @@ async function getJob(id: string) {
   return res.json()
 }
 
-export default async function JobDetailPage({ params }: { params: { id: string } }) {
-  const job = await getJob(params.id)
+export default async function JobDetailPage({ params, searchParams: _searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { id } = await params
+  await _searchParams
+  const job = await getJob(id)
 
   return (
     <div className="min-h-screen bg-white">

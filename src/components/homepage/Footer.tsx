@@ -34,7 +34,7 @@ export default function Footer() {
             </Link>
           </div>
           <p className="text-[11px] md:text-xs font-light text-neutral-400 tracking-[0.25em]">
-            © 2024 THEGND. ALL RIGHTS RESERVED.
+            © 2025 THEGND. ALL RIGHTS RESERVED.
           </p>
         </div>
       </div>

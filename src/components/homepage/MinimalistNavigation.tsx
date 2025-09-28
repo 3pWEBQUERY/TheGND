@@ -225,6 +225,7 @@ export default function MinimalistNavigation() {
                     { href: '/forum', label: 'Forum', Icon: MessageSquare },
                     { href: '/jobs', label: 'Jobs', Icon: Briefcase },
                     { href: '/mieten', label: 'Mieten', Icon: Building2 },
+                    { href: '/blog', label: 'Blog', Icon: BookOpen },
                     { href: '/search', label: 'Suche', Icon: SearchIcon },
                     { href: '/preise', label: 'Preise', Icon: Tag },
                     { href: '/info', label: 'Info', Icon: InfoIcon },
@@ -421,6 +422,10 @@ export default function MinimalistNavigation() {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             {/* Forum link removed per request; forum is accessible via the mega menu */}
+            <Link href="/blog" className="relative group transition-colors">
+              BLOG
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
             <Link href="/preise" className="relative group transition-colors">
               {t('nav.pricing', { defaultValue: 'PREISE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>

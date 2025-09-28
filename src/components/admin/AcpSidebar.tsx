@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Share2,
   MessageCircle,
+  BookOpen,
 } from 'lucide-react'
 
 export type LinkItem = { href: string; label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }
@@ -25,6 +26,7 @@ export const acpLinks: LinkItem[] = [
   { href: '/acp/users', label: 'User', Icon: Users },
   { href: '/acp/escorts', label: 'Escorts', Icon: User },
   { href: '/acp/feeds', label: 'Feeds', Icon: Rss },
+  { href: '/acp/blog', label: 'Blog', Icon: BookOpen },
   { href: '/acp/verifications', label: 'Verifizierungen', Icon: ShieldCheck },
   { href: '/acp/memberships', label: 'Mitgliedschaften', Icon: Crown },
   { href: '/acp/memberships-users', label: 'User-Mitgliedschaften', Icon: UserCog },

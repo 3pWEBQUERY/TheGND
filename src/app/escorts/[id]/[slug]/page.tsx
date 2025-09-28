@@ -343,6 +343,32 @@ export default async function EscortProfilePage({ params, searchParams }: { para
       try {
         const h = await headers()
         viewerCtry = (h.get('x-vercel-ip-country') || h.get('cf-ipcountry') || h.get('x-geo-country') || null)
+        // Fallback via Geo-IP if header not present
+        if (!viewerCtry) {
+          const fwd = h.get('x-forwarded-for') || ''
+          const ip = fwd.split(',')[0]?.trim()
+          if (ip && ip !== '::1' && ip !== '127.0.0.1' && ip !== 'localhost') {
+            // Try ipwho.is first
+            try {
+              const resp = await fetch(`https://ipwho.is/${ip}`, { next: { revalidate: 0 } })
+              if (resp.ok) {
+                const json: any = await resp.json()
+                const code = (json?.country_code || json?.countryCode || '').toString().toUpperCase()
+                if (code && code.length === 2) viewerCtry = code
+              }
+            } catch {}
+            // Fallback to ipapi.co
+            if (!viewerCtry) {
+              try {
+                const resp2 = await fetch(`https://ipapi.co/${ip}/country/`, { next: { revalidate: 0 } })
+                if (resp2.ok) {
+                  const txt = (await resp2.text()).trim().toUpperCase()
+                  if (txt && txt.length === 2) viewerCtry = txt
+                }
+              } catch {}
+            }
+          }
+        }
       } catch {}
       // allow override via query param for testing: ?ctry=DE
       const qctry = typeof sp?.ctry === 'string' ? sp.ctry : Array.isArray(sp?.ctry) ? sp.ctry?.[0] : undefined

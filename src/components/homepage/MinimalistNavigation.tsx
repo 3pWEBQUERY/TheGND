@@ -88,6 +88,7 @@ export default function MinimalistNavigation() {
   const { t } = useTranslation('common')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [discoverOpen, setDiscoverOpen] = useState(false)
+  const [infoOpen, setInfoOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [navAd, setNavAd] = useState<{ url: string; targetUrl?: string | null } | null>(null)
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; isRead: boolean; createdAt: string }>>([])
@@ -95,6 +96,7 @@ export default function MinimalistNavigation() {
   const [notifLoading, setNotifLoading] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const infoCloseTimer = useRef<number | null>(null)
   const pathname = usePathname()
 
   // Active path helper (strip locale prefix)
@@ -132,6 +134,16 @@ export default function MinimalistNavigation() {
   // Load active NAV menu banner (uses SIDEBAR placement key in backend)
   useEffect(() => {
     fetchNavAd()
+  }, [])
+
+  // Cleanup any pending timers on unmount
+  useEffect(() => {
+    return () => {
+      if (infoCloseTimer.current) {
+        clearTimeout(infoCloseTimer.current)
+        infoCloseTimer.current = null
+      }
+    }
   }, [])
 
   // Notifications: load on open and close on outside click
@@ -421,19 +433,54 @@ export default function MinimalistNavigation() {
               {t('nav.search', { defaultValue: 'SUCHE' })}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            {/* Forum link removed per request; forum is accessible via the mega menu */}
-            <Link href="/blog" className="relative group transition-colors">
-              BLOG
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            <Link href="/preise" className="relative group transition-colors">
-              {t('nav.pricing', { defaultValue: 'PREISE' })}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            <Link href="/info" className="relative group transition-colors">
-              {t('nav.info', { defaultValue: 'INFO' })}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
+            {/* INFO dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => {
+                if (infoCloseTimer.current) {
+                  clearTimeout(infoCloseTimer.current)
+                  infoCloseTimer.current = null
+                }
+                setInfoOpen(true)
+              }}
+              onMouseLeave={() => {
+                if (infoCloseTimer.current) clearTimeout(infoCloseTimer.current)
+                infoCloseTimer.current = window.setTimeout(() => setInfoOpen(false), 150)
+              }}
+            >
+              <button className="relative group transition-colors select-none" aria-haspopup="true" aria-expanded={infoOpen}>
+                {t('nav.info', { defaultValue: 'INFO' })}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-pink-500 transition-all duration-300 group-hover:w-full"></span>
+              </button>
+              {infoOpen && (
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-56 bg-white text-gray-800 border border-gray-200 shadow-2xl z-[70]"
+                  onMouseEnter={() => {
+                    if (infoCloseTimer.current) {
+                      clearTimeout(infoCloseTimer.current)
+                      infoCloseTimer.current = null
+                    }
+                    setInfoOpen(true)
+                  }}
+                  onMouseLeave={() => {
+                    if (infoCloseTimer.current) clearTimeout(infoCloseTimer.current)
+                    infoCloseTimer.current = window.setTimeout(() => setInfoOpen(false), 150)
+                  }}
+                >
+                  <div className="py-1">
+                    <Link href="/blog" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
+                      BLOG
+                    </Link>
+                    <Link href="/preise" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
+                      {t('nav.pricing', { defaultValue: 'PREISE' })}
+                    </Link>
+                    <Link href="/info" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
+                      {t('nav.info', { defaultValue: 'INFO' })}
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center space-x-6">

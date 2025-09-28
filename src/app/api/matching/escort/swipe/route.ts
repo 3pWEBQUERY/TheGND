@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
             // Auto-message on MATCH (from member to escort) if enabled in member preferences
             try {
               let shouldSend = false
-              let content = 'Hallo! Ich habe dich geliked und würde dich gerne kennenlernen. Schreib mir gerne zurück!\n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages'
+              let content = 'Hallo! Ich habe dich geliked und würde dich gerne kennenlernen und treffen. Schreib mir gerne zurück!'
               try {
                 const pref = memberUser?.profile?.preferences ? JSON.parse(memberUser.profile.preferences) : {}
                 if (pref && pref.autoMessageOnMatch === true && typeof pref.autoLikeMessage === 'string' && pref.autoLikeMessage.trim()) {

@@ -13,7 +13,7 @@ export default function AutoMessageSettings() {
 
   const [autoMessageOnMatch, setAutoMessageOnMatch] = useState<boolean>(true)
   const [autoLikeMessage, setAutoLikeMessage] = useState<string>(
-    "Hallo! Danke fürs Vorbeischauen. Ich würde dich gerne kennenlernen. Schreib mir gerne zurück! \n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages"
+    "Hallo! Danke fürs Match. Ich würde dich gerne kennenlernen und Treffen! Schreib mir gerne zurück!"
   )
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function AutoMessageSettings() {
   const handleReset = () => {
     setAutoMessageOnMatch(true)
     setAutoLikeMessage(
-      "Hallo! Danke fürs Vorbeischauen. Ich würde dich gerne kennenlernen. Schreib mir gerne zurück! \n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages"
+      "Hallo! Danke fürs Match. Ich würde dich gerne kennenlernen und Treffen! Schreib mir gerne zurück!"
     )
     setOk(null)
     setError(null)

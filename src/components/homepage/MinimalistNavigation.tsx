@@ -304,7 +304,7 @@ export default function MinimalistNavigation() {
                           </Link>
                         </div>
                         {/* Ad banner placeholder below primary cards */}
-                        <div className="mt-3 border border-gray-200 bg-white h-[30rem] md:h-[40rem] relative overflow-hidden">
+                        <div className="mt-3 border border-gray-200 bg-white h-[405px] md:h-[445px] relative overflow-hidden">
                           {navAd ? (
                             navAd.targetUrl ? (
                               <a href={navAd.targetUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 block group">

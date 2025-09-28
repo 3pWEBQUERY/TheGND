@@ -12,7 +12,7 @@ export default function AutoMessageForm() {
   const [ok, setOk] = useState<string | null>(null)
 
   const [autoLikeMessage, setAutoLikeMessage] = useState<string>(
-    'Hallo! Danke fürs Vorbeischauen. Ich würde dich gerne kennenlernen. Schreib mir gerne zurück! \n\nLink zu meinen Nachrichten: http://localhost:3000/dashboard?tab=messages'
+    'Hallo! Danke fürs Vorbeischauen. Ich würde dich gerne kennenlernen. Schreib mir gerne zurück!'
   )
   const [autoMessageOnMatch, setAutoMessageOnMatch] = useState<boolean>(true)
 

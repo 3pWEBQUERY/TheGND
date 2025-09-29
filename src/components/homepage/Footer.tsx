@@ -32,6 +32,12 @@ export default function Footer() {
             >
               IMPRINT
             </Link>
+            <Link
+              href="/feedback"
+              className="text-xs md:text-sm font-light tracking-[0.25em] text-neutral-300 hover:text-pink-400 transition-colors underline-offset-4 hover:underline hover:decoration-pink-400"
+            >
+              FEEDBACK
+            </Link>
           </div>
           <p className="text-[11px] md:text-xs font-light text-neutral-400 tracking-[0.25em]">
             © 2025 THEGND. ALL RIGHTS RESERVED.

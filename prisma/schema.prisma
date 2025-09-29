@@ -281,6 +281,9 @@ model User {
   // Blog posts authored by the user (internal blog)
   blogPosts         BlogPost[]
 
+  // Feedback submitted by the user
+  feedbacks         Feedback[]
+
   // Feed groups
   feedGroupsOwned   FeedGroup[]
   feedGroupMemberships FeedGroupMember[]
@@ -1101,4 +1104,25 @@ model MemberMatchAction {
   @@index([memberId])
   @@index([escortId])
   @@map("member_match_actions")
+}
+
+// User Feedback
+enum FeedbackStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+}
+
+model Feedback {
+  id        String         @id @default(cuid())
+  userId    String?
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email     String?
+  message   String
+  status    FeedbackStatus @default(OPEN)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([status, createdAt])
+  @@map("feedback")
 }

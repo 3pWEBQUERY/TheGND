@@ -27,6 +27,7 @@ export const acpLinks: LinkItem[] = [
   { href: '/acp/escorts', label: 'Escorts', Icon: User },
   { href: '/acp/feeds', label: 'Feeds', Icon: Rss },
   { href: '/acp/blog', label: 'Blog', Icon: BookOpen },
+  { href: '/acp/feedback', label: 'Feedback', Icon: MessageSquare },
   { href: '/acp/verifications', label: 'Verifizierungen', Icon: ShieldCheck },
   { href: '/acp/memberships', label: 'Mitgliedschaften', Icon: Crown },
   { href: '/acp/memberships-users', label: 'User-Mitgliedschaften', Icon: UserCog },

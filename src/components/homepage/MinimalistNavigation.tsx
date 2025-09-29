@@ -468,6 +468,9 @@ export default function MinimalistNavigation() {
                   }}
                 >
                   <div className="py-1">
+                    <Link href="/feedback" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
+                      FEEDBACK
+                    </Link>
                     <Link href="/blog" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
                       BLOG
                     </Link>

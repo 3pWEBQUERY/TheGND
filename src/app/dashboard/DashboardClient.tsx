@@ -21,6 +21,8 @@ import GamificationComponent from '@/components/GamificationComponent'
 import SwipeDeck from '@/components/matching/SwipeDeck'
 import Image from 'next/image'
 import { Heart, X, Undo2 } from 'lucide-react'
+import { FaWhatsapp, FaEnvelope } from 'react-icons/fa6'
+import QRCode from 'react-qr-code'
 import Link from 'next/link'
 import PreferencesForm from '@/components/matching/PreferencesForm'
 import { useToast } from '@/components/ui/toast'
@@ -51,6 +53,9 @@ export default function DashboardClient() {
   const [likesFilter, setLikesFilter] = useState<'all' | 'new' | 'liked_back'>('all')
   const { show } = useToast()
   const [gridAnim, setGridAnim] = useState<Record<string, 'LEFT' | 'RIGHT'>>({})
+  // Review ticket modal state (ESCORT quick action)
+  const [ticketModalOpen, setTicketModalOpen] = useState(false)
+  const [issuedTicket, setIssuedTicket] = useState<{ code: string; expiresAt?: string | null } | null>(null)
 
   const gridSwipe = async (id: string, action: 'LIKE' | 'PASS') => {
     try {
@@ -69,6 +74,22 @@ export default function DashboardClient() {
         setGridAnim(prev => { const { [id]: _, ...rest } = prev; return rest })
       }, 260)
       show(action === 'LIKE' ? 'Geliked' : 'Abgelehnt', { variant: action === 'LIKE' ? 'success' : 'info' })
+    }
+  }
+
+  const issueReviewTicket = async () => {
+    try {
+      const res = await fetch('/api/review-tickets/issue', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        show(data?.error || 'Fehler beim Erstellen', { variant: 'error' })
+        return
+      }
+      const t = data?.ticket
+      setIssuedTicket({ code: t?.code, expiresAt: t?.expiresAt ?? null })
+      setTicketModalOpen(true)
+    } catch {
+      show('Serverfehler', { variant: 'error' })
     }
   }
 
@@ -280,6 +301,7 @@ export default function DashboardClient() {
 
   const userType = session.user.userType as UserType
   const canStories = canCreateStories(userType)
+  const appOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://thegnd.com'
 
   return (
     <div className="min-h-screen bg-white">
@@ -362,9 +384,72 @@ export default function DashboardClient() {
                       <div className="text-sm font-light tracking-widest text-gray-800 uppercase mb-2">NACHRICHTEN</div>
                       <div className="text-xs font-light tracking-wide text-gray-600">Überprüfen Sie Ihre Unterhaltungen</div>
                     </button>
+                    {userType === 'ESCORT' && (
+                      <button
+                        onClick={issueReviewTicket}
+                        className="p-6 bg-pink-50 hover:bg-pink-100 border border-pink-200 hover:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1 transition-colors text-left md:col-span-3"
+                      >
+                        <div className="text-sm font-light tracking-widest text-pink-800 uppercase mb-2">VERIFIZIERUNGS-TICKET ERSTELLEN</div>
+                        <div className="text-xs font-light tracking-wide text-pink-700">Erstelle einen einmaligen Code, damit dein Gast eine verifizierte Bewertung abgeben kann</div>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Ticket Modal */}
+              {ticketModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40" onClick={() => setTicketModalOpen(false)} />
+                  <div className="relative z-10 w-full max-w-md bg-white border border-gray-200 p-6">
+                    <div className="text-lg font-thin tracking-wider text-gray-800 mb-4">VERIFIZIERUNGS-TICKET</div>
+                    <div className="text-sm text-gray-700">Diesen Code an deinen Gast weitergeben. Gültig einmalig.</div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <input readOnly value={issuedTicket?.code || ''} className="flex-1 border border-gray-300 px-3 py-2 text-sm tracking-widest" />
+                      <button
+                        onClick={() => { try { navigator.clipboard.writeText(issuedTicket?.code || '') } catch {} }}
+                        className="px-3 py-2 border text-xs tracking-widest hover:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      >
+                        KOPIEREN
+                      </button>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      {/* WhatsApp share below code field */}
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(`Dein Verifizierungs-Code: ${issuedTicket?.code || ''}\nGültig einmalig. Einlösen: ${appOrigin}/dashboard?tab=comments`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-2 border text-xs tracking-widest hover:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      >
+                        <FaWhatsapp className="h-4 w-4 text-[#25D366]" />
+                        WHATSAPP
+                      </a>
+                      {/* Email share below code field */}
+                      <a
+                        href={`mailto:?subject=${encodeURIComponent('Dein Verifizierungs-Ticket')}&body=${encodeURIComponent(`Dein Verifizierungs-Code: ${issuedTicket?.code || ''}\nGültig einmalig. Einlösen: ${appOrigin}/dashboard?tab=comments`)}`}
+                        className="inline-flex items-center gap-2 px-3 py-2 border text-xs tracking-widest hover:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      >
+                        <FaEnvelope className="h-4 w-4 text-gray-700" />
+                        E‑MAIL
+                      </a>
+                    </div>
+                    {/* QR Code block */}
+                    <div className="mt-4 flex flex-col items-center gap-2">
+                      <div className="text-xs tracking-widest text-gray-700">QR-CODE ZUM EINLÖSEN</div>
+                      <div className="bg-white p-3 border border-gray-200">
+                        <QRCode value={`${appOrigin}/dashboard?tab=comments&code=${encodeURIComponent(issuedTicket?.code || '')}`} size={140} />
+                      </div>
+                      <div className="text-[11px] text-gray-500">Scanne den Code und gib den Ticket-Code ein.</div>
+                    </div>
+                    {issuedTicket?.expiresAt && (
+                      <div className="mt-2 text-[11px] text-gray-500">Ablauf: {new Date(issuedTicket.expiresAt).toLocaleDateString('de-DE')}</div>
+                    )}
+                    <div className="mt-4 text-right">
+                      <button onClick={() => setTicketModalOpen(false)} className="px-3 py-2 border text-xs tracking-widest hover:border-pink-500">SCHLIESSEN</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Profile Analytics (shown only if add-on PROFILE_ANALYTICS is globally active and enabled for user) */}
               <ProfileAnalyticsWidget />

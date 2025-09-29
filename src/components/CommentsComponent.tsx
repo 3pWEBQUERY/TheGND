@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Send, Trash2, Edit3, MessageSquare, X } from 'lucide-react'
 import { FaStar, FaRegStar } from 'react-icons/fa6'
 import Tabs from '@/components/Tabs'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import RatingDonut from '@/components/RatingDonut'
+import { useToast } from '@/components/ui/toast'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 interface CommentItem {
   id: string
@@ -22,12 +25,16 @@ interface CommentItem {
   editRequested: boolean
   editRequestMessage?: string | null
   rating?: number | null
+  verifiedByTicket?: boolean | null
   author?: { email?: string | null; profile?: { displayName?: string | null; avatar?: string | null } | null } | null
 }
 
 export default function CommentsComponent() {
   const { data: session } = useSession()
+  const searchParams = useSearchParams()
+  const { show } = useToast()
   const myId = session?.user?.id as string | undefined
+  const myType = session?.user?.userType as string | undefined
   const canModerate = useMemo(() => !!myId, [myId])
 
   const [loading, setLoading] = useState(false)
@@ -40,12 +47,46 @@ export default function CommentsComponent() {
   const [rateEnabled, setRateEnabled] = useState(false)
   const [rating, setRating] = useState<number>(0)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  // Ticket redeem state (verified review)
+  const [ticketCode, setTicketCode] = useState('')
+  const [ticketComment, setTicketComment] = useState('')
+  const [ticketRating, setTicketRating] = useState<number>(0)
+  const [ticketSubmitting, setTicketSubmitting] = useState(false)
+  const [tipEditOpenForId, setTipEditOpenForId] = useState<string | null>(null)
+  const [tipDeleteOpenForId, setTipDeleteOpenForId] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   const donutColor = (v?: number | null) => {
     const x = typeof v === 'number' ? v : 0
     if (x <= 2) return 'var(--rating-low)'
     if (x < 4) return 'var(--rating-mid)'
     return 'var(--rating-high)'
+  }
+
+  const redeemTicket = async () => {
+    if (requireAuth()) return
+    if (!ticketCode.trim() || !ticketComment.trim()) return
+    setTicketSubmitting(true)
+    try {
+      const res = await fetch('/api/review-tickets/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: ticketCode.trim(), content: ticketComment.trim(), rating: ticketRating > 0 ? ticketRating : undefined }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        show(data?.error || 'Fehler beim Einlösen', { variant: 'error' })
+        return
+      }
+      // Clear and reload lists
+      setTicketCode('')
+      setTicketComment('')
+      setTicketRating(0)
+      load()
+      show('Verifizierte Bewertung erstellt', { variant: 'success' })
+    } finally {
+      setTicketSubmitting(false)
+    }
   }
 
   const load = async () => {
@@ -67,6 +108,21 @@ export default function CommentsComponent() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myId])
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const update = () => setIsMobile(typeof window !== 'undefined' ? window.innerWidth < 768 : false)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  // Prefill ticket code from URL (?code=...)
+  useEffect(() => {
+    const c = searchParams.get('code')
+    if (c) setTicketCode(String(c).toUpperCase())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   const requireAuth = (): boolean => {
     if (!myId) {
@@ -146,6 +202,47 @@ export default function CommentsComponent() {
         </div>
         <div className="w-16 h-px bg-pink-500"></div>
       </div>
+
+      {/* Verified review via ticket (MEMBER only) */}
+      {myType === 'MEMBER' && (
+        <div className="mb-8 border border-gray-200 p-4">
+          <div className="text-sm font-light tracking-wider text-gray-800 mb-2">VERIFIZIERTE BEWERTUNG MIT TICKET</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <input
+              value={ticketCode}
+              onChange={(e) => setTicketCode(e.target.value.toUpperCase())}
+              onFocus={() => { if (!myId) setShowAuthModal(true) }}
+              placeholder="Ticket-Code (z. B. ABCD2345)"
+              className="border border-gray-300 px-3 py-2 text-sm"
+            />
+            <input
+              value={ticketComment}
+              onChange={(e) => setTicketComment(e.target.value)}
+              onFocus={() => { if (!myId) setShowAuthModal(true) }}
+              placeholder="Deine Bewertung"
+              className="border border-gray-300 px-3 py-2 text-sm md:col-span-2"
+            />
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <span className="text-xs text-gray-600">Bewertung:</span>
+            {[1,2,3,4,5].map(i => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setTicketRating(i)}
+                className={`text-lg ${i <= ticketRating ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-400`}
+                aria-label={`${i} Sterne`}
+              >
+                {i <= ticketRating ? <FaStar /> : <FaRegStar />}
+              </button>
+            ))}
+            <button onClick={redeemTicket} disabled={ticketSubmitting || !ticketCode.trim() || !ticketComment.trim()} className="ml-auto px-3 py-2 border text-sm tracking-widest hover:border-pink-500">
+              EINLÖSEN
+            </button>
+          </div>
+          <div className="mt-1 text-[11px] text-gray-500">Der Code wird von der Escort im Dashboard generiert und ist einmalig gültig.</div>
+        </div>
+      )}
 
       {/* Auth Modal */}
       {showAuthModal && (
@@ -264,19 +361,74 @@ export default function CommentsComponent() {
                           {typeof c.rating === 'number' && (
                             <RatingDonut value={c.rating ?? 0} size={22} strokeWidth={5} fillColor={donutColor(c.rating)} />
                           )}
+                          {c.verifiedByTicket && (
+                            <span className="ml-2 text-[10px] uppercase tracking-widest text-emerald-700 border border-emerald-300 px-1.5 py-0.5">VERIFIZIERT</span>
+                          )}
                         </div>
                       </div>
                       <div className="text-sm text-gray-800 mt-1">{c.content}</div>
-                      <div className="mt-2 flex flex-wrap gap-2 items-center">
+                      <Tooltip.Provider delayDuration={0}>
+                      <div className="mt-3 grid [grid-template-columns:1fr_auto_auto] gap-2 items-stretch">
                         <input
                           value={requestMessage}
                           onChange={(e) => setRequestMessage(e.target.value)}
                           placeholder="Nachricht an Admin (optional)"
-                          className="border border-gray-200 px-2 py-1 text-xs"
+                          className="w-full min-w-0 border border-gray-200 px-2 py-1 text-xs"
                         />
-                        <button onClick={() => request(c.id, 'requestEdit')} className="px-2 py-1 border text-xs hover:border-pink-500 hover:text-pink-600 inline-flex items-center gap-1"><Edit3 className="h-3 w-3"/> Bearbeitung anfragen</button>
-                        <button onClick={() => request(c.id, 'requestDeletion')} className="px-2 py-1 border text-xs hover:border-pink-500 hover:text-pink-600 inline-flex items-center gap-1"><Trash2 className="h-3 w-3"/> Löschung anfragen</button>
+                        <Tooltip.Root
+                          open={tipEditOpenForId === c.id}
+                          onOpenChange={(open) => setTipEditOpenForId(open ? c.id : (tipEditOpenForId === c.id ? null : tipEditOpenForId))}
+                        >
+                          <Tooltip.Trigger asChild>
+                            <button
+                              type="button"
+                              aria-label="Bearbeitung anfragen"
+                              onClick={() => {
+                                const isOpen = tipEditOpenForId === c.id
+                                if (isMobile && !isOpen) { setTipEditOpenForId(c.id); return }
+                                request(c.id, 'requestEdit')
+                                setTipEditOpenForId(prev => prev === c.id ? null : prev)
+                              }}
+                              onMouseLeave={() => setTipEditOpenForId(prev => prev === c.id ? null : prev)}
+                              className="px-2 py-1 border text-xs hover:border-pink-500 hover:text-pink-600 inline-flex items-center justify-center gap-1"
+                            >
+                              <Edit3 className="h-3 w-3"/>
+                              <span className="hidden md:inline">Bearbeitung anfragen</span>
+                            </button>
+                          </Tooltip.Trigger>
+                          <Tooltip.Content side="top" align="center" className="px-2 py-1 text-xs bg-gray-900 text-white border border-gray-700">
+                            Bearbeitung anfragen
+                            <Tooltip.Arrow className="fill-gray-900" />
+                          </Tooltip.Content>
+                        </Tooltip.Root>
+                        <Tooltip.Root
+                          open={tipDeleteOpenForId === c.id}
+                          onOpenChange={(open) => setTipDeleteOpenForId(open ? c.id : (tipDeleteOpenForId === c.id ? null : tipDeleteOpenForId))}
+                        >
+                          <Tooltip.Trigger asChild>
+                            <button
+                              type="button"
+                              aria-label="Löschung anfragen"
+                              onClick={() => {
+                                const isOpen = tipDeleteOpenForId === c.id
+                                if (isMobile && !isOpen) { setTipDeleteOpenForId(c.id); return }
+                                request(c.id, 'requestDeletion')
+                                setTipDeleteOpenForId(prev => prev === c.id ? null : prev)
+                              }}
+                              onMouseLeave={() => setTipDeleteOpenForId(prev => prev === c.id ? null : prev)}
+                              className="px-2 py-1 border text-xs hover:border-pink-500 hover:text-pink-600 inline-flex items-center justify-center gap-1"
+                            >
+                              <Trash2 className="h-3 w-3"/>
+                              <span className="hidden md:inline">Löschung anfragen</span>
+                            </button>
+                          </Tooltip.Trigger>
+                          <Tooltip.Content side="top" align="center" className="px-2 py-1 text-xs bg-gray-900 text-white border border-gray-700">
+                            Löschung anfragen
+                            <Tooltip.Arrow className="fill-gray-900" />
+                          </Tooltip.Content>
+                        </Tooltip.Root>
                       </div>
+                      </Tooltip.Provider>
                     </div>
                   ))
                 )}

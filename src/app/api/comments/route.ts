@@ -43,6 +43,8 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         updatedAt: true,
         rating: true,
+        verifiedByTicket: true,
+        reviewTicketId: true,
         isVisible: true,
         hiddenByOwner: true,
         deletionRequested: true,

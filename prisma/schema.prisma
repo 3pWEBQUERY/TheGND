@@ -311,6 +311,11 @@ model User {
   // Rentals posted by this user (AGENCY/CLUB/STUDIO only)
   rentalsPosted     Rental[]
 
+  // Review tickets relations
+  reviewTicketsTarget   ReviewTicket[] @relation("TicketTargetUser")
+  reviewTicketsIssued   ReviewTicket[] @relation("TicketIssuedBy")
+  reviewTicketsRedeemed ReviewTicket[] @relation("TicketRedeemedBy")
+
   @@map("users")
 }
 
@@ -474,6 +479,10 @@ model Comment {
   author    User     @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   // Optional rating 1-5
   rating    Int?
+  // Verified review via physical ticket
+  verifiedByTicket Boolean @default(false)
+  reviewTicketId   String?
+  reviewTicket     ReviewTicket? @relation(fields: [reviewTicketId], references: [id], onDelete: SetNull)
   // Threaded replies
   parentId  String?
   parent    Comment? @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: Cascade)
@@ -492,6 +501,31 @@ model Comment {
   @@map("comments")
   @@index([postId, parentId])
   @@index([targetUserId])
+}
+
+// Physical review ticket that an ESCORT can generate and hand to a MEMBER
+model ReviewTicket {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  targetUserId  String
+  targetUser    User     @relation("TicketTargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+  issuedById    String
+  issuedBy      User     @relation("TicketIssuedBy", fields: [issuedById], references: [id], onDelete: Cascade)
+  redeemedById  String?
+  redeemedBy    User?    @relation("TicketRedeemedBy", fields: [redeemedById], references: [id], onDelete: SetNull)
+  redeemedAt    DateTime?
+  expiresAt     DateTime?
+  maxUses       Int      @default(1)
+  usedCount     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  // Back relation to comments created via this ticket
+  comments      Comment[]
+
+  @@index([targetUserId])
+  @@index([issuedById])
+  @@index([redeemedById])
+  @@map("review_tickets")
 }
 
 // Messages Model

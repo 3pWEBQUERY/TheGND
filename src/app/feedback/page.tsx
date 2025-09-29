@@ -2,6 +2,8 @@ import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import Footer from '@/components/homepage/Footer'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import FeedbackFormClient from './FeedbackFormClient'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,34 +42,21 @@ export default async function FeedbackPage({ searchParams }: { searchParams?: Pr
               Vielen Dank! Dein Feedback wurde übermittelt.
             </div>
           )}
-          <form className="max-w-3xl space-y-5" action="/api/feedback" method="post">
-            {!session?.user?.email && (
-              <div>
-                <label className="block text-[11px] uppercase tracking-widest text-gray-600 mb-1">E-Mail (optional)</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="dein@email.de"
-                  className="w-full border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-pink-500"
-                />
-              </div>
-            )}
-            <div>
-              <label className="block text-[11px] uppercase tracking-widest text-gray-600 mb-1">Nachricht</label>
-              <textarea
-                name="message"
-                required
-                rows={6}
-                placeholder="Dein Feedback…"
-                className="w-full border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-pink-500"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            <div className="md:col-span-2">
+              <FeedbackFormClient showEmailField={!session?.user?.email} />
+            </div>
+            <div className="md:col-span-1">
+              <Image
+                src="/feedback.jpg"
+                alt="Feedback"
+                width={800}
+                height={1200}
+                className="w-full h-auto object-cover border border-gray-200"
+                priority
               />
             </div>
-            <div>
-              <button type="submit" className="px-5 py-2 border border-gray-300 text-sm uppercase tracking-widest hover:bg-pink-50/40">
-                Absenden
-              </button>
-            </div>
-          </form>
+          </div>
         </section>
       </main>
 

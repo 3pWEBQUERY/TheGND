@@ -1147,16 +1147,30 @@ enum FeedbackStatus {
   RESOLVED
 }
 
+// Reason for user feedback/contact
+enum FeedbackReason {
+  REPORT_AD       // Ich möchte eine Anzeige melden
+  BUG             // Etwas funktioniert nicht
+  PRAISE          // Ich möchte Lob und Kritik hinterlassen
+  ADVERTISING     // Ich möchte Werbung auf TheGND schalten
+  CUSTOMER_SERVICE // Ich suche den Kontakt zu einem Kundenbetreuer
+  OTHER           // Etwas anderes
+}
+
 model Feedback {
   id        String         @id @default(cuid())
   userId    String?
   user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   email     String?
   message   String
+  reason    FeedbackReason?
+  customTitle String?
+  contact   String?
   status    FeedbackStatus @default(OPEN)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
   @@index([status, createdAt])
+  @@index([reason])
   @@map("feedback")
 }

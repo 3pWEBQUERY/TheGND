@@ -41,7 +41,6 @@ interface Post {
   likes: any[]
   comments: any[]
 }
-
 export default function NewsfeedComponent() {
   const { data: session } = useSession()
   const [posts, setPosts] = useState<Post[]>([])
@@ -63,9 +62,17 @@ export default function NewsfeedComponent() {
 
   // Share Menu State
   const [shareMenuFor, setShareMenuFor] = useState<string | null>(null)
+  const [moreMenuFor, setMoreMenuFor] = useState<string | null>(null)
   const [openCommentsFor, setOpenCommentsFor] = useState<string | null>(null)
   const [openCommentsModalFor, setOpenCommentsModalFor] = useState<string | null>(null)
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null)
+  const [editPostId, setEditPostId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState<string>('')
+  const [blockedIds, setBlockedIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return []
+    try { return JSON.parse(localStorage.getItem('feed_blocked') || '[]') } catch { return [] }
+  })
+  const [imageOrientation, setImageOrientation] = useState<Record<string, 'landscape' | 'portrait' | 'square'>>({})
 
   const openLightbox = (images: string[], index: number) => {
     if (!images || images.length === 0) return
@@ -82,6 +89,17 @@ export default function NewsfeedComponent() {
   const showNext = (e?: any) => {
     if (e) e.stopPropagation()
     setLightboxIndex((prev) => (prev + 1) % lightboxImages.length)
+  }
+
+  // Detect image orientation on load for single-image posts
+  const handleImageLoad = (url: string, e: any) => {
+    try {
+      const img = e?.currentTarget as HTMLImageElement
+      const w = img?.naturalWidth || 0
+      const h = img?.naturalHeight || 0
+      const o: 'landscape' | 'portrait' | 'square' = w > h ? 'landscape' : w < h ? 'portrait' : 'square'
+      setImageOrientation((prev) => (prev[url] === o ? prev : { ...prev, [url]: o }))
+    } catch {}
   }
 
   // Normalisiert Avatar-Pfade aus der API (z. B. fehlender führender "/")
@@ -304,6 +322,62 @@ export default function NewsfeedComponent() {
     setShareMenuFor(null)
   }
 
+  // Inline edit helpers (placed inside component)
+  const startEdit = (post: Post) => {
+    setEditPostId(post.id)
+    setEditContent(post.content || '')
+    setMoreMenuFor(null)
+  }
+
+  const saveEdit = async () => {
+    if (!editPostId) return
+    try {
+      const res = await fetch(`/api/posts/${editPostId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editContent })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Speichern fehlgeschlagen')
+      const updated: Post = data.post
+      setPosts((prev: Post[]) => prev.map((p: Post) => p.id === updated.id ? { ...p, content: updated.content, images: (updated as any).images } as any : p))
+      setEditPostId(null)
+      setEditContent('')
+    } catch (e: any) {
+      alert(e?.message || 'Fehler')
+    }
+  }
+
+  const reportPost = async (post: Post) => {
+    const reason = window.prompt('Grund für Meldung (optional):') || undefined
+    try {
+      const res = await fetch(`/api/posts/${post.id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Melden fehlgeschlagen')
+      alert('Meldung gesendet. Danke!')
+    } catch (e: any) {
+      alert(e?.message || 'Fehler')
+    } finally {
+      setMoreMenuFor(null)
+    }
+  }
+
+  const unfollowUser = async (userId: string) => {
+    try {
+      await fetch(`/api/users/${userId}/follow`, { method: 'DELETE' })
+    } catch {}
+    setMoreMenuFor(null)
+  }
+
+  const blockUser = (userId: string) => {
+    setBlockedIds((prev: string[]) => {
+      const next = prev.includes(userId) ? prev : [...prev, userId]
+      try { localStorage.setItem('feed_blocked', JSON.stringify(next)) } catch {}
+      return next
+    })
+    setMoreMenuFor(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -313,7 +387,7 @@ export default function NewsfeedComponent() {
   }
 
   return (
-    <div className="space-y-8" onClickCapture={() => setShareMenuFor(null)}>
+    <div className="space-y-8" onClickCapture={() => { setShareMenuFor(null); setMoreMenuFor(null) }}>
       {/* Create Post */}
       <div className="bg-white border border-gray-100 rounded-none">
         <div className="p-4 sm:p-8">
@@ -364,7 +438,7 @@ export default function NewsfeedComponent() {
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
                 placeholder="Teile etwas mit der Community..."
-                className="min-h-32 resize-none border-0 border-b-2 border-gray-200 rounded-none px-0 py-4 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent"
+                className="min-h-32 resize-none border-0 border-b-2 border-gray-200 rounded-none px-3 sm:px-4 py-4 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent placeholder:text-gray-500"
               />
 
               {/* Bilder hinzufügen: Hidden File Input + Previews */}
@@ -436,7 +510,9 @@ export default function NewsfeedComponent() {
 
       {/* Posts Feed */}
       {posts.length > 0 ? (
-        posts.map((post) => {
+        posts
+          .filter((post) => !blockedIds.includes(post.author.id))
+          .map((post) => {
           const displayName = post.author.profile?.displayName || post.author.email
           
           return (
@@ -464,34 +540,138 @@ export default function NewsfeedComponent() {
                     </div>
                   </div>
                   
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
+                  <div className="relative" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      onClick={() => setMoreMenuFor(moreMenuFor === post.id ? null : post.id)}
+                      aria-label="Mehr Aktionen"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                    {moreMenuFor === post.id && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-10">
+                        <button
+                          className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                          onClick={() => { onCopyLink(post.id); setMoreMenuFor(null) }}
+                        >
+                          Link kopieren
+                        </button>
+                        {(session?.user?.id && session.user.id === post.author.id) && (
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                            onClick={() => startEdit(post)}
+                          >
+                            Bearbeiten
+                          </button>
+                        )}
+                        {(session?.user?.id && session.user.id !== post.author.id) && (
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                            onClick={() => reportPost(post)}
+                          >
+                            Melden
+                          </button>
+                        )}
+                        {(session?.user?.id && session.user.id !== post.author.id) && (
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                            onClick={() => unfollowUser(post.author.id)}
+                          >
+                            Unfollow
+                          </button>
+                        )}
+                        {(session?.user?.id && session.user.id !== post.author.id) && (
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50"
+                            onClick={() => blockUser(post.author.id)}
+                          >
+                            Blockieren
+                          </button>
+                        )}
+                        {(session?.user?.id && session.user.id === post.author.id) && (
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50"
+                            onClick={async () => {
+                              const ok = window.confirm('Diesen Beitrag löschen?')
+                              if (!ok) return
+                              try {
+                                const res = await fetch(`/api/posts/${post.id}`, { method: 'DELETE' })
+                                if (res.ok) {
+                                  setPosts(prev => prev.filter(p => p.id !== post.id))
+                                } else {
+                                  const data = await res.json().catch(() => ({}))
+                                  alert(data?.error || 'Löschen fehlgeschlagen')
+                                }
+                              } finally {
+                                setMoreMenuFor(null)
+                              }
+                            }}
+                          >
+                            Beitrag löschen
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Post Content */}
                 <div className="mb-6">
-                  <p className="text-sm font-light tracking-wide text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {post.content}
-                  </p>
+                  {editPostId === post.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="min-h-24 border border-gray-200 rounded-none px-3 py-2 text-sm font-light focus:border-pink-500 focus:ring-0 bg-white"
+                      />
+                      <div className="flex items-center gap-3">
+                        <button className="px-3 py-2 border text-xs uppercase tracking-widest hover:border-pink-500" onClick={saveEdit}>Speichern</button>
+                        <button className="px-3 py-2 border text-xs uppercase tracking-widest hover:border-pink-500" onClick={() => { setEditPostId(null); setEditContent('') }}>Abbrechen</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-light tracking-wide text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {post.content}
+                    </p>
+                  )}
                   
                   {/* Post Images */}
                   {post.images && post.images.length > 0 && (
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {post.images.map((image, index) => (
+                    post.images.length === 1 ? (
+                      <div className="mt-6">
                         <div 
-                          key={index} 
-                          className="relative group cursor-zoom-in" 
-                          onClick={() => openLightbox(post.images, index)}
+                          className="relative group cursor-zoom-in"
+                          onClick={() => openLightbox(post.images, 0)}
                         >
-                          <img 
-                            src={image} 
-                            alt={`Beitragsbild ${index + 1}`}
-                            className="w-50 h-80 object-cover rounded-none"
+                          <img
+                            src={post.images[0]}
+                            alt={`Beitragsbild 1`}
+                            onLoad={(e) => handleImageLoad(post.images[0], e)}
+                            className={
+                              imageOrientation[post.images[0]] === 'landscape'
+                                ? 'w-full h-auto max-h-[560px] object-cover rounded-none'
+                                : 'h-96 w-auto object-cover rounded-none mx-auto'
+                            }
                           />
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {post.images.map((image, index) => (
+                          <div 
+                            key={index} 
+                            className="relative group cursor-zoom-in" 
+                            onClick={() => openLightbox(post.images, index)}
+                          >
+                            <img 
+                              src={image} 
+                              alt={`Beitragsbild ${index + 1}`}
+                              className="w-full h-64 sm:h-80 object-cover rounded-none"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )
                   )}
                 </div>
                 

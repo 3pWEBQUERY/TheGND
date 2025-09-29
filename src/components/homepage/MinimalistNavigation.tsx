@@ -387,14 +387,14 @@ export default function MinimalistNavigation() {
                       <div className="col-span-12 md:col-span-4">
                         <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-3">COMMUNITY</div>
                         <div className="flex h-full flex-col gap-3">
-                          <Link href="/feed" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
+                          <Link href="/blog" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 7.7' }} className="relative">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src="/2.jpg" alt="NEWSFEED" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src="/2.jpg" alt="Blog" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70" />
                               <div className="absolute inset-0 p-3 flex items-end">
                                 <div className="text-left">
-                                  <div className="text-[10px] uppercase tracking-widest text-white">{t('labels.newsfeed', { defaultValue: 'NEWSFEED' })}</div>
+                                  <div className="text-[10px] uppercase tracking-widest text-white">{t('labels.blog', { defaultValue: 'BLOG' })}</div>
                                   <div className="mt-1 text-white text-sm">Neueste News & Stories</div>
                                   <span className="mt-3 inline-block text-xs uppercase tracking-widest underline underline-offset-4 text-white">JETZT ANSEHEN</span>
                                 </div>
@@ -471,9 +471,7 @@ export default function MinimalistNavigation() {
                     <Link href="/feedback" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
                       FEEDBACK
                     </Link>
-                    <Link href="/blog" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
-                      BLOG
-                    </Link>
+                    
                     <Link href="/preise" className="block px-4 py-2 text-sm tracking-widest hover:bg-pink-50" onClick={() => setInfoOpen(false)}>
                       {t('nav.pricing', { defaultValue: 'PREISE' })}
                     </Link>

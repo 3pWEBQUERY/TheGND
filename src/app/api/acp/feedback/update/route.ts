@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const status = body.status
     if (!id || !status) return NextResponse.json({ error: 'invalid_payload' }, { status: 400 })
 
-    await (prisma as any).feedback.update({ where: { id }, data: { status } })
+    await prisma.feedback.update({ where: { id }, data: { status } })
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: 'server_error' }, { status: 500 })

@@ -17,7 +17,7 @@ function formatDate(d: Date) {
 
 export const dynamic = 'force-dynamic'
 
-export default async function AcpFeedbackPage({ searchParams }: { searchParams?: { status?: string; reason?: string } }) {
+export default async function AcpFeedbackPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
   const { isAdmin } = await requireAdmin()
   if (!isAdmin) return notFound()
 

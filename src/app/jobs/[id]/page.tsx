@@ -113,8 +113,20 @@ export default async function JobDetailPage({ params, searchParams: _searchParam
             {/* Details column */}
             <div className="md:col-span-2">
               <div className="border border-gray-200 p-6 bg-white">
-                <h2 className="text-2xl md:text-3xl font-thin tracking-wider text-gray-900">{job.title}</h2>
-                <div className="w-16 h-px bg-pink-500 my-4" />
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-thin tracking-wider text-gray-900">{job.title}</h2>
+                    <div className="w-16 h-px bg-pink-500 mt-2" />
+                  </div>
+                  {job?.postedBy?.id && (
+                    <Link
+                      href={`/dashboard?tab=messages&to=${encodeURIComponent(job.postedBy.id)}${job.postedBy.displayName ? `&toName=${encodeURIComponent(job.postedBy.displayName)}` : ''}${job.postedBy.avatar ? `&toAvatar=${encodeURIComponent(job.postedBy.avatar)}` : ''}`}
+                      className="px-4 py-2 text-xs uppercase tracking-widest bg-pink-500 hover:bg-pink-600 text-white self-start"
+                    >
+                      Kontakt aufnehmen
+                    </Link>
+                  )}
+                </div>
                 <div className="text-sm text-gray-700 mb-4">{job.shortDesc}</div>
 
                 <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest text-gray-600 mb-6">
@@ -123,17 +135,7 @@ export default async function JobDetailPage({ params, searchParams: _searchParam
                   {job.postedBy?.companyName && <span className="px-2 py-1 border border-gray-300">{job.postedBy.companyName}</span>}
                 </div>
 
-                {/* Actions */}
-                {job?.postedBy?.id && (
-                  <div className="mb-6 flex flex-wrap gap-3">
-                    <Link
-                      href={`/dashboard?tab=messages&to=${encodeURIComponent(job.postedBy.id)}${job.postedBy.displayName ? `&toName=${encodeURIComponent(job.postedBy.displayName)}` : ''}${job.postedBy.avatar ? `&toAvatar=${encodeURIComponent(job.postedBy.avatar)}` : ''}`}
-                      className="px-4 py-2 text-xs uppercase tracking-widest bg-pink-500 hover:bg-pink-600 text-white"
-                    >
-                      Kontakt aufnehmen
-                    </Link>
-                  </div>
-                )}
+                
 
                 <div className="prose prose-p:my-3 prose-ul:my-2 prose-li:my-0 text-gray-800 max-w-none">
                   <p style={{ whiteSpace: 'pre-wrap' }}>{job.description}</p>

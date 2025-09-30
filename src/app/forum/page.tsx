@@ -4,11 +4,30 @@ import Footer from '@/components/homepage/Footer'
 import ForumHero from '@/components/homepage/ForumHero'
 import { prisma } from '@/lib/prisma'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import * as Icons from 'lucide-react'
+import { Info } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export default async function ForumHomePage() {
+  const toKebab = (s: string) => s
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/_/g, '-')
+    .toLowerCase()
+
+  const resolveIcon = (key?: string) => {
+    if (!key) return null
+    const direct: any = (Icons as any)[key]
+    if (typeof direct === 'function' || typeof direct === 'object') return direct
+    const map: any = (Icons as any).icons
+    const make: any = (Icons as any).createLucideIcon
+    if (map && make) {
+      const node = map[key] || map[toKebab(key)]
+      if (node) return make(key, node)
+    }
+    return null
+  }
   const categories = await prisma.forumCategory.findMany({
     orderBy: { sortOrder: 'asc' },
     include: {
@@ -20,18 +39,30 @@ export default async function ForumHomePage() {
           threads: {
             orderBy: { createdAt: 'desc' },
             take: 1,
-            select: {
-              id: true,
-              title: true,
-              createdAt: true,
+            include: {
               author: { select: { email: true, profile: { select: { displayName: true, avatar: true } } } },
-            },
+              posts: { orderBy: { createdAt: 'asc' }, take: 1, select: { content: true } },
+            }
           },
           _count: { select: { threads: true } },
         },
       },
     },
   })
+
+  const extractFirstImageUrl = (content?: string | null): string | null => {
+    if (!content) return null
+    // Markdown image ![alt](url)
+    const md = /!\[[^\]]*\]\(([^)]+)\)/.exec(content)
+    if (md && md[1]) return md[1]
+    // HTML <img src="...">
+    const html = /<img[^>]*src=["']([^"']+)["'][^>]*>/i.exec(content)
+    if (html && html[1]) return html[1]
+    // Plain URL ending with image extension
+    const url = /(https?:[^\s)]+\.(?:png|jpe?g|webp|gif)|\/uploads\/[^\s)]+)/i.exec(content)
+    if (url && url[0]) return url[0]
+    return null
+  }
 
   function relativeFromNow(date: Date) {
     const diffMs = Date.now() - date.getTime()
@@ -66,11 +97,41 @@ export default async function ForumHomePage() {
                   <Link
                     key={f.id}
                     href={`/forum/${f.slug}`}
-                    className="group block p-4 sm:p-5 transition-colors duration-200 hover:bg-pink-50/40 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2 focus:ring-offset-white"
+                    className="group block p-0 sm:pr-5 transition-colors duration-200 hover:bg-pink-50/40 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2 focus:ring-offset-white"
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 sm:gap-6 items-center">
-                      <div className="min-w-0">
-                        <span className="text-gray-900 group-hover:text-pink-600 font-medium tracking-widest uppercase transition-colors">
+                    <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto_auto] gap-0 items-stretch overflow-hidden">
+                      {/* Image column (latest thread image if available, else forum image) */}
+                      <div className="hidden sm:block overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {(() => {
+                          const thread = f.threads?.[0]
+                          const fromPost = extractFirstImageUrl(thread?.posts?.[0]?.content)
+                          const src = fromPost || (f.image as string | undefined)
+                          if (src) {
+                            return (
+                              <img
+                                src={src}
+                                alt="Forum Bild"
+                                className="w-28 h-full object-cover block"
+                                style={{ clipPath: 'polygon(0% 0%, 92% 0%, 100% 50%, 92% 100%, 0% 100%)' }}
+                              />
+                            )
+                          }
+                          return (
+                            <div
+                              className="w-28 h-full bg-gray-100"
+                              style={{ clipPath: 'polygon(0% 0%, 92% 0%, 100% 50%, 92% 100%, 0% 100%)' }}
+                            />
+                          )
+                        })()}
+                      </div>
+                      <div className="min-w-0 sm:pl-3 flex flex-col justify-center">
+                        <span className="text-gray-900 group-hover:text-pink-600 font-medium tracking-widest uppercase transition-colors inline-flex items-center gap-2">
+                          {(() => {
+                            const key = (f as any).icon as string | undefined
+                            const Ico = resolveIcon(key) || Info
+                            return <Ico className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-pink-600" aria-hidden="true" />
+                          })()}
                           {f.name}
                         </span>
                         {f.description && (
@@ -88,7 +149,8 @@ export default async function ForumHomePage() {
                           </div>
                         )}
                       </div>
-                      <div className="min-w-0">
+                      {/* Latest thread column (vertically centered) */}
+                      <div className="min-w-0 sm:flex sm:items-center sm:px-5">
                         {f.threads?.[0] && (
                           <div className="flex items-center gap-3">
                             <Avatar className="h-6 w-6 bg-gray-200">
@@ -115,7 +177,8 @@ export default async function ForumHomePage() {
                           </div>
                         )}
                       </div>
-                      <div className="text-right">
+                      {/* Right stats column (restore right padding, vertically centered) */}
+                      <div className="text-right sm:pr-5 flex items-center justify-end gap-2">
                         <div className="text-xs uppercase tracking-widest text-gray-500">Themen</div>
                         <div className="text-sm text-gray-900">{f._count.threads}</div>
                       </div>

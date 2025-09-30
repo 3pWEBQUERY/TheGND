@@ -916,6 +916,8 @@ model Forum {
   name        String
   slug        String   @unique
   description String?
+  icon        String?
+  image       String?
   sortOrder   Int      @default(0)
   isLocked    Boolean  @default(false)
   isHidden    Boolean  @default(false)

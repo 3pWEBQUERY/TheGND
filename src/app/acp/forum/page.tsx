@@ -1,6 +1,10 @@
 import CreateForumCategoryForm from '@/components/admin/forum/CreateForumCategoryForm'
 import CreateForumForm from '@/components/admin/forum/CreateForumForm'
+import EditForumButton from '@/components/admin/forum/EditForumButton'
+import ForumFilterSelect from '@/components/admin/forum/ForumFilterSelect'
 import { prisma } from '@/lib/prisma'
+import * as Icons from 'lucide-react'
+import { Info } from 'lucide-react'
 import { Fragment } from 'react'
 import { ActionButton } from '@/components/admin/ActionButton'
 
@@ -8,6 +12,20 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export default async function AdminForumPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const toKebab = (s: string) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/_/g, '-').toLowerCase()
+  const resolveIcon = (key?: string) => {
+    if (!key) return null
+    const k = key.trim()
+    const direct: any = (Icons as any)[k]
+    if (typeof direct === 'function' || typeof direct === 'object') return direct
+    const map: any = (Icons as any).icons
+    const make: any = (Icons as any).createLucideIcon
+    if (map && make) {
+      const node = map[k] || map[toKebab(k)]
+      if (node) return make(k, node)
+    }
+    return null
+  }
   const categories = await prisma.forumCategory.findMany({
     orderBy: { sortOrder: 'asc' },
     include: {
@@ -74,7 +92,7 @@ export default async function AdminForumPage({ searchParams }: { searchParams: P
         <CreateForumForm categories={flatCategories as any} />
       </div>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-none overflow-hidden bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -82,6 +100,7 @@ export default async function AdminForumPage({ searchParams }: { searchParams: P
               <th className="text-left px-4 py-2 text-gray-500 font-medium">Slug</th>
               <th className="text-left px-4 py-2 text-gray-500 font-medium">Status</th>
               <th className="text-right px-4 py-2 text-gray-500 font-medium">Threads</th>
+              <th className="text-right px-4 py-2 text-gray-500 font-medium">Aktionen</th>
             </tr>
           </thead>
           <tbody>
@@ -97,7 +116,10 @@ export default async function AdminForumPage({ searchParams }: { searchParams: P
                   <tr key={f.id} className="border-t border-gray-100">
                     <td className="px-4 py-3 text-gray-700">
                       <div>
-                        <span className="font-medium text-gray-900">{f.name}</span>
+                        <span className="font-medium text-gray-900 inline-flex items-center gap-2">
+                          {(() => { const key = (f as any).icon as string | undefined; const Ico = resolveIcon(key) || Info; return <Ico className="h-4 w-4 text-gray-500" aria-hidden /> })()}
+                          {f.name}
+                        </span>
                         {Array.isArray((f as any).children) && (f as any).children.length > 0 && (
                           <div className="text-xs text-gray-500 mt-1">
                             Unterforen: {(((f as any).children ?? []) as Array<{ name: string }>).map((c) => c.name).join(', ')}
@@ -115,6 +137,19 @@ export default async function AdminForumPage({ searchParams }: { searchParams: P
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-gray-700">{f._count.threads}</td>
+                    <td className="px-4 py-3 text-right text-gray-700">
+                      <div className="flex items-center justify-end gap-2">
+                        <EditForumButton forum={f as any} categories={flatCategories as any} />
+                        <ActionButton
+                          label="Löschen"
+                          endpoint={`/api/acp/forum/forums/${f.id}`}
+                          method="DELETE"
+                          confirm="Forum wirklich löschen? (Unterforen und Threads verschieben/prüfen!)"
+                          variant="danger"
+                          className="h-8 px-3 text-xs leading-none rounded-none py-0"
+                        />
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </Fragment>
@@ -128,27 +163,18 @@ export default async function AdminForumPage({ searchParams }: { searchParams: P
         <form method="get" action="/acp/forum" className="flex flex-wrap items-end gap-3">
           <div className="flex-1 min-w-[220px]">
             <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1">Suche</label>
-            <input name="q" defaultValue={q} className="w-full border border-gray-300 px-3 py-2 text-sm" placeholder="Text im Beitrag" />
+            <input name="q" defaultValue={q} className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm" placeholder="Text im Beitrag" />
           </div>
           <div className="w-64 min-w-[220px]">
             <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1">Forum</label>
-            <select name="forumId" defaultValue={forumId} className="w-full border border-gray-300 px-3 py-2 text-sm">
-              <option value="">Alle Foren</option>
-              {categories.map((cat) => (
-                <optgroup key={cat.id} label={cat.name}>
-                  {cat.forums.map((f) => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            <ForumFilterSelect categories={flatCategories as any} value={forumId} />
           </div>
           <div className="flex items-center gap-2">
             <button type="submit" className="px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">Filtern</button>
             <a href="/acp/forum" className="px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">Zurücksetzen</a>
           </div>
         </form>
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <div className="border border-gray-200 rounded-none overflow-hidden bg-white">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>

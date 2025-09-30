@@ -134,6 +134,17 @@ export default function ProfileFeed({ posts, adminActions }: Props) {
   const [openCommentsFor, setOpenCommentsFor] = useState<string | null>(null)
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null)
   const [openCommentsModalFor, setOpenCommentsModalFor] = useState<string | null>(null)
+  const [imageOrientation, setImageOrientation] = useState<Record<string, 'landscape' | 'portrait' | 'square'>>({})
+
+  const handleImageLoad = (url: string, e: any) => {
+    try {
+      const img = e?.currentTarget as HTMLImageElement
+      const w = img?.naturalWidth || 0
+      const h = img?.naturalHeight || 0
+      const o: 'landscape' | 'portrait' | 'square' = w > h ? 'landscape' : w < h ? 'portrait' : 'square'
+      setImageOrientation((prev) => (prev[url] === o ? prev : { ...prev, [url]: o }))
+    } catch {}
+  }
 
   useEffect(() => {
     setLocalPosts(posts || [])
@@ -324,18 +335,43 @@ export default function ProfileFeed({ posts, adminActions }: Props) {
 
                 {/* Images */}
                 {post.images && post.images.length > 0 && (
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {post.images.map((image, index) => (
+                  post.images.length === 1 ? (
+                    <div className="mt-6">
                       <div 
-                        key={index} 
                         className="relative group cursor-zoom-in"
-                        onClick={() => openLightbox(post.images!, index)}
+                        onClick={() => openLightbox(post.images!, 0)}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={image} alt={`Beitragsbild ${index + 1}`} className="w-50 h-80 object-cover rounded-none" />
+                        <img
+                          src={post.images[0]}
+                          alt={`Beitragsbild 1`}
+                          onLoad={(e) => handleImageLoad(post.images![0], e)}
+                          className={
+                            imageOrientation[post.images![0]] === 'landscape'
+                              ? 'w-full h-auto max-h-[560px] object-cover rounded-none'
+                              : 'h-96 w-auto object-cover rounded-none mx-auto'
+                          }
+                        />
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {post.images.map((image, index) => (
+                        <div 
+                          key={index} 
+                          className="relative group cursor-zoom-in"
+                          onClick={() => openLightbox(post.images!, index)}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={image} 
+                            alt={`Beitragsbild ${index + 1}`}
+                            className="w-full h-64 sm:h-80 object-cover rounded-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
                 )}
 
                 {/* Stats */}

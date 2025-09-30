@@ -10,6 +10,7 @@ export function ActionButton({
   body,
   confirm,
   variant = 'default',
+  className = '',
 }: {
   label: string
   endpoint: string
@@ -17,6 +18,7 @@ export function ActionButton({
   body?: any
   confirm?: string
   variant?: 'default' | 'danger'
+  className?: string
 }) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -49,7 +51,7 @@ export function ActionButton({
       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
 
   return (
-    <button onClick={onClick} disabled={loading} className={`${base} ${styles}`}>
+    <button onClick={onClick} disabled={loading} className={`${base} ${styles} ${className}`}>
       {loading ? '...' : label}
     </button>
   )

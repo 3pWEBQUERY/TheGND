@@ -19,6 +19,8 @@ import ExpandableText from '@/components/ExpandableText'
 import type React from 'react'
 import ProfileComments from '@/components/ProfileComments'
 import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
+import OnlineBadge from '@/components/OnlineBadge'
+import Link from 'next/link'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -80,13 +82,25 @@ function slugify(input: string): string {
     .replace(/(^-|-$)+/g, '')
 }
 
-export default async function AgencyDetailPage({ params }: { params: Promise<{ id: string; slug: string }> }) {
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000
+
+type GirlItem = {
+  id: string
+  name: string | null
+  city: string | null
+  country: string | null
+  image: string | null
+  isOnline: boolean
+}
+
+export default async function AgencyDetailPage({ params, searchParams }: { params: Promise<{ id: string; slug: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const { id, slug } = await params
+  const sp = (await (searchParams || Promise.resolve({}))) as Record<string, string | string[] | undefined>
+  const sortKey = (typeof sp?.sort === 'string' ? sp.sort : Array.isArray(sp?.sort) ? sp.sort?.[0] : undefined) || 'name'
   const user = await prisma.user.findFirst({
     where: { id, userType: 'AGENCY', isActive: true },
     include: { profile: true },
   })
-
   if (!user || !user.profile) return notFound()
 
   const name = user.profile.companyName || user.profile.displayName || 'Agentur'
@@ -252,6 +266,34 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
     }
   })
 
+  // Linked escorts (Girls) for this agency via AppSetting (after user null-check)
+  let girls: GirlItem[] = []
+  try {
+    const s = await (prisma as any).appSetting.findUnique({ where: { key: `girls:org:${user.id}:members` } })
+    const ids: string[] = (() => { try { return s?.value ? JSON.parse(s.value) : [] } catch { return [] } })()
+    if (Array.isArray(ids) && ids.length > 0) {
+      const esc = await (prisma as any).user.findMany({
+        where: { id: { in: ids }, isActive: true, userType: 'ESCORT' },
+        select: { id: true, lastSeenAt: true, email: true, profile: true },
+      })
+      girls = esc.map((u: any) => ({
+        id: u.id,
+        name: u.profile?.displayName ?? u.email ?? null,
+        city: u.profile?.city ?? null,
+        country: u.profile?.country ?? null,
+        image: getPrimaryImage(u.profile),
+        isOnline: !!(u.lastSeenAt && (Date.now() - new Date(u.lastSeenAt as any).getTime()) <= ONLINE_THRESHOLD_MS),
+      }))
+      // Apply sorting based on sortKey
+      girls.sort((a, b) => {
+        if (sortKey === 'online') return (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0) || (a.name || '').localeCompare(b.name || '')
+        if (sortKey === 'city') return (a.city || '').localeCompare(b.city || '') || (a.name || '').localeCompare(b.name || '')
+        if (sortKey === 'country') return (a.country || '').localeCompare(b.country || '') || (a.name || '').localeCompare(b.name || '')
+        return (a.name || '').localeCompare(b.name || '')
+      })
+    }
+  } catch {}
+
   return (
     <div className="min-h-screen bg-white">
       {analyticsEnabled && <ProfileAnalyticsTracker profileUserId={user.id} />}
@@ -375,6 +417,7 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                       key === 'snapchat' ? FaSnapchat :
                       null
                     const color = brandColor(key)
+                    const display = key === 'whatsapp' ? 'WHATSAPP' : (rawVal as string)
                     return (
                       <a
                         key={rawKey}
@@ -386,7 +429,7 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                         title={rawKey}
                       >
                         {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-                        <span className="truncate max-w-[180px]">{rawVal}</span>
+                        <span className="truncate max-w-[180px]">{display}</span>
                       </a>
                     )
                   })}
@@ -496,6 +539,46 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                   </div>
                 ) : (
                   <div className="text-sm text-gray-500">Keine Services angegeben.</div>
+                ),
+              },
+              {
+                id: 'girls',
+                label: 'GIRLS',
+                content: girls.length > 0 ? (
+                  <div>
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] tracking-widest text-gray-500">SORTIEREN:</span>
+                      <Link href="?sort=name" className={`px-2 py-1 border text-xs tracking-widest ${sortKey==='name' ? 'border-pink-500 text-pink-600' : 'border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}>NAME</Link>
+                      <Link href="?sort=city" className={`px-2 py-1 border text-xs tracking-widest ${sortKey==='city' ? 'border-pink-500 text-pink-600' : 'border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}>STADT</Link>
+                      <Link href="?sort=country" className={`px-2 py-1 border text-xs tracking-widest ${sortKey==='country' ? 'border-pink-500 text-pink-600' : 'border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}>LAND</Link>
+                      <Link href="?sort=online" className={`px-2 py-1 border text-xs tracking-widest ${sortKey==='online' ? 'border-pink-500 text-pink-600' : 'border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}>ONLINE</Link>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    {girls.map((g: GirlItem) => {
+                      const slug = slugify((g.name || 'escort').toString())
+                      const href = `/escorts/${g.id}/${slug}`
+                      return (
+                        <Link key={g.id} href={href} className="group block">
+                          <div className="relative aspect-[3/4] bg-gray-100 border border-gray-200 overflow-hidden">
+                            {g.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={g.image} alt={g.name || 'Escort'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-gray-400">Kein Bild</div>
+                            )}
+                            <OnlineBadge userId={g.id} initialOnline={g.isOnline} className="absolute top-2 right-2 z-10" />
+                          </div>
+                          <div className="px-2 py-2">
+                            <div className="text-sm font-medium tracking-widest text-gray-900 truncate">{(g.name || '').toUpperCase()}</div>
+                            <div className="text-xs text-gray-500 truncate">{[g.city, g.country].filter(Boolean).join(', ')}</div>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">Keine Girls verbunden.</div>
                 ),
               },
               {

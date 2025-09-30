@@ -208,6 +208,22 @@ async function getEscort(id: string) {
     }
   } catch {}
 
+  // Linked organizations (AGENCY/CLUB/STUDIO) via AppSetting girls:escort:<id>:orgs
+  let linkedOrgs: Array<{ id: string; userType: string; name: string | null; logo: string | null }> = []
+  try {
+    const s = await (prisma as any).appSetting.findUnique({ where: { key: `girls:escort:${id}:orgs` } })
+    const orgIds: string[] = (() => { try { return s?.value ? JSON.parse(s.value) : [] } catch { return [] } })()
+    if (Array.isArray(orgIds) && orgIds.length > 0) {
+      const orgUsers = await (prisma as any).user.findMany({
+        where: { id: { in: orgIds } },
+        select: { id: true, userType: true, profile: { select: { companyName: true, displayName: true, avatar: true } } },
+      })
+      linkedOrgs = orgUsers
+        .filter((u: any) => ['AGENCY','CLUB','STUDIO'].includes(u.userType))
+        .map((u: any) => ({ id: u.id, userType: u.userType, name: u.profile?.companyName || u.profile?.displayName || null, logo: u.profile?.avatar || null }))
+    }
+  } catch {}
+
   const primaryImage = getPrimaryImage(profile)
   // Presence (use raw SQL to avoid Prisma Client validation if types not regenerated)
   let isOnline = false
@@ -270,6 +286,7 @@ async function getEscort(id: string) {
       dressSize: (profile as any)?.dressSize ?? null,
       shoeSize: (profile as any)?.shoeSize ?? null,
     },
+    orgs: linkedOrgs,
   }
 }
 
@@ -697,18 +714,45 @@ export default async function EscortProfilePage({ params, searchParams }: { para
             )}
             {slogan && <p className="text-sm text-gray-600 mt-2 italic">“{slogan}”</p>}
 
-            {/* CTA / Interaktion */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <MessageButton toUserId={escortId} toDisplayName={name ?? undefined} toAvatar={image ?? undefined} />
-              {contact.phone && (
-                <a href={`tel:${contact.phone}`} className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
-                  ANRUFEN
-                </a>
-              )}
-              {contact.website && (
-                <a href={contact.website} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
-                  WEBSEITE
-                </a>
+            {/* CTA / Interaktion + Linked Org badges */}
+            <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
+                <MessageButton toUserId={escortId} toDisplayName={name ?? undefined} toAvatar={image ?? undefined} />
+                {contact.phone && (
+                  <a href={`tel:${contact.phone}`} className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
+                    ANRUFEN
+                  </a>
+                )}
+                {contact.website && (
+                  <a href={contact.website} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
+                    WEBSEITE
+                  </a>
+                )}
+              </div>
+              {Array.isArray((data as any)?.orgs) && (data as any).orgs.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest text-gray-500">AKTUELL IN</span>
+                  <div className="flex flex-wrap gap-2">
+                    {((data as any).orgs as any[]).map((o, idx) => {
+                      const base = o.userType === 'AGENCY' ? '/agency' : '/club-studio'
+                      const slug = slugify((o.name || o.userType || '').toString()) || (o.userType === 'AGENCY' ? 'agency' : 'club-studio')
+                      const href = `${base}/${o.id}/${slug}`
+                      return (
+                        <Link
+                          key={o.id || idx}
+                          href={href}
+                          className="inline-flex items-center gap-2 px-2 py-1 border border-gray-300 text-xs tracking-widest text-gray-700 hover:border-pink-500 hover:text-pink-600"
+                        >
+                          {o.logo ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={o.logo} alt={o.name || o.userType} className="h-5 w-5 object-cover" />
+                          ) : null}
+                          {o.name || o.userType}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
               )}
             </div>
             {socials && Object.keys(socials).length > 0 && (

@@ -175,6 +175,22 @@ export async function GET(req: NextRequest) {
       image: (() => {
         try { const g = parseJSON<string[]>(user.profile?.gallery ?? null, []); return g[0] || null } catch { return null }
       })(),
+      // Provide raw gallery JSON (string) and parsed media URLs array
+      gallery: user.profile?.gallery || null,
+      media: (() => {
+        try {
+          const raw = parseJSON<any[]>(user.profile?.media ?? null, [])
+          const urls = raw
+            .map((v) => (typeof v === 'string' ? v : (v && (v.url || v.src))))
+            .filter((u: any) => typeof u === 'string' && u)
+          // Also append gallery images to media for convenience
+          const gal = parseJSON<string[]>(user.profile?.gallery ?? null, [])
+          const merged = [...urls, ...gal].filter(Boolean)
+          return Array.from(new Set(merged))
+        } catch {
+          try { return parseJSON<string[]>(user.profile?.gallery ?? null, []) } catch { return [] }
+        }
+      })(),
       services: parseJSON<string[]>(user.profile?.services ?? null, []),
       appearance: {
         bodyType: user.profile?.bodyType,

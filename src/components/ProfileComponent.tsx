@@ -21,6 +21,8 @@ import ProfileVisitorsTab from '@/components/profile/ProfileVisitorsTab'
 import ProfileTabsBar from '@/components/profile/ProfileTabsBar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { uploadFiles } from '@/utils/uploadthing'
+import { useToast } from '@/components/ui/toast'
+import Link from 'next/link'
 
 interface ProfileData {
   user: {
@@ -69,6 +71,22 @@ interface ProfileData {
   }
 }
 
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+}
+
+function orgTypeLabel(t: string): string {
+  if (t === 'AGENCY') return 'AGENTUR'
+  if (t === 'CLUB') return 'CLUB'
+  if (t === 'STUDIO') return 'STUDIO'
+  return t
+}
+
 export default function ProfileComponent({ userId }: { userId?: string }) {
   const { data: session } = useSession()
   const router = useRouter()
@@ -95,6 +113,13 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   const [savingHeroPrefs, setSavingHeroPrefs] = useState(false)
   const [heroUploads, setHeroUploads] = useState<string[]>([])
   const [uploadingHero, setUploadingHero] = useState(false)
+  // Escort join-with-code
+  const { show } = useToast()
+  const [joinCode, setJoinCode] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [myOrgs, setMyOrgs] = useState<Array<{ id: string; userType: string; name: string; avatar: string | null; city: string | null; country: string | null }> | null>(null)
+  const [loadingMyOrgs, setLoadingMyOrgs] = useState(false)
+  const [unlinking, setUnlinking] = useState<string | null>(null)
 
 
   const isOwnProfile = !userId || userId === session?.user?.id
@@ -102,6 +127,48 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   useEffect(() => {
     fetchProfile()
   }, [userId])
+
+  // Load current linked orgs for escorts
+  const loadMyOrgs = async () => {
+    try {
+      setLoadingMyOrgs(true)
+      const res = await fetch('/api/girls/my-orgs', { cache: 'no-store' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Fehler beim Laden')
+      setMyOrgs(Array.isArray(data?.items) ? data.items : [])
+    } catch (e) {
+      setMyOrgs([])
+    } finally {
+      setLoadingMyOrgs(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!profileData) return
+    const utype = profileData?.user?.userType
+    if (isOwnProfile && utype === 'ESCORT') {
+      loadMyOrgs()
+    }
+  }, [profileData?.user?.id, profileData?.user?.userType])
+
+  const unlinkOrg = async (orgId: string) => {
+    try {
+      if (typeof window !== 'undefined') {
+        const ok = window.confirm('Verknüpfung wirklich entfernen?')
+        if (!ok) return
+      }
+      setUnlinking(orgId)
+      const res = await fetch('/api/girls/my-orgs', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgId }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Fehler beim Entfernen')
+      show('Verbindung entfernt', { variant: 'success' })
+      await loadMyOrgs()
+    } catch (e: any) {
+      show(e?.message || 'Fehler', { variant: 'error' })
+    } finally {
+      setUnlinking(null)
+    }
+  }
 
   // Load recent visitors when popup opens
   useEffect(() => {
@@ -573,6 +640,93 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
           </div>
         </div>
       </div>
+
+      {/* Join Agency/Club/Studio (move above ProfileViewSelector) */}
+      {isOwnProfile && userType === 'ESCORT' && (
+        <div className="bg-white border border-gray-100 rounded-none">
+          <div className="p-4 sm:p-8">
+            <div className="text-xs font-light tracking-widest text-gray-600 mb-2">ZU AGENTUR, CLUB ODER STUDIO HINZUFÜGEN</div>
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                placeholder="Code eingeben"
+                className="flex-1 border border-gray-300 px-3 py-2 text-sm tracking-widest uppercase"
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  const code = joinCode.trim().toUpperCase()
+                  if (!code) { show('Bitte Code eingeben', { variant: 'error' }); return }
+                  setJoining(true)
+                  try {
+                    const res = await fetch('/api/girls/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
+                    const data = await res.json().catch(() => ({}))
+                    if (!res.ok) throw new Error(data?.error || 'Fehler beim Verbinden')
+                    show('Erfolgreich verbunden', { variant: 'success' })
+                    setJoinCode('')
+                    await loadMyOrgs()
+                  } catch (e: any) {
+                    show(e?.message || 'Fehler', { variant: 'error' })
+                  } finally {
+                    setJoining(false)
+                  }
+                }}
+                disabled={joining}
+                className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600 disabled:opacity-50"
+              >
+                {joining ? 'Verbinde…' : 'VERBINDEN'}
+              </button>
+            </div>
+
+            {/* Current orgs */}
+            <div className="mt-4">
+              <div className="text-[10px] tracking-widest text-gray-500 mb-2">AKTUELL VERBUNDEN</div>
+              {loadingMyOrgs ? (
+                <div className="text-sm text-gray-500">Lade…</div>
+              ) : !myOrgs || myOrgs.length === 0 ? (
+                <div className="text-sm text-gray-500">Noch keine Verbindung vorhanden.</div>
+              ) : (
+                <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {myOrgs.map((o) => {
+                    const base = o.userType === 'AGENCY' ? '/agency' : '/club-studio'
+                    const href = `${base}/${o.id}/${slugify(o.name || o.userType)}`
+                    return (
+                      <li key={o.id} className="border border-gray-200 p-3 flex items-center gap-3">
+                        <Link href={href} className="h-10 w-10 bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
+                          {o.avatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={o.avatar} alt={o.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-[10px] text-gray-500">Kein Logo</div>
+                          )}
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Link href={href} className="text-sm font-medium tracking-widest text-gray-900 truncate hover:text-pink-600">
+                              {o.name.toUpperCase?.() ?? o.name}
+                            </Link>
+                            <span className="text-[10px] uppercase tracking-widest border border-gray-300 text-gray-700 px-1 py-0.5">{orgTypeLabel(o.userType)}</span>
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">{[o.city, o.country].filter(Boolean).join(', ')}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => unlinkOrg(o.id)}
+                          disabled={unlinking === o.id}
+                          className="px-2 py-1 text-[10px] uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600 disabled:opacity-50"
+                        >
+                          {unlinking === o.id ? 'Entferne…' : 'Entfernen'}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Profile View Selection (owner only, non-MEMBER) */}
       {isOwnProfile && userType !== 'MEMBER' && (
@@ -593,7 +747,9 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         {/* Tab Content */}
         <div className="p-4 sm:p-8">
           {activeTab === 'about' && (
-            <ProfileAboutTab profile={profile} userType={userType} />
+            <>
+              <ProfileAboutTab profile={profile} userType={userType} />
+            </>
           )}
           
           {activeTab === 'posts' && (

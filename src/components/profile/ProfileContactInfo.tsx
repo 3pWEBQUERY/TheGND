@@ -1,6 +1,7 @@
 'use client'
 
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
+import { SiOnlyfans } from 'react-icons/si'
 import { Globe } from 'lucide-react'
 
 function brandColor(key: string): string {
@@ -14,6 +15,7 @@ function brandColor(key: string): string {
   if (k === 'telegram') return '#26A5E4'
   if (k === 'tiktok') return '#000000'
   if (k === 'snapchat') return '#FFFC00'
+  if (k === 'onlyfans') return '#00AEEF'
   return '#6B7280'
 }
 
@@ -79,8 +81,22 @@ export default function ProfileContactInfo({ profile, city, country }: Props) {
                   key === 'telegram' ? FaTelegram :
                   key === 'tiktok' ? FaTiktok :
                   key === 'snapchat' ? FaSnapchat :
+                  key === 'onlyfans' ? SiOnlyfans :
                   null
                 const color = brandColor(key)
+                const display = (
+                  key === 'whatsapp' ? 'WHATSAPP' :
+                  key === 'instagram' ? 'INSTAGRAM' :
+                  key === 'facebook' ? 'FACEBOOK' :
+                  (key === 'twitter' || key === 'x') ? 'X' :
+                  key === 'youtube' ? 'YOUTUBE' :
+                  key === 'linkedin' ? 'LINKEDIN' :
+                  key === 'telegram' ? 'TELEGRAM' :
+                  key === 'tiktok' ? 'TIKTOK' :
+                  key === 'snapchat' ? 'SNAPCHAT' :
+                  key === 'onlyfans' ? 'ONLYFANS' :
+                  String(rawKey).toUpperCase()
+                )
                 return (
                   <a
                     key={rawKey}
@@ -92,7 +108,7 @@ export default function ProfileContactInfo({ profile, city, country }: Props) {
                     title={rawKey}
                   >
                     {Icon ? <Icon className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-                    <span className="truncate max-w-[180px]">{String(rawVal)}</span>
+                    <span className="truncate max-w-[180px]">{display}</span>
                   </a>
                 )
               })}

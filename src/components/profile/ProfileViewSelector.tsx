@@ -50,10 +50,6 @@ export default function ProfileViewSelector({ selected, onChange, onSave, saving
             <span className="text-xs text-emerald-600">Gespeichert</span>
           )}
         </div>
-        <div className="mt-6">
-          <div className="text-xs font-light tracking-widest text-gray-600 mb-2">AUSGEWÄHLTE ANSICHT</div>
-          <ProfileViewPreview variant={(selected as any) || 'STANDARD'} />
-        </div>
       </div>
     </div>
   )

@@ -4,6 +4,8 @@ import Footer from '@/components/homepage/Footer'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import NewThreadForm from '@/components/forum/NewThreadForm'
+import NewThreadActions from '@/components/forum/NewThreadActions'
+import Appear from '@/components/motion/Appear'
 import ForumHero from '@/components/homepage/ForumHero'
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +37,7 @@ export default async function ForumBySlugPage({ params, searchParams }: { params
 
   const sp = (searchParams ? await searchParams : {}) as { [key: string]: string | string[] | undefined }
   const sort = typeof sp.sort === 'string' ? sp.sort : 'latest' // latest | views
+  const showNew = typeof sp.new === 'string' && sp.new === '1'
   const page = Math.max(1, parseInt((typeof sp.page === 'string' ? sp.page : '1') || '1', 10))
   const take = 20
   const skip = (page - 1) * take
@@ -68,18 +71,11 @@ export default async function ForumBySlugPage({ params, searchParams }: { params
               <p className="mt-3 text-sm text-gray-600">{forum.description}</p>
             )}
           </div>
-          <div className="text-sm">
-            <Link
-              href="/forum"
-              className="px-3 py-1.5 border border-gray-300 text-gray-700 hover:bg-gray-50 uppercase tracking-widest text-[11px]"
-            >
-              Alle Kategorien
-            </Link>
-          </div>
+          <NewThreadActions forumSlug={forum.slug} isLocked={forum.isLocked} />
         </div>
 
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        <div className={`mt-8 grid grid-cols-1 ${showNew ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-8`}>
+          <div className={showNew ? 'lg:col-span-2' : ''}>
             <div className="mb-3 flex items-center justify-between text-sm text-gray-700">
               <div className="flex items-center gap-3">
                 <span className="text-xs uppercase tracking-widest text-gray-500">Sortieren:</span>
@@ -151,14 +147,17 @@ export default async function ForumBySlugPage({ params, searchParams }: { params
               </div>
             )}
           </div>
-          <div className="lg:col-span-1">
-            {!forum.isLocked ? (
-              <NewThreadForm forumSlug={forum.slug} />
-            ) : (
-              <div className="border border-gray-200 p-4 bg-pink-50/40 text-sm text-gray-700">Dieses Forum ist gesperrt.</div>
-            )}
-          </div>
+          {showNew && !forum.isLocked && (
+            <div className="lg:col-span-1">
+              <Appear>
+                <NewThreadForm forumSlug={forum.slug} />
+              </Appear>
+            </div>
+          )}
         </div>
+        {forum.isLocked && (
+          <div className="mt-4 border border-gray-200 p-4 bg-pink-50/40 text-sm text-gray-700">Dieses Forum ist gesperrt.</div>
+        )}
       </main>
       <Footer />
     </div>

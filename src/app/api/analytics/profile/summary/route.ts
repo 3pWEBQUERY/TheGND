@@ -9,6 +9,24 @@ export async function GET() {
   const userId = session.user.id as string
 
   try {
+    // Enforce global availability
+    try {
+      const addon = await (prisma as any).addon.findFirst({
+        where: { key: 'PROFILE_ANALYTICS', active: true },
+        select: { key: true },
+      })
+      if (!addon) return NextResponse.json({ error: 'Analytics disabled' }, { status: 403 })
+    } catch {}
+
+    // Enforce user-level enablement
+    try {
+      const st = await (prisma as any).userAddonState.findUnique({
+        where: { userId_key: { userId, key: 'PROFILE_ANALYTICS' } },
+        select: { enabled: true },
+      })
+      if (!st?.enabled) return NextResponse.json({ error: 'Analytics disabled' }, { status: 403 })
+    } catch {}
+
     // Pull last 90 days of events for the owner to compute a summary
     const events: any[] = await (prisma as any).profileAnalyticsEvent.findMany({
       where: { profileUserId: userId, createdAt: { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } },

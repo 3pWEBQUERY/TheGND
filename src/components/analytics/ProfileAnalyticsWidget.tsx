@@ -26,6 +26,7 @@ type Summary = {
 
 export default function ProfileAnalyticsWidget() {
   const [globallyActive, setGloballyActive] = useState<boolean | null>(null)
+  const [userEnabled, setUserEnabled] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<Summary | null>(null)
@@ -33,17 +34,38 @@ export default function ProfileAnalyticsWidget() {
   useEffect(() => {
     const load = async () => {
       try {
-        // Check global availability first (admin ACP toggle)
+        // Check global availability (admin ACP toggle)
         try {
           const g = await fetch('/api/addons/available', { cache: 'no-store' })
           const gj = await g.json().catch(() => ({}))
           const keys: string[] = Array.isArray(gj?.activeKeys) ? gj.activeKeys : []
           const isGloballyActive = keys.includes('PROFILE_ANALYTICS')
           setGloballyActive(isGloballyActive)
-          if (!isGloballyActive) return
+          if (!isGloballyActive) {
+            setUserEnabled(false)
+            return
+          }
         } catch {
-          // If the global toggle endpoint fails, treat it as unknown and continue fetching summary
+          // If the global toggle endpoint fails, mark unknown
           setGloballyActive(null)
+        }
+
+        // Check per-user enabled state
+        try {
+          const s = await fetch('/api/addons/state', { cache: 'no-store' })
+          if (s.ok) {
+            const arr = await s.json()
+            const enabled = Array.isArray(arr) && !!arr.find((x: any) => x?.key === 'PROFILE_ANALYTICS' && x?.enabled === true)
+            setUserEnabled(enabled)
+            if (!enabled) return
+          } else {
+            // If cannot load user state, default to not showing
+            setUserEnabled(false)
+            return
+          }
+        } catch {
+          setUserEnabled(false)
+          return
         }
 
         setLoading(true)
@@ -197,7 +219,9 @@ export default function ProfileAnalyticsWidget() {
     return <span style={{ width: size, height: size, background: '#9ca3af', borderRadius: 4, display: 'inline-block' }} />
   }
 
+  // Hide widget unless globally active and user has explicitly enabled it
   if (globallyActive === false) return null
+  if (userEnabled !== true) return null
 
   return (
     <div className="bg-white border border-gray-100">

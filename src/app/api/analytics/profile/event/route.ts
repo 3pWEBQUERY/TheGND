@@ -31,6 +31,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 })
   }
 
+  // Check if analytics add-on is globally active (admin toggle)
+  try {
+    const addon = await (prisma as any).addon.findFirst({
+      where: { key: 'PROFILE_ANALYTICS', active: true },
+      select: { key: true },
+    })
+    if (!addon) {
+      return NextResponse.json({ ok: true, ignored: true, reason: 'globally_disabled' })
+    }
+  } catch (_) {
+    // If schema not available yet, proceed without blocking (will be gated by user state below)
+  }
+
   // Check if target profile owner has analytics enabled
   try {
     const st = await (prisma as any).userAddonState.findUnique({

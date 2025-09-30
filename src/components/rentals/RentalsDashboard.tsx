@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useUploadThing } from '@/utils/uploadthing'
 import { useToast } from '@/components/ui/toast'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const CATEGORIES = [
   { value: 'APARTMENT', label: 'Apartment' },
@@ -50,6 +51,18 @@ export default function RentalsDashboard() {
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [message, setMessage] = useState<string | null>(null)
+
+  const currency = useMemo(() => {
+    switch (country) {
+      case 'Schweiz':
+        return 'CHF'
+      case 'Österreich':
+      case 'Deutschland':
+        return 'EUR'
+      default:
+        return ''
+    }
+  }, [country])
 
   const [myRentals, setMyRentals] = useState<MyRental[] | null>(null)
   const [loadingRentals, setLoadingRentals] = useState(false)
@@ -225,9 +238,16 @@ export default function RentalsDashboard() {
           </div>
           <div>
             <label className="block text-xs tracking-widest text-gray-600 mb-2">KATEGORIE</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border border-gray-300 px-3 py-2 rounded-none bg-white">
-              {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
+            <Select value={category} onValueChange={(v) => setCategory(v)}>
+              <SelectTrigger className="w-full rounded-none border-gray-300">
+                <SelectValue placeholder="Kategorie wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="md:col-span-2">
             <label className="block text-xs tracking-widest text-gray-600 mb-2">KURZBESCHREIBUNG</label>
@@ -247,11 +267,32 @@ export default function RentalsDashboard() {
           </div>
           <div>
             <label className="block text-xs tracking-widest text-gray-600 mb-2">LAND</label>
-            <Input value={country} onChange={(e) => setCountry(e.target.value)} className="rounded-none border-gray-300" />
+            <Select value={country} onValueChange={(v) => setCountry(v)}>
+              <SelectTrigger className="w-full rounded-none border-gray-300">
+                <SelectValue placeholder="Land wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Schweiz">SCHWEIZ</SelectItem>
+                <SelectItem value="Österreich">ÖSTERREICH</SelectItem>
+                <SelectItem value="Deutschland">DEUTSCHLAND</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-xs tracking-widest text-gray-600 mb-2">PREIS</label>
-            <Input value={priceInfo} onChange={(e) => setPriceInfo(e.target.value)} className="rounded-none border-gray-300" />
+            <div className="relative">
+              <Input
+                value={priceInfo}
+                onChange={(e) => setPriceInfo(e.target.value)}
+                className="rounded-none border-gray-300 pr-16"
+                placeholder={currency ? `z.B. 100 ${currency}` : 'z.B. 100'}
+              />
+              {currency && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs uppercase tracking-widest text-gray-600 pointer-events-none">
+                  {currency}
+                </span>
+              )}
+            </div>
           </div>
           <div className="md:col-span-2">
             <label className="block text-xs tracking-widest text-gray-600 mb-2">KONTAKT</label>

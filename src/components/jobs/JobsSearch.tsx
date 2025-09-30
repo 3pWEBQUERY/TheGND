@@ -3,9 +3,10 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const CATEGORIES = [
-  { value: '', label: 'Alle Kategorien' },
+  { value: 'ALL', label: 'Alle Kategorien' },
   { value: 'ESCORT', label: 'Escort' },
   { value: 'CLEANING', label: 'Reinigungskraft' },
   { value: 'SECURITY', label: 'Security' },
@@ -50,9 +51,16 @@ export default function JobsSearch({ q, setQ, category, setCategory, city, setCi
             </div>
             <div className="md:col-span-1">
               <label className="block text-xs tracking-widest text-gray-600 mb-2">KATEGORIE</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border border-gray-300 px-3 py-2 rounded-none bg-white">
-                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
+              <Select value={category && category.length ? category : 'ALL'} onValueChange={(v) => setCategory(v === 'ALL' ? '' : v)}>
+                <SelectTrigger className="w-full rounded-none border-gray-300">
+                  <SelectValue placeholder="Kategorie wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="md:col-span-1">
               <label className="block text-xs tracking-widest text-gray-600 mb-2">STADT</label>
@@ -60,7 +68,16 @@ export default function JobsSearch({ q, setQ, category, setCategory, city, setCi
             </div>
             <div className="md:col-span-1">
               <label className="block text-xs tracking-widest text-gray-600 mb-2">LAND</label>
-              <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Land" className="rounded-none border-gray-300" />
+              <Select value={country || undefined} onValueChange={(v) => setCountry(v)}>
+                <SelectTrigger className="w-full rounded-none border-gray-300">
+                  <SelectValue placeholder="Land wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Schweiz">SCHWEIZ</SelectItem>
+                  <SelectItem value="Österreich">ÖSTERREICH</SelectItem>
+                  <SelectItem value="Deutschland">DEUTSCHLAND</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="md:col-span-1">
               <Button

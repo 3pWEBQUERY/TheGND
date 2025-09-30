@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -51,6 +51,18 @@ export default function JobsDashboard() {
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [message, setMessage] = useState<string | null>(null)
+
+  const currency = useMemo(() => {
+    switch (country) {
+      case 'Schweiz':
+        return 'CHF'
+      case 'Österreich':
+      case 'Deutschland':
+        return 'EUR'
+      default:
+        return ''
+    }
+  }, [country])
 
   const [myJobs, setMyJobs] = useState<MyJob[] | null>(null)
   const [loadingJobs, setLoadingJobs] = useState(false)
@@ -276,7 +288,19 @@ export default function JobsDashboard() {
           </div>
           <div>
             <label className="block text-xs tracking-widest text-gray-600 mb-2">VERGÜTUNG</label>
-            <Input value={salaryInfo} onChange={(e) => setSalaryInfo(e.target.value)} className="rounded-none border-gray-300" />
+            <div className="relative">
+              <Input
+                value={salaryInfo}
+                onChange={(e) => setSalaryInfo(e.target.value)}
+                className="rounded-none border-gray-300 pr-16"
+                placeholder={currency ? `z.B. 100 ${currency}` : 'z.B. 100'}
+              />
+              {currency && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs uppercase tracking-widest text-gray-600 pointer-events-none">
+                  {currency}
+                </span>
+              )}
+            </div>
           </div>
           <div className="md:col-span-2">
             <label className="block text-xs tracking-widest text-gray-600 mb-2">KONTAKT</label>

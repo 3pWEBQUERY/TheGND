@@ -122,8 +122,22 @@ export default function StudioOnboardingStep4() {
     setIsUploading(true)
     setErrors([])
     try {
-      const results = await uploadFiles('storyMedia', { files: selectedFiles })
-      const files = results
+      // Respect UploadThing limits per request
+      const images = selectedFiles.filter((f) => f.type.startsWith('image/'))
+      const videos = selectedFiles.filter((f) => f.type.startsWith('video/'))
+
+      const batches: File[][] = []
+      for (let i = 0; i < images.length; i += 10) batches.push(images.slice(i, i + 10))
+      for (let i = 0; i < videos.length; i += 2) batches.push(videos.slice(i, i + 2))
+
+      const allResults: any[] = []
+      for (const batch of batches) {
+        if (batch.length === 0) continue
+        const res = await uploadFiles('storyMedia', { files: batch })
+        allResults.push(...res)
+      }
+
+      const files = allResults
         .filter((r: any) => typeof r?.url === 'string')
         .map((r: any) => {
           const url = r.url as string
@@ -134,8 +148,9 @@ export default function StudioOnboardingStep4() {
         })
       setUploaded(prev => [...prev, ...files])
       setSelectedFiles([])
-    } catch {
-      setErrors(['Fehler beim Upload'])
+    } catch (e: any) {
+      const msg = typeof e?.message === 'string' ? e.message : ''
+      setErrors([msg ? `Fehler beim Upload: ${msg}` : 'Fehler beim Upload', 'Hinweis: Max. 10 Bilder und 2 Videos pro Upload.'])
     } finally {
       setIsUploading(false)
     }

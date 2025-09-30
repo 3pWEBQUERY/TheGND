@@ -45,9 +45,8 @@ export default function AgencyOnboardingStep7() {
   const autocompleteRef = useRef<any>(null)
   const addressInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Load existing data (only in edit mode)
+  // Load existing data (always try)
   useEffect(() => {
-    if (!isEditMode) return
     let active = true
     ;(async () => {
       try {
@@ -73,7 +72,7 @@ export default function AgencyOnboardingStep7() {
       }
     })()
     return () => { active = false }
-  }, [reset, mapsReady, isEditMode])
+  }, [reset, mapsReady])
 
   // Initialize Maps after script loaded
   const onMapsLoaded = () => {

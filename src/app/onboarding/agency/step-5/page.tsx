@@ -37,9 +37,8 @@ export default function AgencyOnboardingStep5() {
 
   const selectedValues = watch('services') || []
 
-  // Prefill in edit mode
+  // Prefill if available
   useEffect(() => {
-    if (!isEditMode) return
     let active = true
     ;(async () => {
       try {
@@ -55,7 +54,7 @@ export default function AgencyOnboardingStep5() {
       }
     })()
     return () => { active = false }
-  }, [isEditMode, reset])
+  }, [reset])
 
   const onSubmit = async (data: Step5Form) => {
     setIsLoading(true)

@@ -86,9 +86,8 @@ export default function AgencyOnboardingStep6() {
   const [customPlatformName, setCustomPlatformName] = useState<string>('')
   const [newUrl, setNewUrl] = useState<string>('')
 
-  // Vorbefüllung bestehender Daten (nur im Edit-Modus)
+  // Vorbefüllung bestehender Daten (immer versuchen)
   useEffect(() => {
-    if (!isEditMode) return
     let active = true
     const load = async () => {
       try {
@@ -109,7 +108,7 @@ export default function AgencyOnboardingStep6() {
     }
     load()
     return () => { active = false }
-  }, [reset, isEditMode])
+  }, [reset])
 
   // Client-seitige Prüfung für Telefonnummern (E.164-ähnlich)
   const phoneRegex = /^\+?[1-9]\d{7,14}$/

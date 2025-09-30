@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import MultiSelect from '@/components/ui/multi-select'
-import { SERVICES_DE } from '@/data/services.de'
+import { AGENCY_SERVICES_DE } from '@/data/business-services.de'
 import { businessOnboardingStep5Schema } from '@/lib/validations'
 import { ArrowLeft } from 'lucide-react'
 
@@ -31,11 +31,27 @@ export default function AgencyOnboardingStep5() {
 
   const labelByValue = useMemo(() => {
     const m = new Map<string, string>()
-    SERVICES_DE.forEach(o => m.set(o.value, o.label))
+    AGENCY_SERVICES_DE.forEach(o => m.set(o.value, o.label))
     return m
   }, [])
 
   const selectedValues = watch('services') || []
+
+  const groups = useMemo(() => [
+    { title: 'Buchungsarten & Dauer', ids: ['short-date','dinner-date','overnight','day-24h','weekend'] },
+    { title: 'Einsatzort / Art', ids: ['incall','outcall','city-date','business-dinner','cultural-event','club-night','event-companion'] },
+    { title: 'Reisen & Umfang', ids: ['travel-companion-domestic','travel-companion-international','vacation-companion'] },
+    { title: 'Konstellationen', ids: ['duo-booking','trio-booking','couple-service'] },
+    { title: 'Zusatzleistungen', ids: ['gift-arrangement','dress-code-styling','restaurant-reservation','discreet-pickup','multilingual-companion','nda-confidentiality'] },
+    { title: 'Erfahrung / Atmosphäre', ids: ['girlfriend-experience','elegant-dinner-companion','vip-evening'] },
+    { title: 'Anlässe & Special Occasions', ids: ['red-carpet','wedding-plus-one','business-trip','spa-day','shopping-companion','wine-tasting','museum-tour'] },
+    { title: 'Reise & Transport (optional organisiert)', ids: ['airport-pickup','chauffeur-service','yacht-day','ski-trip','beach-day'] },
+    { title: 'Stil & Themen', ids: ['evening-gown','business-attire','smart-casual','theme-dress-up'] },
+    { title: 'Add-ons & Diskretion', ids: ['photo-free-zone','gift-curation','hotel-restaurant-booking'] },
+    { title: 'Weitere Dates & Erlebnisse', ids: ['breakfast-date','lunch-date','after-work-drink','opera-night','concert-night','sports-event','city-weekend','road-trip','mountain-retreat','island-getaway'] },
+  ], [])
+
+  const getOptions = (ids: string[]) => AGENCY_SERVICES_DE.filter(o => ids.includes(o.value))
 
   // Prefill in edit mode
   useEffect(() => {
@@ -117,20 +133,27 @@ export default function AgencyOnboardingStep5() {
               <div className="p-4 text-sm font-light text-red-600 bg-red-50 border border-red-200">{error}</div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">Services (Mehrfachauswahl) *</Label>
               <Controller
                 name="services"
                 control={control}
                 render={({ field }) => (
-                  <MultiSelect
-                    options={SERVICES_DE}
-                    value={field.value || []}
-                    onChange={field.onChange}
-                    placeholder="Wähle die Leistungen der Agentur"
-                    searchPlaceholder="Nach Services suchen..."
-                    className="w-full"
-                  />
+                  <div className="space-y-6">
+                    {groups.map((g) => (
+                      <div key={g.title} className="space-y-2">
+                        <div className="text-[11px] uppercase tracking-widest text-gray-500">{g.title}</div>
+                        <MultiSelect
+                          options={getOptions(g.ids)}
+                          value={field.value || []}
+                          onChange={field.onChange}
+                          placeholder="Auswählen..."
+                          searchPlaceholder="Suchen..."
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
               />
               {errors.services && (

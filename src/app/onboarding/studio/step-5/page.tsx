@@ -103,9 +103,7 @@ export default function StudioOnboardingStep5() {
           <div className="text-center mb-16">
             <h1 className="text-5xl font-thin tracking-wider text-gray-800 mb-6">AUSSTATTUNG & RÄUME</h1>
             <div className="w-24 h-px bg-pink-500 mx-auto mb-8"></div>
-            <p className="text-lg font-light tracking-wide text-gray-600 max-w-md mx-auto mb-4">
-              Features – Schritt 5 von 7
-            </p>
+            <p className="text-lg font-light tracking-wide text-gray-600 max-w-md mx-auto mb-4">Features – Schritt 5 von 7</p>
             <div className="flex justify-center">
               <Badge className="bg-pink-500 text-white font-light tracking-widest px-4 py-1 rounded-none">SCHRITT 5/7</Badge>
             </div>
@@ -127,7 +125,7 @@ export default function StudioOnboardingStep5() {
                     options={VENUE_FEATURES_DE}
                     value={field.value || []}
                     onChange={field.onChange}
-                    placeholder="Wähle, was euer Studio bietet"
+                    placeholder="Wähle, was euer Studio bietet (z. B. Darkroom, Sauna, Raucherbereich)"
                     searchPlaceholder="Nach Features suchen..."
                     className="w-full"
                   />

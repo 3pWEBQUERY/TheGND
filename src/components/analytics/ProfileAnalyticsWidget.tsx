@@ -307,9 +307,9 @@ export default function ProfileAnalyticsWidget() {
                     .map((r, idx) => (
                       <Tooltip.Root key={idx}>
                         <Tooltip.Trigger asChild>
-                          <span className="inline-flex items-center gap-2 px-2.5 py-1 text-xs rounded-full bg-gray-50 text-gray-800 border border-gray-200 cursor-default" title={r.referrer || '—'}>
+                          <span className="inline-flex items-center gap-2 px-2.5 py-1 text-xs rounded-none bg-gray-50 text-gray-800 border border-gray-200 cursor-default" title={r.referrer || '—'}>
                             <span className="truncate max-w-[200px]">{formatReferrerBadge(r.referrer)}</span>
-                            <span className="px-1.5 py-0.5 rounded-full bg-pink-100 text-pink-700 text-[10px] leading-none">{r.count}</span>
+                            <span className="px-1.5 py-0.5 rounded-none bg-pink-100 text-pink-700 text-[10px] leading-none">{r.count}</span>
                           </span>
                         </Tooltip.Trigger>
                         <Tooltip.Portal>
@@ -348,9 +348,9 @@ export default function ProfileAnalyticsWidget() {
               <div className="text-xs font-light tracking-widest text-gray-800 uppercase mb-2">Top Klicks</div>
               <div className="flex flex-wrap gap-2">
                 {data.topClicks.slice(0, 10).map((c, idx) => (
-                  <span key={idx} className="inline-flex items-center gap-2 px-2.5 py-1 text-xs rounded-full bg-gray-50 text-gray-800 border border-gray-200" title={c.href || c.label || '—'}>
+                  <span key={idx} className="inline-flex items-center gap-2 px-2.5 py-1 text-xs rounded-none bg-gray-50 text-gray-800 border border-gray-200" title={c.href || c.label || '—'}>
                     <span className="truncate max-w-[200px]">{formatClickBadge(c)}</span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-pink-100 text-pink-700 text-[10px] leading-none">{c.count}</span>
+                    <span className="px-1.5 py-0.5 rounded-none bg-pink-100 text-pink-700 text-[10px] leading-none">{c.count}</span>
                   </span>
                 ))}
               </div>

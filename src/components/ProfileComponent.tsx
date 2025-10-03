@@ -606,8 +606,7 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
   }
 
   return (
-      <div>
-        <div className="max-w-7xl mx-auto space-y-8 px-6 overflow-x-hidden">
+    <div className="max-w-7xl mx-auto space-y-8 overflow-x-hidden">
       {/* Profile Header */}
       <div className="bg-white border border-gray-100 rounded-none">
         <div className="p-4 sm:p-8">
@@ -889,6 +888,5 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
         </SheetContent>
       </Sheet>
     </div>
-  </div>
 )
 }

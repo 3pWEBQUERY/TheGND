@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 // Types mirroring Prisma models
 type Addon = {
   id?: string
-  key?: 'ESCORT_OF_DAY' | 'ESCORT_OF_WEEK' | 'ESCORT_OF_MONTH' | 'CITY_BOOST' | 'PROFILE_ANALYTICS' | 'COUNTRY_BLOCK'
+  key?: 'ESCORT_OF_DAY' | 'ESCORT_OF_WEEK' | 'ESCORT_OF_MONTH' | 'CITY_BOOST' | 'PROFILE_ANALYTICS' | 'COUNTRY_BLOCK' | 'SEO'
   name: string
   description?: string | null
   active: boolean
@@ -31,7 +31,7 @@ export default function AdminAddonsPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
 
-  const addonKeys = useMemo(() => ['ESCORT_OF_DAY', 'ESCORT_OF_WEEK', 'ESCORT_OF_MONTH', 'CITY_BOOST', 'PROFILE_ANALYTICS', 'COUNTRY_BLOCK'] as const, [])
+  const addonKeys = useMemo(() => ['ESCORT_OF_DAY', 'ESCORT_OF_WEEK', 'ESCORT_OF_MONTH', 'CITY_BOOST', 'PROFILE_ANALYTICS', 'COUNTRY_BLOCK', 'SEO'] as const, [])
 
   const fetchAddons = async () => {
     setLoading(true)
@@ -50,6 +50,11 @@ export default function AdminAddonsPage() {
 
   const upsertAddon = async (addon: Addon, markId: string | 'new') => {
     try {
+      // Basic client-side validation
+      if (!addon.key) {
+        setMessage('Bitte wähle einen gültigen Add-on Key (z. B. SEO).')
+        return
+      }
       setSaving(markId)
       setMessage(null)
       const payload = { ...addon, sortOrder: addon.sortOrder ?? 0 }
@@ -58,11 +63,18 @@ export default function AdminAddonsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error('failed')
+      if (!res.ok) {
+        let msg = 'Speichern fehlgeschlagen'
+        try {
+          const j = await res.json()
+          if (j?.error) msg = j.error
+        } catch {}
+        throw new Error(msg)
+      }
       await fetchAddons()
       setMessage('Add-on gespeichert')
-    } catch {
-      setMessage('Speichern fehlgeschlagen')
+    } catch (e: any) {
+      setMessage(e?.message || 'Speichern fehlgeschlagen')
     } finally {
       setSaving(null)
     }

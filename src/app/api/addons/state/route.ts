@@ -21,6 +21,16 @@ export async function POST(req: Request) {
   try { body = await req.json() } catch {}
   const { key, enabled, settings } = body || {}
   if (!key) return NextResponse.json({ error: 'Missing key' }, { status: 400 })
+  // Server-side gating: restrict certain add-ons by user type
+  try {
+    const userType: string | undefined = session?.user?.userType
+    if (key === 'SEO') {
+      const allowed = ['ESCORT','AGENCY','CLUB','STUDIO']
+      if (!userType || !allowed.includes(userType)) {
+        return NextResponse.json({ error: 'Forbidden for this user type' }, { status: 403 })
+      }
+    }
+  } catch {}
   try {
     const s = settings ? JSON.stringify(settings) : null
     const rows = await (prisma as any).$queryRaw<any[]>`

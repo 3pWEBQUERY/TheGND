@@ -214,6 +214,7 @@ enum AddonKey {
   CITY_BOOST
   PROFILE_ANALYTICS
   COUNTRY_BLOCK
+  SEO
   @@map("addon_key")
 }
 

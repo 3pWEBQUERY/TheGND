@@ -42,6 +42,8 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const [notifCursor, setNotifCursor] = useState<string | null>(null)
   const [notifHasMore, setNotifHasMore] = useState(false)
   const [countryBlockEnabled, setCountryBlockEnabled] = useState(false)
+  const [seoEnabled, setSeoEnabled] = useState(false)
+  const [seoAvailable, setSeoAvailable] = useState(false)
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' })
@@ -188,7 +190,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
     loadAdmin()
   }, [])
 
-  // Load add-on states to determine if LÄNDERSPERRE should be shown
+  // Load add-on states to determine if LÄNDERSPERRE and SEO should be shown
   useEffect(() => {
     const loadAddons = async () => {
       try {
@@ -199,10 +201,26 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
         const st = Array.isArray(data) ? data : []
         const found = st.find((s: any) => s?.key === 'COUNTRY_BLOCK' && !!s?.enabled)
         setCountryBlockEnabled(!!found)
+        const seo = st.find((s: any) => s?.key === 'SEO' && !!s?.enabled)
+        setSeoEnabled(!!seo)
       } catch {}
     }
     loadAddons()
   }, [session?.user?.id])
+
+  // Load global availability for SEO (ACP-controlled)
+  useEffect(() => {
+    const loadAvailable = async () => {
+      try {
+        const res = await fetch('/api/addons/available', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        const keys = Array.isArray(data?.activeKeys) ? data.activeKeys : []
+        setSeoAvailable(keys.includes('SEO'))
+      } catch {}
+    }
+    loadAvailable()
+  }, [])
 
   // Load matching counts (badge) and refresh periodically
   useEffect(() => {
@@ -355,6 +373,9 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                       )}
                       {userType === 'ESCORT' && countryBlockEnabled && (
                         <Link href="/addons/laendersperre" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">LÄNDERSPERRE</Link>
+                      )}
+                      {['ESCORT','AGENCY','CLUB','STUDIO'].includes(userType as any) && seoEnabled && seoAvailable && (
+                        <Link href="/addons/seo" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">SEO</Link>
                       )}
                     </div>
                   </div>

@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GND - Escort Platform",
-  description: "Premium Escort Platform mit sozialen Features",
+  title: "THEGND - THE GIRL NEXT DOOR - Innovative Escort Portal Since 2025",
+  description: "Das Innovative Escort Portal in der digitalen Welt",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

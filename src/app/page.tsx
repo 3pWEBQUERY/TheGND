@@ -19,7 +19,10 @@ export default function Home() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Laden...</div>
+        <div className="flex flex-col items-center gap-3">
+          <img src="/blocks-wave.svg" alt="Laden" className="w-14 h-14" />
+          <div className="text-lg">Laden...</div>
+        </div>
       </div>
     )
   }

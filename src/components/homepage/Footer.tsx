@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SiX, SiTumblr, SiInstagram } from 'react-icons/si'
 
 export default function Footer() {
   return (
@@ -11,8 +12,37 @@ export default function Footer() {
             aria-hidden="true"
           />
           <p className="text-[13px] md:text-sm font-light text-neutral-300 leading-relaxed mb-8 max-w-md mx-auto">
-            Finde deine Girls Next Door auf THEGND.
+            Finde dein Escort Treffen direkt auf THEGND.
           </p>
+          <div className="flex justify-center gap-6 mb-6">
+            <a
+              href="https://x.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="X (Twitter)"
+              className="text-white hover:text-pink-600 transition-colors"
+            >
+              <SiX className="w-6 h-6" />
+            </a>
+            <a
+              href="https://www.tumblr.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Tumblr"
+              className="text-white hover:text-pink-600 transition-colors"
+            >
+              <SiTumblr className="w-6 h-6" />
+            </a>
+            <a
+              href="https://www.instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="text-white hover:text-pink-600 transition-colors"
+            >
+              <SiInstagram className="w-6 h-6" />
+            </a>
+          </div>
           <div className="flex justify-center gap-6 mb-8">
             <Link
               href="/agb"

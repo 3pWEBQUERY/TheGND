@@ -21,7 +21,10 @@ export default function ProfileViewSelector({ selected, onChange, onSave, saving
         <p className="text-sm text-gray-600 mb-4">Wähle eine von drei Ansichten für dein öffentliches Escort-Profil aus. Die Auswahl wird gespeichert und auf deiner Profilseite verwendet.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {(['STANDARD','ALT1','ALT2'] as const).map((key) => (
-            <label key={key} className={`border ${selected === key ? 'border-pink-500' : 'border-gray-200'} p-4 cursor-pointer flex flex-col gap-3`}>
+            <label
+              key={key}
+              className={`${selected === key ? 'border border-pink-500' : 'group border border-gray-200 hover:border-pink-500 hover:bg-pink-50/40'} p-4 cursor-pointer flex flex-col gap-3 transition-colors`}
+            >
               <ProfileViewPreview variant={key} />
               <div className="flex items-center gap-3">
                 <input
@@ -32,8 +35,8 @@ export default function ProfileViewSelector({ selected, onChange, onSave, saving
                   onChange={() => onChange(key)}
                 />
                 <div>
-                  <div className="text-sm font-light tracking-widest text-gray-800">{key === 'STANDARD' ? 'STANDARD' : key === 'ALT1' ? 'ALTERNATIVE 1' : 'ALTERNATIVE 2'}</div>
-                  <div className="text-xs text-gray-500">{key === 'STANDARD' ? 'Aktuelle Standard-Ansicht' : key === 'ALT1' ? 'Kompakte Seitenleiste + Tabs' : 'Großes Hero + Sektionen'}</div>
+                  <div className="text-sm font-light tracking-widest text-gray-800 transition-colors group-hover:text-pink-600">{key === 'STANDARD' ? 'STANDARD' : key === 'ALT1' ? 'ANSICHT 1' : 'ANSICHT 2'}</div>
+                  <div className="text-xs text-gray-500 transition-colors group-hover:text-pink-500">{key === 'STANDARD' ? 'Aktuelle Standard-Ansicht' : key === 'ALT1' ? 'Kompakte Seitenleiste + Tabs' : 'Großes Hero + Sektionen'}</div>
                 </div>
               </div>
             </label>

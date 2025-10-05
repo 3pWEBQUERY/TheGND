@@ -16,24 +16,24 @@ export default function DashboardQuickActions({ onEditProfile, onDiscover, onMes
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button 
             onClick={onEditProfile}
-            className="p-6 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+            className="group p-6 bg-white border border-gray-200 text-left transition-colors focus:outline-none focus:ring-1 focus:ring-pink-400 hover:bg-pink-50/40 hover:border-pink-500 border-l-4 border-l-gray-200 hover:border-l-pink-600"
           >
-            <div className="text-sm font-light tracking-widest text-gray-800 uppercase mb-2">PROFIL BEARBEITEN</div>
-            <div className="text-xs font-light tracking-wide text-gray-600">Aktualisieren Sie Ihre Profilinformationen</div>
+            <div className="text-sm font-light tracking-widest text-gray-800 uppercase mb-2 group-hover:text-pink-600">PROFIL BEARBEITEN</div>
+            <div className="text-xs font-light tracking-wide text-gray-600 group-hover:text-pink-500">Aktualisieren Sie Ihre Profilinformationen</div>
           </button>
           <button 
             onClick={onDiscover}
-            className="p-6 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+            className="group p-6 bg-white border border-gray-200 text-left transition-colors focus:outline-none focus:ring-1 focus:ring-pink-400 hover:bg-pink-50/40 hover:border-pink-500 border-l-4 border-l-gray-200 hover:border-l-pink-600"
           >
-            <div className="text-sm font-light tracking-widest text-gray-800 uppercase mb-2">BENUTZER ENTDECKEN</div>
-            <div className="text-xs font-light tracking-wide text-gray-600">Finden und vernetzen Sie sich mit anderen</div>
+            <div className="text-sm font-light tracking-widest text-gray-800 uppercase mb-2 group-hover:text-pink-600">BENUTZER ENTDECKEN</div>
+            <div className="text-xs font-light tracking-wide text-gray-600 group-hover:text-pink-500">Finden und vernetzen Sie sich mit anderen</div>
           </button>
           <button 
             onClick={onMessages}
-            className="p-6 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+            className="group p-6 bg-white border border-gray-200 text-left transition-colors focus:outline-none focus:ring-1 focus:ring-pink-400 hover:bg-pink-50/40 hover:border-pink-500 border-l-4 border-l-gray-200 hover:border-l-pink-600"
           >
-            <div className="text-sm font-light tracking-widest text-gray-800 uppercase mb-2">NACHRICHTEN</div>
-            <div className="text-xs font-light tracking-wide text-gray-600">Überprüfen Sie Ihre Unterhaltungen</div>
+            <div className="text-sm font-light tracking-widest text-gray-800 uppercase mb-2 group-hover:text-pink-600">NACHRICHTEN</div>
+            <div className="text-xs font-light tracking-wide text-gray-600 group-hover:text-pink-500">Überprüfen Sie Ihre Unterhaltungen</div>
           </button>
           {isEscort && (
             <button

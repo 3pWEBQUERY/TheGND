@@ -59,7 +59,7 @@ export default function AltEscortViewOne(props: {
       {/* Hero */}
       <section className="relative">
         <div className={`relative ${heroMobileClass} md:h-[50vh] md:min-h-[400px]`}>
-          <img src={heroImage || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover" />
+          <img src={heroImage || '/escort.png'} alt={(name ?? 'Escort') + ' Hero'} className="w-full h-full object-cover object-top" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           {/* Online status bottom-right (live via presence API) */}
           <OnlineBadge userId={escortId} initialOnline={isOnline} className="absolute bottom-4 right-4" />

@@ -3,6 +3,7 @@ import Footer from '@/components/homepage/Footer'
 import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import Tabs from '@/components/Tabs'
 
 async function getJob(id: string) {
   try {
@@ -127,34 +128,58 @@ export default async function JobDetailPage({ params, searchParams: _searchParam
                     </Link>
                   )}
                 </div>
-                <div className="text-sm text-gray-700 mb-4">{job.shortDesc}</div>
-
-                <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest text-gray-600 mb-6">
-                  <span className="px-2 py-1 border border-gray-300">{job.category}</span>
-                  {job.city && <span className="px-2 py-1 border border-gray-300">{job.city}{job.country ? `, ${job.country}` : ''}</span>}
-                  {job.postedBy?.companyName && <span className="px-2 py-1 border border-gray-300">{job.postedBy.companyName}</span>}
-                </div>
-
-                
-
-                <div className="prose prose-p:my-3 prose-ul:my-2 prose-li:my-0 text-gray-800 max-w-none">
-                  <p style={{ whiteSpace: 'pre-wrap' }}>{job.description}</p>
-                </div>
-
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {job.salaryInfo && (
-                    <div className="border border-gray-200 p-4">
-                      <div className="text-[11px] uppercase tracking-widest text-gray-500 mb-1">Vergütung</div>
-                      <div className="text-sm text-gray-800">{job.salaryInfo}</div>
-                    </div>
-                  )}
-                  {job.contactInfo && (
-                    <div className="border border-gray-200 p-4">
-                      <div className="text-[11px] uppercase tracking-widest text-gray-500 mb-1">Kontakt</div>
-                      <div className="text-sm text-gray-800 break-all">{job.contactInfo}</div>
-                    </div>
-                  )}
-                </div>
+                <Tabs
+                  className="mt-4"
+                  tabs={[
+                    {
+                      id: 'aktuell',
+                      label: 'Aktuell',
+                      content: (
+                        <>
+                          <div className="text-sm text-gray-700 mb-4">{job.shortDesc}</div>
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest text-gray-600 mb-6">
+                            <span className="px-2 py-1 border border-gray-300">{job.category}</span>
+                            {job.city && <span className="px-2 py-1 border border-gray-300">{job.city}{job.country ? `, ${job.country}` : ''}</span>}
+                            {job.postedBy?.companyName && <span className="px-2 py-1 border border-gray-300">{job.postedBy.companyName}</span>}
+                          </div>
+                          <div className="prose prose-p:my-3 prose-ul:my-2 prose-li:my-0 text-gray-800 max-w-none">
+                            <p style={{ whiteSpace: 'pre-wrap' }}>{job.description}</p>
+                          </div>
+                          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {job.salaryInfo && (
+                              <div className="border border-gray-200 p-4">
+                                <div className="text-[11px] uppercase tracking-widest text-gray-500 mb-1">Vergütung</div>
+                                <div className="text-sm text-gray-800">{job.salaryInfo}</div>
+                              </div>
+                            )}
+                            {job.contactInfo && (
+                              <div className="border border-gray-200 p-4">
+                                <div className="text-[11px] uppercase tracking-widest text-gray-500 mb-1">Kontakt</div>
+                                <div className="text-sm text-gray-800 break-all">{job.contactInfo}</div>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ),
+                    },
+                    {
+                      id: 'galerie',
+                      label: 'Galerie',
+                      content: (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {(Array.isArray(job.media) && job.media.length > 0 ? job.media : [job.postedBy?.avatar].filter(Boolean)).map((u: string, idx: number) => (
+                            <div key={idx} className="relative aspect-[3/4] bg-gray-100 border border-gray-200 overflow-hidden">
+                              <Image src={u} alt={job.title} fill className="object-cover" />
+                            </div>
+                          ))}
+                          {(!job.media || job.media.length === 0) && !job.postedBy?.avatar && (
+                            <div className="h-40 border border-gray-200 bg-gray-50 flex items-center justify-center text-xs text-gray-500 w-full col-span-2 md:col-span-3">KEIN BILD</div>
+                          )}
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </div>
             </div>
           </div>

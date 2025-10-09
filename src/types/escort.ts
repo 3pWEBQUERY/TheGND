@@ -11,6 +11,10 @@ export type EscortItem = {
   isEscortOfWeek?: boolean
   isEscortOfMonth?: boolean
   badges?: string[]
+  // Optional geolocation for map view
+  latitude?: number | null
+  longitude?: number | null
+  locationFormatted?: string | null
 }
 
 export type EscortFilters = {

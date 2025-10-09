@@ -132,11 +132,11 @@ export async function GET(request: Request) {
   ])
 
   // Determine which users have an approved verification
-  const ids = usersBase.map((u) => u.id)
+  const ids = usersBase.map((u: any) => u.id)
   let approvedSet = new Set<string>()
   if (ids.length > 0) {
     try {
-      const inList = ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')
+      const inList = ids.map((id: string) => `'${id.replace(/'/g, "''")}'`).join(',')
       const rows: Array<{ userId: string }> = await (prisma as any).$queryRawUnsafe(
         `SELECT DISTINCT "userId" FROM "verification_requests" WHERE "status"::text = 'APPROVED' AND "userId" IN (${inList})`
       )
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
   let monthSet = new Set<string>()
   if (ids.length > 0) {
     try {
-      const inList = ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')
+      const inList = ids.map((id: string) => `'${id.replace(/'/g, "''")}'`).join(',')
       const weekRows: Array<{ userId: string }> = await (prisma as any).$queryRawUnsafe(
         `SELECT DISTINCT b."userId" FROM "user_addon_bookings" b
          JOIN "addon_options" o ON o.id = b."addonOptionId"
@@ -173,7 +173,7 @@ export async function GET(request: Request) {
     } catch {}
   }
 
-  const enriched = usersBase.map((u) => {
+  const enriched = usersBase.map((u: any) => {
     const isVerified = u.profile?.visibility === 'VERIFIED'
     const isEscort = u.userType === 'ESCORT'
     const isAgeVerified = isEscort && (approvedSet.has(u.id) || isVerified)
@@ -182,20 +182,20 @@ export async function GET(request: Request) {
 
   // Apply post-filters
   let filtered = enriched
-  if (verifiedOnly) filtered = filtered.filter((x) => x.isVerified)
-  if (ageVerifiedOnly) filtered = filtered.filter((x) => x.isEscort && x.isAgeVerified)
-  if (hasVideoOnly) filtered = filtered.filter((x) => profileHasVideo(x.u.profile))
+  if (verifiedOnly) filtered = filtered.filter((x: any) => x.isVerified)
+  if (ageVerifiedOnly) filtered = filtered.filter((x: any) => x.isEscort && x.isAgeVerified)
+  if (hasVideoOnly) filtered = filtered.filter((x: any) => profileHasVideo(x.u.profile))
 
   // Sorting
   if (sort === 'name') {
-    filtered.sort((a, b) => {
+    filtered.sort((a: any, b: any) => {
       const an = (a.u.profile?.displayName || '').toString().toLowerCase()
       const bn = (b.u.profile?.displayName || '').toString().toLowerCase()
       return an.localeCompare(bn)
     })
   } else {
     const rankHighlight = (id: string) => (monthSet.has(id) ? 2 : (weekSet.has(id) ? 1 : 0))
-    filtered.sort((a, b) => {
+    filtered.sort((a: any, b: any) => {
       const wDiff = rankHighlight(b.u.id) - rankHighlight(a.u.id)
       if (wDiff !== 0) return wDiff
       const aTime = (a.u as any).createdAt ? new Date((a.u as any).createdAt).getTime() : 0
@@ -206,9 +206,9 @@ export async function GET(request: Request) {
 
   const total = filtered.length
   const pageSlice = filtered.slice(skip, skip + take)
-  const users = pageSlice.map((x) => x.u)
+  const users = pageSlice.map((x: any) => x.u)
 
-  const items = users.map((u) => {
+  const items = users.map((u: any) => {
     const isWeek = weekSet.has(u.id)
     const isMonth = monthSet.has(u.id)
     const badges: string[] = []
@@ -226,6 +226,9 @@ export async function GET(request: Request) {
       isEscortOfWeek: isWeek,
       isEscortOfMonth: isMonth,
       badges,
+      latitude: u.profile?.latitude ?? null,
+      longitude: u.profile?.longitude ?? null,
+      locationFormatted: u.profile?.locationFormatted ?? null,
     }
   })
 

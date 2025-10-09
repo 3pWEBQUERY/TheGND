@@ -8,7 +8,10 @@ import Footer from '@/components/homepage/Footer'
 import EscortsHero from '@/components/homepage/EscortsHero'
 import EscortsSearch from '@/components/escorts/EscortsSearch'
 import EscortsResultsGrid from '@/components/escorts/EscortsResultsGrid'
+import EscortsResultsList from '@/components/escorts/EscortsResultsList'
+import EscortsResultsMap from '@/components/escorts/EscortsResultsMap'
 import type { EscortItem, EscortFilters } from '@/types/escort'
+import { LayoutGrid, List as ListIcon, Map as MapIcon } from 'lucide-react'
 
 // EscortItem type is imported from '@/types/escort'
 
@@ -31,6 +34,7 @@ function EscortsPageInner() {
   const [error, setError] = useState<string | null>(null)
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [ageVerifiedOnly, setAgeVerifiedOnly] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid')
   const [filters, setFilters] = useState<EscortFilters>({
     height: '',
     weight: '',
@@ -63,8 +67,10 @@ function EscortsPageInner() {
     setLoading(true)
     setError(null)
     try {
-      // Write current query into URL
-      router.replace(`/escorts?${queryString}`)
+      // Write current query into URL (include view when not default)
+      const urlParams = new URLSearchParams(queryString)
+      if (viewMode !== 'grid') urlParams.set('view', viewMode)
+      router.replace(`/escorts?${urlParams.toString()}`)
       const res = await fetch(`/api/escorts/search?${queryString}`, { cache: 'no-store' })
       if (!res.ok) throw new Error('Fehler beim Laden')
       const data = await res.json()
@@ -87,6 +93,8 @@ function EscortsPageInner() {
     }
     const initialQ = sp.get('q')?.trim() || ''
     const initialLocation = sp.get('location')?.trim() || ''
+    const initialViewRaw = sp.get('view')?.trim()?.toLowerCase() || ''
+    const initialView = (['grid', 'list', 'map'].includes(initialViewRaw) ? (initialViewRaw as 'grid' | 'list' | 'map') : 'grid')
     const initialFilters: EscortFilters = {
       height: sp.get('height')?.trim() || '',
       weight: sp.get('weight')?.trim() || '',
@@ -103,6 +111,7 @@ function EscortsPageInner() {
     setFilters(initialFilters)
     setVerifiedOnly(sp.get('verifiedOnly') === '1')
     setAgeVerifiedOnly(sp.get('ageVerifiedOnly') === '1')
+    setViewMode(initialView)
 
     // Fetch with these initial params immediately
     const p = new URLSearchParams()
@@ -141,6 +150,16 @@ function EscortsPageInner() {
     return () => clearTimeout(t)
   }, [q, location, filters])
 
+  // Update URL when view mode changes, without re-fetching data
+  useEffect(() => {
+    if (!initializedRef.current) return
+    const baseParams = new URLSearchParams(queryString)
+    if (viewMode !== 'grid') baseParams.set('view', viewMode)
+    else baseParams.delete('view')
+    router.replace(`/escorts?${baseParams.toString()}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode])
+
   return (
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
@@ -167,8 +186,45 @@ function EscortsPageInner() {
         setAgeVerifiedOnly={setAgeVerifiedOnly}
       />
 
+      {/* View mode toggle */}
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-end gap-2 mb-4">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`inline-flex items-center gap-2 px-3 py-2 text-sm border ${viewMode === 'grid' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              title="Grid Ansicht"
+            >
+              <LayoutGrid className="h-4 w-4" /> Grid
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`inline-flex items-center gap-2 px-3 py-2 text-sm border ${viewMode === 'list' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              title="Listen Ansicht"
+            >
+              <ListIcon className="h-4 w-4" /> Liste
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`inline-flex items-center gap-2 px-3 py-2 text-sm border ${viewMode === 'map' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              title="Karten Ansicht"
+            >
+              <MapIcon className="h-4 w-4" /> Map
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Ergebnisse: 5er Grid */}
-      <EscortsResultsGrid items={items} loading={loading} total={total} />
+      {viewMode === 'grid' && (
+        <EscortsResultsGrid items={items} loading={loading} total={total} />
+      )}
+      {viewMode === 'list' && (
+        <EscortsResultsList items={items} loading={loading} total={total} />
+      )}
+      {viewMode === 'map' && (
+        <EscortsResultsMap items={items} loading={loading} total={total} />
+      )}
       <Footer />
     </div>
   )

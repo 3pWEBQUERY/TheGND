@@ -84,50 +84,58 @@ export default async function PublicFeedPage() {
               <div className="p-4 border-b border-gray-100">
                 <h2 className="text-sm font-light tracking-widest text-gray-800">GRUPPE ERSTELLEN</h2>
               </div>
-              <div className="p-4">
+              <div className={userId ? "p-4" : "px-0 pt-0 pb-4"}>
                 {userId ? (
                   <CreateGroupForm />
                 ) : (
-                  <div className="text-sm text-gray-600">
-                    Bitte <Link href="/auth/signin" className="underline">anmelden</Link>, um eine Gruppe zu erstellen.
+                  <div className="text-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/circle.jpg" alt="Anmelden erforderlich" className="w-full h-auto mb-3 object-contain" />
+                    <div className="text-sm text-gray-600">
+                      Bitte <Link href="/auth/signin" className="underline">anmelden</Link>, um eine Gruppe zu erstellen.
+                    </div>
                   </div>
                 )}
               </div>
             </section>
 
-            {/* My Groups */}
-            <section className="border border-gray-200 bg-white shadow-sm">
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-sm font-light tracking-widest text-gray-800">MEINE GRUPPEN</h2>
-                <Link href="/groups">
-                  <Button variant="outline" className="h-8 rounded-none text-xs uppercase tracking-widest px-3 py-1">
-                    ALLE
-                  </Button>
-                </Link>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {Array.isArray(myGroups) && myGroups.length > 0 ? (
-                  myGroups.map((g: any) => (
-                    <div key={g.id} className="p-4 hover:bg-gray-50 flex items-start gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={g.cover || '/1.jpg'} alt="Cover" className="w-12 h-12 object-cover" />
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/groups/${g.slug}`} className="text-gray-900 font-medium line-clamp-1 block">{g.name}</Link>
-                        {g.description && (
-                          <div className="text-sm text-gray-600 mt-1 line-clamp-2">{g.description}</div>
-                        )}
-                        <div className="text-xs text-gray-500 mt-2">{g._count?.members ?? 0} Mitglieder · {g._count?.posts ?? 0} Beiträge</div>
-                      </div>
-                      <GroupJoinLeaveButton slug={g.slug} isMember={true} />
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-4 text-sm text-gray-600">
-                    {userId ? 'Du bist noch kein Mitglied einer Gruppe.' : 'Melde dich an, um deine Gruppen zu sehen.'}
+            {userId && (
+              <>
+                {/* My Groups */}
+                <section className="border border-gray-200 bg-white shadow-sm">
+                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 className="text-sm font-light tracking-widest text-gray-800">MEINE GRUPPEN</h2>
+                    <Link href="/groups">
+                      <Button variant="outline" className="h-8 rounded-none text-xs uppercase tracking-widest px-3 py-1">
+                        ALLE
+                      </Button>
+                    </Link>
                   </div>
-                )}
-              </div>
-            </section>
+                  <div className="divide-y divide-gray-100">
+                    {Array.isArray(myGroups) && myGroups.length > 0 ? (
+                      myGroups.map((g: any) => (
+                        <div key={g.id} className="p-4 hover:bg-gray-50 flex items-start gap-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={g.cover || '/1.jpg'} alt="Cover" className="w-12 h-12 object-cover" />
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/groups/${g.slug}`} className="text-gray-900 font-medium line-clamp-1 block">{g.name}</Link>
+                            {g.description && (
+                              <div className="text-sm text-gray-600 mt-1 line-clamp-2">{g.description}</div>
+                            )}
+                            <div className="text-xs text-gray-500 mt-2">{g._count?.members ?? 0} Mitglieder · {g._count?.posts ?? 0} Beiträge</div>
+                          </div>
+                          <GroupJoinLeaveButton slug={g.slug} isMember={true} />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-sm text-gray-600">
+                        Du bist noch kein Mitglied einer Gruppe.
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </>
+            )}
 
             {/* Suggestions */}
             <section className="border border-gray-200 bg-white shadow-sm">

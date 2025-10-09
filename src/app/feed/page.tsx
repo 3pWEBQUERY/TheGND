@@ -124,7 +124,7 @@ export default async function PublicFeedPage() {
                             )}
                             <div className="text-xs text-gray-500 mt-2">{g._count?.members ?? 0} Mitglieder · {g._count?.posts ?? 0} Beiträge</div>
                           </div>
-                          <GroupJoinLeaveButton slug={g.slug} isMember={true} />
+                          <GroupJoinLeaveButton slug={g.slug} isMember={true} isAuthenticated={true} />
                         </div>
                       ))
                     ) : (
@@ -155,7 +155,7 @@ export default async function PublicFeedPage() {
                         )}
                         <div className="text-xs text-gray-500 mt-2">{g._count?.members ?? 0} Mitglieder · {g._count?.posts ?? 0} Beiträge</div>
                       </div>
-                      <GroupJoinLeaveButton slug={g.slug} isMember={false} />
+                      <GroupJoinLeaveButton slug={g.slug} isMember={false} isAuthenticated={!!userId} />
                     </div>
                   ))
                 ) : (

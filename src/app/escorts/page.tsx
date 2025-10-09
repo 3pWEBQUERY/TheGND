@@ -12,6 +12,7 @@ import EscortsResultsList from '@/components/escorts/EscortsResultsList'
 import EscortsResultsMap from '@/components/escorts/EscortsResultsMap'
 import type { EscortItem, EscortFilters } from '@/types/escort'
 import { LayoutGrid, List as ListIcon, Map as MapIcon } from 'lucide-react'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 // EscortItem type is imported from '@/types/escort'
 
@@ -189,29 +190,66 @@ function EscortsPageInner() {
       {/* View mode toggle */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-end gap-2 mb-4">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-sm border ${viewMode === 'grid' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-              title="Grid Ansicht"
-            >
-              <LayoutGrid className="h-4 w-4" /> Grid
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-sm border ${viewMode === 'list' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-              title="Listen Ansicht"
-            >
-              <ListIcon className="h-4 w-4" /> Liste
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-sm border ${viewMode === 'map' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-              title="Karten Ansicht"
-            >
-              <MapIcon className="h-4 w-4" /> Map
-            </button>
-          </div>
+          <Tooltip.Provider delayDuration={100}>
+            <div className="flex items-center justify-end gap-2 mb-4">
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    aria-label="Grid Ansicht"
+                    aria-pressed={viewMode === 'grid'}
+                    className={`inline-flex items-center justify-center h-10 w-10 border rounded-none transition-colors ${viewMode === 'grid' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 hover:border-pink-300 hover:text-pink-600'}`}
+                  >
+                    <LayoutGrid className="h-5 w-5" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">
+                    Grid
+                    <Tooltip.Arrow className="fill-gray-900" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    aria-label="Listen Ansicht"
+                    aria-pressed={viewMode === 'list'}
+                    className={`inline-flex items-center justify-center h-10 w-10 border rounded-none transition-colors ${viewMode === 'list' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 hover:border-pink-300 hover:text-pink-600'}`}
+                  >
+                    <ListIcon className="h-5 w-5" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">
+                    Liste
+                    <Tooltip.Arrow className="fill-gray-900" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    onClick={() => setViewMode('map')}
+                    aria-label="Karten Ansicht"
+                    aria-pressed={viewMode === 'map'}
+                    className={`inline-flex items-center justify-center h-10 w-10 border rounded-none transition-colors ${viewMode === 'map' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 hover:border-pink-300 hover:text-pink-600'}`}
+                  >
+                    <MapIcon className="h-5 w-5" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">
+                    Map
+                    <Tooltip.Arrow className="fill-gray-900" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </div>
+          </Tooltip.Provider>
         </div>
       </div>
 

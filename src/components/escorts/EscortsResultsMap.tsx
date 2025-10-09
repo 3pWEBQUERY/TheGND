@@ -101,7 +101,28 @@ export default function EscortsResultsMap({ items, loading, total }: EscortsResu
         markers.push(marker)
         bounds.extend(position)
       })
-      try { map.fitBounds(bounds) } catch {}
+      try {
+        if (coords.length === 1) {
+          // One marker: focus closer on it
+          map.setCenter(bounds.getCenter())
+          map.setZoom(14)
+        } else {
+          // Multiple markers: fit, but not too far; smaller padding and higher max zoom
+          map.fitBounds(bounds, { top: 20, right: 20, bottom: 20, left: 20 })
+          const MAX_ZOOM = 14
+          const once = map.addListener('idle', () => {
+            try {
+              if (typeof map.getZoom === 'function' && map.getZoom() > MAX_ZOOM) {
+                map.setZoom(MAX_ZOOM)
+              }
+            } finally {
+              // remove this one-time listener
+              // @ts-ignore
+              if (once && typeof once.remove === 'function') once.remove()
+            }
+          })
+        }
+      } catch {}
     }
 
     return () => {

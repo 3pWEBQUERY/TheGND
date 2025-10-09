@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { LANGUAGES_DE } from '@/data/languages.de'
+import { SERVICES_DE } from '@/data/services.de'
 
 function getPrimaryImage(profile: any): string | null {
   if (profile?.avatar) return profile.avatar
@@ -19,6 +21,33 @@ function getPrimaryImage(profile: any): string | null {
     }
   } catch {}
   return null
+}
+
+function getGalleryImages(profile: any): string[] {
+  const urls: string[] = []
+  try {
+    if (profile?.media) {
+      const media = JSON.parse(profile.media)
+      if (Array.isArray(media)) {
+        media.forEach((m: any) => {
+          const t = (m?.type?.toLowerCase?.() ?? '')
+          if (t.includes('image') && m?.url) urls.push(String(m.url))
+        })
+      }
+    }
+  } catch {}
+  try {
+    if (profile?.gallery) {
+      const gallery = JSON.parse(profile.gallery)
+      if (Array.isArray(gallery)) {
+        gallery.forEach((u: any) => {
+          if (u) urls.push(String(u))
+        })
+      }
+    }
+  } catch {}
+  // Dedupe
+  return Array.from(new Set(urls)).filter(Boolean)
 }
 
 // Helper to detect if a profile has at least one video in media JSON
@@ -208,12 +237,67 @@ export async function GET(request: Request) {
   const pageSlice = filtered.slice(skip, skip + take)
   const users = pageSlice.map((x: any) => x.u)
 
+  // Helpers to normalize arrays from DB
+  const LANGUAGE_VALUE_BY_LABEL = new Map(LANGUAGES_DE.map((o) => [o.label.toLowerCase(), o.value]))
+  const LANGUAGE_VALUE_BY_VALUE = new Map(LANGUAGES_DE.map((o) => [o.value.toLowerCase(), o.value]))
+  const SERVICE_VALUE_BY_LABEL = new Map(SERVICES_DE.map((o) => [o.label.toLowerCase(), o.value]))
+  const SERVICE_VALUE_BY_VALUE = new Map(SERVICES_DE.map((o) => [o.value.toLowerCase(), o.value]))
+
+  function parseList(raw: unknown): string[] | undefined {
+    try {
+      if (typeof raw === 'string') {
+        const trimmed = raw.trim()
+        if (!trimmed) return undefined
+        // Try JSON first
+        if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes('"')) {
+          const parsed = JSON.parse(trimmed)
+          if (Array.isArray(parsed)) return parsed.map((x) => String(x))
+        }
+        // Fallback: comma/semicolon separated
+        return trimmed
+          .split(/[,;]+/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      }
+      if (Array.isArray(raw)) return raw.map((x) => String(x))
+    } catch {}
+    return undefined
+  }
+
+  function normalizeLanguage(v: string): string {
+    const key = v.trim().toLowerCase()
+    return LANGUAGE_VALUE_BY_VALUE.get(key) || LANGUAGE_VALUE_BY_LABEL.get(key) || key
+  }
+
+  function slugifyService(v: string): string {
+    return v
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[_\s]+/g, '-')
+      .replace(/[^a-z0-9-]+/g, '')
+      .replace(/--+/g, '-')
+  }
+
+  function normalizeService(v: string): string {
+    const key = v.trim().toLowerCase()
+    return (
+      SERVICE_VALUE_BY_VALUE.get(key) ||
+      SERVICE_VALUE_BY_LABEL.get(key) ||
+      SERVICE_VALUE_BY_VALUE.get(slugifyService(key)) ||
+      slugifyService(key)
+    )
+  }
+
   const items = users.map((u: any) => {
     const isWeek = weekSet.has(u.id)
     const isMonth = monthSet.has(u.id)
     const badges: string[] = []
     if (isWeek) badges.push('ESCORT_OF_WEEK')
     if (isMonth) badges.push('ESCORT_OF_MONTH')
+    // Extract arrays (supports JSON arrays or comma-separated strings)
+    let languagesArr: string[] | undefined = parseList(u.profile?.languages)?.map(normalizeLanguage)
+    let servicesArr: string[] | undefined = parseList(u.profile?.services)?.map(normalizeService)
     return {
       id: u.id,
       name: u.profile?.displayName ?? null,
@@ -229,6 +313,15 @@ export async function GET(request: Request) {
       latitude: u.profile?.latitude ?? null,
       longitude: u.profile?.longitude ?? null,
       locationFormatted: u.profile?.locationFormatted ?? null,
+      age: typeof u.profile?.age === 'number' ? u.profile.age : (u.profile?.age ? Number(u.profile.age) || null : null),
+      slogan: u.profile?.slogan ?? null,
+      languages: languagesArr,
+      services: servicesArr,
+      gallery: (() => {
+        const all = getGalleryImages(u.profile)
+        const primary = getPrimaryImage(u.profile)
+        return all.filter((url) => url && url !== primary)
+      })(),
     }
   })
 

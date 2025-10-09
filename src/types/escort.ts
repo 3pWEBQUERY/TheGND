@@ -15,6 +15,13 @@ export type EscortItem = {
   latitude?: number | null
   longitude?: number | null
   locationFormatted?: string | null
+  // Extra info for richer list cards
+  age?: number | null
+  slogan?: string | null
+  languages?: string[]
+  services?: string[]
+  // Additional image URLs (excluding the primary image)
+  gallery?: string[]
 }
 
 export type EscortFilters = {

@@ -1,9 +1,11 @@
 "use client"
 
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { EscortItem } from '@/types/escort'
-import { BadgeCheck, ShieldCheck, Star } from 'lucide-react'
+import { BadgeCheck, ShieldCheck } from 'lucide-react'
+import { LANGUAGES_DE } from '@/data/languages.de'
+import { SERVICES_DE } from '@/data/services.de'
 
 export type EscortsResultsListProps = {
   items: EscortItem[] | null
@@ -18,6 +20,143 @@ function slugify(input: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '')
+}
+
+const LANGUAGE_LABELS = new Map(LANGUAGES_DE.map((o) => [o.value, o.label]))
+const SERVICE_LABELS = new Map(SERVICES_DE.map((o) => [o.value, o.label]))
+
+function formatLanguage(val: string): string {
+  return LANGUAGE_LABELS.get(val) || val
+}
+
+function titleCaseFallback(s: string): string {
+  return s
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function formatService(val: string): string {
+  return SERVICE_LABELS.get(val) || titleCaseFallback(val)
+}
+
+function EscortListRow({ e }: { e: EscortItem }) {
+  const slug = e.name ? slugify(e.name) : 'escort'
+  const href = `/escorts/${e.id}/${slug}`
+  const isWeek = Boolean((e as any)?.isEscortOfWeek) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_WEEK'))
+  const isMonth = Boolean((e as any)?.isEscortOfMonth) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_MONTH'))
+  const highlightLabel = isMonth ? 'ESCORT OF THE MONTH' : (isWeek ? 'ESCORT OF THE WEEK' : null)
+
+  const images = useMemo(() => {
+    const arr: string[] = []
+    if (e.image) arr.push(e.image)
+    if (Array.isArray(e.gallery)) arr.push(...e.gallery)
+    return Array.from(new Set(arr)).filter(Boolean)
+  }, [e.image, e.gallery])
+  const [sel, setSel] = useState(0)
+  const main = images[sel] || null
+  const thumbs = images.slice(1, 8)
+
+  return (
+    <div className="py-8 grid grid-cols-[auto_1fr_auto] gap-8 md:gap-10 items-center">
+      {/* Image area: main + vertical thumbs */}
+      <div className="flex items-center gap-4">
+        <Link href={href} className="block flex-shrink-0">
+          <div className="relative h-96 w-72 md:w-80 bg-gray-200 border border-gray-200 overflow-hidden shadow-sm">
+            {main ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={main} alt={e.name ?? ''} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full bg-gray-300" />
+            )}
+          </div>
+        </Link>
+        {thumbs.length > 0 && (
+          <div className="flex flex-col gap-2 h-96 w-20 overflow-hidden self-center">
+            {thumbs.map((url, i) => (
+              <button
+                key={`${e.id}-thumb-${i}`}
+                onMouseEnter={() => setSel(i + 1)}
+                onFocus={() => setSel(i + 1)}
+                onClick={() => setSel(i + 1)}
+                className={`relative block ring-1 ${sel === i + 1 ? 'ring-pink-500' : 'ring-gray-200'}`}
+                aria-label="Vorschaubild anzeigen"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="Thumbnail" className="h-12 w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Divider between images and info */}
+        <div className="hidden sm:block w-px bg-gray-200" />
+      </div>
+
+      {/* Info area */}
+      <div className="flex-1 min-w-0 flex flex-col self-center space-y-2 md:space-y-3">
+        {/* Name */}
+        <div className="flex items-center gap-2">
+          <Link href={href} className="block">
+            <h3 className="text-base font-medium tracking-widest text-gray-900">
+              {(e.name?.toUpperCase?.() ?? e.name) || '—'}
+            </h3>
+          </Link>
+          {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
+          {(e.isAgeVerified || e.isVerified) && <ShieldCheck className="h-4 w-4 text-rose-600 flex-shrink-0" />}
+          {highlightLabel && (
+            <span className={`ml-2 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'text-amber-600' : 'text-pink-600'}`}>{highlightLabel}</span>
+          )}
+        </div>
+        {/* Slogan */}
+        {e.slogan && (
+          <div className="mt-1 text-sm text-gray-900">{e.slogan}</div>
+        )}
+        {/* Standort */}
+        {(e.locationFormatted || e.city || e.country) && (
+          <div className="mt-1 text-sm text-gray-700">{e.locationFormatted || e.city || e.country}</div>
+        )}
+        {/* Chips */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {typeof e.age === 'number' && e.age > 0 && (
+            <span className="inline-flex items-center px-2 py-0.5 text-xs border border-gray-300 text-gray-700 uppercase tracking-widest">
+              {e.age} Jahre
+            </span>
+          )}
+          {Array.isArray(e.languages) && e.languages.slice(0, 3).map((lang, i) => (
+            <span key={`lang-${e.id}-${i}`} className="inline-flex items-center px-2 py-0.5 text-xs border border-pink-300 text-pink-700">
+              {formatLanguage(String(lang))}
+            </span>
+          ))}
+          {Array.isArray(e.services) && e.services.slice(0, 3).map((srv, i) => (
+            <span key={`srv-${e.id}-${i}`} className="inline-flex items-center px-2 py-0.5 text-xs border border-gray-300 text-gray-700">
+              {formatService(String(srv))}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Actions area */}
+      <div className="w-40 sm:w-44 md:w-48 flex flex-col gap-4 self-center">
+        <Link
+          href={href}
+          className="inline-flex items-center justify-center px-3 py-2 w-full text-sm uppercase tracking-widest bg-pink-600 text-white hover:bg-pink-700"
+        >
+          Profil anzeigen
+        </Link>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center px-3 py-2 w-full text-sm uppercase tracking-widest border border-gray-300 text-gray-800 bg-white hover:bg-gray-50"
+        >
+          Speichern
+        </button>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center px-3 py-2 w-full text-sm uppercase tracking-widest border border-pink-300 text-pink-700 bg-white hover:bg-pink-50"
+        >
+          Nachricht
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function EscortsResultsList({ items, loading, total }: EscortsResultsListProps) {
@@ -44,44 +183,9 @@ export default function EscortsResultsList({ items, loading, total }: EscortsRes
             ))
           )}
 
-          {items?.map((e) => {
-            const slug = e.name ? slugify(e.name) : 'escort'
-            const href = `/escorts/${e.id}/${slug}`
-            const isWeek = Boolean((e as any)?.isEscortOfWeek) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_WEEK'))
-            const isMonth = Boolean((e as any)?.isEscortOfMonth) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_MONTH'))
-            const highlightLabel = isMonth ? 'ESCORT OF THE MONTH' : (isWeek ? 'ESCORT OF THE WEEK' : null)
-            return (
-              <div key={e.id} className="py-4 flex gap-4 items-center">
-                <Link href={href} className="block flex-shrink-0">
-                  <div className="h-28 w-20 bg-gray-200 border border-gray-200 overflow-hidden">
-                    {e.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gray-300" />
-                    )}
-                  </div>
-                </Link>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Link href={href} className="block truncate">
-                      <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">
-                        {(e.name?.toUpperCase?.() ?? e.name) || '—'}
-                      </h3>
-                    </Link>
-                    {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
-                    {(e.isAgeVerified || e.isVerified) && <ShieldCheck className="h-4 w-4 text-rose-600 flex-shrink-0" />}
-                    {highlightLabel && (
-                      <span className={`ml-2 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'text-amber-600' : 'text-pink-600'}`}>{highlightLabel}</span>
-                    )}
-                  </div>
-                  {(e.city || e.country || e.locationFormatted) && (
-                    <div className="mt-1 text-sm text-gray-700 truncate">{e.locationFormatted || e.city || e.country}</div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+          {items?.map((e) => (
+            <EscortListRow key={e.id} e={e} />
+          ))}
 
           {!loading && items?.length === 0 && (
             <div className="text-center text-sm text-gray-500 py-10">

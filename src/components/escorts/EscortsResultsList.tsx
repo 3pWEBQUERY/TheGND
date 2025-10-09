@@ -57,11 +57,11 @@ function EscortListRow({ e }: { e: EscortItem }) {
   const thumbs = images.slice(1, 8)
 
   return (
-    <div className="py-8 grid grid-cols-[auto_1fr_auto] gap-8 md:gap-10 items-center">
+    <div className="p-4 md:p-5 border border-gray-200 bg-white flex flex-col gap-6 md:grid md:grid-cols-[auto_1fr] md:gap-8 md:items-center">
       {/* Image area: main + vertical thumbs */}
-      <div className="flex items-center gap-4">
-        <Link href={href} className="block flex-shrink-0">
-          <div className="relative h-96 w-72 md:w-80 bg-gray-200 border border-gray-200 overflow-hidden shadow-sm">
+      <div className="md:flex items-start md:items-center gap-4 w-full">
+        <Link href={href} className="block flex-shrink-0 w-full md:w-auto">
+          <div className="relative h-80 w-full sm:h-96 md:h-96 md:w-72 lg:w-80 bg-gray-200 border border-gray-200 overflow-hidden shadow-sm">
             {main ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={main} alt={e.name ?? ''} className="h-full w-full object-cover" />
@@ -70,8 +70,26 @@ function EscortListRow({ e }: { e: EscortItem }) {
             )}
           </div>
         </Link>
+        {/* Mobile thumbs below main image */}
         {thumbs.length > 0 && (
-          <div className="flex flex-col gap-2 h-96 w-20 overflow-hidden self-center">
+          <div className="mt-3 grid grid-cols-5 gap-2 w-full md:hidden">
+            {thumbs.map((url, i) => (
+              <button
+                key={`${e.id}-mthumb-${i}`}
+                onMouseEnter={() => setSel(i + 1)}
+                onFocus={() => setSel(i + 1)}
+                onClick={() => setSel(i + 1)}
+                className={`relative block ring-1 ${sel === i + 1 ? 'ring-pink-500' : 'ring-gray-200'}`}
+                aria-label="Vorschaubild anzeigen"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="Thumbnail" className="h-16 w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+        {thumbs.length > 0 && (
+          <div className="hidden md:flex flex-col gap-2 h-96 w-20 overflow-hidden self-center">
             {thumbs.map((url, i) => (
               <button
                 key={`${e.id}-thumb-${i}`}
@@ -87,8 +105,8 @@ function EscortListRow({ e }: { e: EscortItem }) {
             ))}
           </div>
         )}
-        {/* Divider between images and info */}
-        <div className="hidden sm:block w-px bg-gray-200" />
+        {/* Divider between images and info (md+) */}
+        <div className="hidden md:block w-px bg-gray-200" />
       </div>
 
       {/* Info area */}
@@ -132,28 +150,27 @@ function EscortListRow({ e }: { e: EscortItem }) {
             </span>
           ))}
         </div>
-      </div>
-
-      {/* Actions area */}
-      <div className="w-40 sm:w-44 md:w-48 flex flex-col gap-4 self-center">
-        <Link
-          href={href}
-          className="inline-flex items-center justify-center px-3 py-2 w-full text-sm uppercase tracking-widest bg-pink-600 text-white hover:bg-pink-700"
-        >
-          Profil anzeigen
-        </Link>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center px-3 py-2 w-full text-sm uppercase tracking-widest border border-gray-300 text-gray-800 bg-white hover:bg-gray-50"
-        >
-          Speichern
-        </button>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center px-3 py-2 w-full text-sm uppercase tracking-widest border border-pink-300 text-pink-700 bg-white hover:bg-pink-50"
-        >
-          Nachricht
-        </button>
+        {/* Actions under info: stacked on mobile, horizontal on desktop */}
+        <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+          <Link
+            href={href}
+            className="inline-flex items-center justify-center px-3 py-2 w-full md:w-auto text-sm uppercase tracking-widest bg-pink-600 text-white hover:bg-pink-700"
+          >
+            Profil anzeigen
+          </Link>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center px-3 py-2 w-full md:w-auto text-sm uppercase tracking-widest border border-gray-300 text-gray-800 bg-white hover:bg-gray-50"
+          >
+            Speichern
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center px-3 py-2 w-full md:w-auto text-sm uppercase tracking-widest border border-pink-300 text-pink-700 bg-white hover:bg-pink-50"
+          >
+            Nachricht
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -170,7 +187,7 @@ export default function EscortsResultsList({ items, loading, total }: EscortsRes
           )}
         </div>
 
-        <div className="divide-y divide-gray-200">
+        <div className="flex flex-col gap-4">
           {loading && !items && (
             Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="py-4 flex gap-4 items-center">

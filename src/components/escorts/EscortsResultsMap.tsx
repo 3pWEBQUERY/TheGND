@@ -149,7 +149,9 @@ export default function EscortsResultsMap({ items, loading, total }: EscortsResu
             Für die aktuelle Auswahl sind keine Koordinaten hinterlegt. Wechsle zur Listen- oder Grid-Ansicht.
           </div>
         )}
-        <div ref={containerRef} className="w-full h-[60vh] border border-gray-200" />
+        <div className="-mx-6 md:mx-0">
+          <div ref={containerRef} className="w-full h-[60vh] border border-gray-200" />
+        </div>
       </div>
     </section>
   )

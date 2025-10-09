@@ -567,113 +567,114 @@ export default function StoriesGallery({ userType, q }: { userType?: string; q?:
           </div>
         </div>
 
-        {/* Desktop/Tablet: grid */}
-        <div className="hidden md:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {/* Sponsored HOME_BANNER tile (if any) */}
-          {sponsoredUrl && (
-            <div
-              key="sponsored"
-              className="aspect-[3/4] group overflow-hidden relative ring-2 ring-[var(--brand-pink)] bg-gray-200"
-              title="Sponsored – Story Banner"
-              aria-label="Sponsored – Story Banner"
-            >
-              {/* Use a plain <img> because the CDN uses dynamic subdomains (e.g., *.ufs.sh) */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={sponsoredUrl}
-                alt="Sponsored Story Banner"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="eager"
-              />
-              <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase tracking-widest px-2 py-1">Sponsored</div>
-              {sponsoredTargetUrl && (
-                <a
-                  href={sponsoredTargetUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute inset-0"
-                  aria-label="Gesponsertes Banner öffnen"
-                />
-              )}
-            </div>
-          )}
-          {((groupedGridItems ?? Array.from({ length: 7 })) as any[]).map((story, idx) => {
-            if (!stories) {
-              return (
-                <div key={idx} className="aspect-[3/4] bg-gray-200 animate-pulse rounded" />
-              )
-            }
-
-            const authorName = (
-              story.author.displayName ?? story.author.email.split('@')[0]
-            ).toUpperCase()
-            const label = timeAgoISO(story.createdAt)
-            const coverUrl = story.author.avatar || story.image || (story.video ? videoPosters[story.id] : undefined)
-            const fetchPrio: 'high' | 'low' = idx < 4 ? 'high' : 'low'
-            const sizes = '(min-width: 1024px) 12vw, (min-width: 768px) 22vw, 45vw'
-            const initials = authorName
-              .split(/\s|\.|-|_/)
-              .filter(Boolean)
-              .slice(0, 2)
-              .map((s: string) => s[0])
-              .join('') || authorName[0]
-
-            // Unseen indicator per author based on seenByAuthor state
-            const coverTs = new Date(story.createdAt).getTime()
-            const lastSeen = story.authorId ? seenByAuthor[story.authorId] ?? 0 : 0
-            const unseen = coverTs > lastSeen
-
-            return (
+        {/* Desktop/Tablet: horizontal slider with 5er Grid */}
+        <div className="hidden md:block" role="region" aria-label="Stories der 24h – Slider (Desktop)">
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
+            {/* Sponsored HOME_BANNER tile (if any) */}
+            {sponsoredUrl && (
               <div
-                key={story.id}
-                className={`aspect-[3/4] bg-gray-200 group cursor-pointer overflow-hidden relative ${unseen ? 'ring-2 ring-[var(--brand-pink)]' : 'ring-1 ring-gray-200'}`}
-                title={`${authorName} - ${story.content} (${label})`}
-                role="button"
-                tabIndex={0}
-                aria-label={`${authorName} – Story öffnen (${label})`}
-                onClick={() => viewStory(story)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    viewStory(story)
-                  }
-                }}
+                key="sponsored-desktop"
+                className="shrink-0 basis-[20%] aspect-[3/4] group overflow-hidden relative ring-2 ring-[var(--brand-pink)] bg-gray-200 snap-start"
+                title="Sponsored – Story Banner"
+                aria-label="Sponsored – Story Banner"
               >
-                {coverUrl ? (
-                  <>
-                    <Image
-                      src={coverUrl}
-                      alt={story.content || authorName}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                      fetchPriority={fetchPrio}
-                      sizes={sizes}
-                    />
-                    {story.video && (
-                      <div className="absolute bottom-2 right-2 bg-black/60 rounded-full p-1.5">
-                        <Play className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center brand-gradient">
-                    <div className="h-16 w-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/40">
-                      <span className="text-white text-xl font-light tracking-widest">{initials}</span>
-                    </div>
-                  </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={sponsoredUrl}
+                  alt="Sponsored Story Banner"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="eager"
+                />
+                <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase tracking-widest px-2 py-1">Sponsored</div>
+                {sponsoredTargetUrl && (
+                  <a
+                    href={sponsoredTargetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute inset-0"
+                    aria-label="Gesponsertes Banner öffnen"
+                  />
                 )}
-
-                {/* Story Info Overlay (nur bei Hover sichtbar) */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2">
-                  <div className="text-white text-xs font-light tracking-wider">
-                    {authorName}
-                  </div>
-                  <div className="text-gray-300 text-xs mt-1">{label}</div>
-                </div>
               </div>
-            )
-          })}
+            )}
+            {((groupedGridItems ?? Array.from({ length: 7 })) as any[]).map((story, idx) => {
+              if (!stories) {
+                return (
+                  <div key={idx} className="shrink-0 basis-[20%] aspect-[3/4] bg-gray-200 animate-pulse rounded snap-start" />
+                )
+              }
+
+              const authorName = (
+                story.author.displayName ?? story.author.email.split('@')[0]
+              ).toUpperCase()
+              const label = timeAgoISO(story.createdAt)
+              const coverUrl = story.author.avatar || story.image || (story.video ? videoPosters[story.id] : undefined)
+              const fetchPrio: 'high' | 'low' = idx < 4 ? 'high' : 'low'
+              const sizes = '(min-width: 1024px) 20vw, (min-width: 768px) 25vw, 45vw'
+              const initials = authorName
+                .split(/\s|\.|-|_/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((s: string) => s[0])
+                .join('') || authorName[0]
+
+              // Unseen indicator per author based on seenByAuthor state
+              const coverTs = new Date(story.createdAt).getTime()
+              const lastSeen = story.authorId ? seenByAuthor[story.authorId] ?? 0 : 0
+              const unseen = coverTs > lastSeen
+
+              return (
+                <div
+                  key={story.id}
+                  className={`shrink-0 basis-[20%] aspect-[3/4] bg-gray-200 group cursor-pointer overflow-hidden relative snap-start ${unseen ? 'ring-2 ring-[var(--brand-pink)]' : 'ring-1 ring-gray-200'}`}
+                  title={`${authorName} - ${story.content} (${label})`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${authorName} – Story öffnen (${label})`}
+                  onClick={() => viewStory(story)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      viewStory(story)
+                    }
+                  }}
+                >
+                  {coverUrl ? (
+                    <>
+                      <Image
+                        src={coverUrl}
+                        alt={story.content || authorName}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        fetchPriority={fetchPrio}
+                        sizes={sizes}
+                      />
+                      {story.video && (
+                        <div className="absolute bottom-2 right-2 bg-black/60 rounded-full p-1.5">
+                          <Play className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center brand-gradient">
+                      <div className="h-16 w-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/40">
+                        <span className="text-white text-xl font-light tracking-widest">{initials}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Story Info Overlay (nur bei Hover sichtbar) */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2">
+                    <div className="text-white text-xs font-light tracking-wider">
+                      {authorName}
+                    </div>
+                    <div className="text-gray-300 text-xs mt-1">{label}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {/* Story View Dialog */}

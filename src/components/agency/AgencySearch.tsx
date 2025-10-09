@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { MapPin, Search } from 'lucide-react'
 import MultiSelect from '@/components/ui/multi-select'
 import { SERVICES_DE } from '@/data/services.de'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type Props = {
   q: string
@@ -22,6 +24,9 @@ type Props = {
 }
 
 export default function AgencySearch({ q, setQ, location, setLocation, sort, setSort, onSubmit, loading, error, businessType = '', setBusinessType, businessServices = [], setBusinessServices }: Props) {
+  // Avoid SSR hydration mismatches with Radix Select by mounting it on client only
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-6">
@@ -59,14 +64,27 @@ export default function AgencySearch({ q, setQ, location, setLocation, sort, set
               </div>
               <div className="md:col-span-1">
                 <label className="block text-xs tracking-widest text-gray-600 mb-2">SORTIEREN</label>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="w-full border border-gray-300 bg-white px-3 py-2 text-sm rounded-none focus:outline-none focus:ring-1 focus:ring-pink-500/30"
-                >
-                  <option value="newest">Neueste zuerst</option>
-                  <option value="name">Name A–Z</option>
-                </select>
+                {mounted ? (
+                  <Select value={sort} onValueChange={(v) => setSort(v)}>
+                    <SelectTrigger className="w-full rounded-none border-gray-300">
+                      <SelectValue aria-label="Sortieren" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Neueste zuerst</SelectItem>
+                      <SelectItem value="name">Name A–Z</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <select
+                    value={sort}
+                    onChange={() => {}}
+                    aria-hidden
+                    className="w-full border border-gray-300 bg-white px-3 py-2 text-sm rounded-none"
+                  >
+                    <option value="newest">Neueste zuerst</option>
+                    <option value="name">Name A–Z</option>
+                  </select>
+                )}
               </div>
               {setBusinessType && (
                 <div className="md:col-span-2">

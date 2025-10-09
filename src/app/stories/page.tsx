@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
 import Footer from '@/components/homepage/Footer'
 import StoriesHero from '@/components/homepage/StoriesHero'
-import StoriesGallery from '@/components/homepage/StoriesGallery'
+import StoriesLatestGrid from '@/components/stories/StoriesLatestGrid'
 import StoriesSearch from '@/components/stories/StoriesSearch'
 
 export default function StoriesPage() {
@@ -43,7 +43,7 @@ function StoriesPageInner() {
       <MinimalistNavigation />
       <StoriesHero />
       <StoriesSearch q={q} setQ={setQ} onSubmit={onSubmit} />
-      <StoriesGallery userType="ESCORT" q={q} />
+      <StoriesLatestGrid userType="ESCORT" q={q} />
       <Footer />
     </div>
   )

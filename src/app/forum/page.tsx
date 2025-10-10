@@ -40,7 +40,7 @@ export default async function ForumHomePage() {
             orderBy: { createdAt: 'desc' },
             take: 1,
             include: {
-              author: { select: { email: true, profile: { select: { displayName: true, avatar: true } } } },
+              author: { select: { id: true, email: true, profile: { select: { displayName: true, avatar: true } } } },
               posts: { orderBy: { createdAt: 'asc' }, take: 1, select: { content: true } },
             }
           },
@@ -94,9 +94,8 @@ export default async function ForumHomePage() {
                   <div className="p-4 text-sm text-gray-500">Keine Foren in dieser Kategorie.</div>
                 )}
                 {cat.forums.map((f: any) => (
-                  <Link
+                  <div
                     key={f.id}
-                    href={`/forum/${f.slug}`}
                     className="group block p-0 sm:pr-5 transition-colors duration-200 hover:bg-pink-50/40 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2 focus:ring-offset-white"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto_auto] gap-0 items-stretch overflow-hidden">
@@ -126,14 +125,14 @@ export default async function ForumHomePage() {
                         })()}
                       </div>
                       <div className="min-w-0 sm:pl-3 flex flex-col justify-center">
-                        <span className="text-gray-900 group-hover:text-pink-600 font-medium tracking-widest uppercase transition-colors inline-flex items-center gap-2">
+                        <Link href={`/forum/${f.slug}`} className="text-gray-900 group-hover:text-pink-600 font-medium tracking-widest uppercase transition-colors inline-flex items-center gap-2">
                           {(() => {
                             const key = (f as any).icon as string | undefined
                             const Ico = resolveIcon(key) || Info
                             return <Ico className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-pink-600" aria-hidden="true" />
                           })()}
                           {f.name}
-                        </span>
+                        </Link>
                         {f.description && (
                           <p className="mt-1 text-sm text-gray-600">{f.description}</p>
                         )}
@@ -169,7 +168,13 @@ export default async function ForumHomePage() {
                             <div className="min-w-0">
                               <div className="text-sm text-gray-900 truncate group-hover:text-pink-600">{f.threads[0].title}</div>
                               <div className="text-[11px] text-gray-500">
-                                {(f.threads[0].author?.profile?.displayName || f.threads[0].author?.email || 'Unbekannt')}
+                                {f.threads[0].author ? (() => {
+                                  const name = f.threads[0].author?.profile?.displayName || f.threads[0].author?.email || 'Unbekannt'
+                                  const slug = name.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+                                  return (
+                                    <Link href={`/user/${f.threads[0].author.id}/${slug}`} className="hover:underline">{name}</Link>
+                                  )
+                                })() : 'Unbekannt'}
                                 {' · '}
                                 {relativeFromNow(new Date(f.threads[0].createdAt))}
                               </div>
@@ -183,7 +188,7 @@ export default async function ForumHomePage() {
                         <div className="text-sm text-gray-900">{f._count.threads}</div>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </section>

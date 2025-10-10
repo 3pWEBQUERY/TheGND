@@ -1,6 +1,6 @@
 'use client'
 
-import { Users, MessageCircle, Edit } from 'lucide-react'
+import { Users, MessageCircle, Edit, Image as ImageIcon } from 'lucide-react'
 
 type Props = {
   isOwnProfile: boolean
@@ -10,11 +10,13 @@ type Props = {
   onEdit: () => void
   onOpenVisitors: () => void
   editBtnRef: React.RefObject<HTMLButtonElement | null>
+  showBannerButton?: boolean
+  onOpenBanner?: () => void
 }
 
-export default function ProfileHeaderLeft({ isOwnProfile, avatarUrl, displayName, avatarSize, onEdit, onOpenVisitors, editBtnRef }: Props) {
+export default function ProfileHeaderLeft({ isOwnProfile, avatarUrl, displayName, avatarSize, onEdit, onOpenVisitors, editBtnRef, showBannerButton, onOpenBanner }: Props) {
   return (
-    <div className="flex flex-col items-center lg:items-start space-y-6">
+    <div className="flex flex-col items-center lg:items-start space-y-3">
       <div
         className="bg-gray-100 flex-none flex items-center justify-center"
         style={{
@@ -42,6 +44,17 @@ export default function ProfileHeaderLeft({ isOwnProfile, avatarUrl, displayName
         >
           <Edit className="h-4 w-4" />
           <span>PROFIL BEARBEITEN</span>
+        </button>
+      )}
+
+      {isOwnProfile && showBannerButton && (
+        <button
+          onClick={onOpenBanner}
+          className="border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-500 text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center space-x-2"
+          style={{ width: avatarSize ?? undefined }}
+        >
+          <ImageIcon className="h-4 w-4" />
+          <span>PROFIL BANNER</span>
         </button>
       )}
 

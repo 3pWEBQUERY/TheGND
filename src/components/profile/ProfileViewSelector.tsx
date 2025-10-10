@@ -46,9 +46,11 @@ export default function ProfileViewSelector({ selected, onChange, onSave, saving
           <button onClick={onSave} disabled={!selected || saving} className={`px-5 py-2 text-xs tracking-widest uppercase ${saving ? 'bg-pink-400' : 'bg-pink-500 hover:bg-pink-600'} text-white`}>
             {saving ? 'SPEICHERN…' : 'AUSWAHL SPEICHERN'}
           </button>
-          <button type="button" onClick={onEdit} className="px-5 py-2 text-xs tracking-widest uppercase border border-gray-300 hover:border-pink-500 text-gray-800">
-            ANSICHT BEARBEITEN
-          </button>
+          {onEdit && (
+            <button type="button" onClick={onEdit} className="px-5 py-2 text-xs tracking-widest uppercase border border-gray-300 hover:border-pink-500 text-gray-800">
+              ANSICHT BEARBEITEN
+            </button>
+          )}
           {savedAt && (
             <span className="text-xs text-emerald-600">Gespeichert</span>
           )}

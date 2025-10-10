@@ -1,432 +1,87 @@
 'use client'
 
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import ProfileVisitorsModal from '@/components/profile/ProfileVisitorsModal'
-import ProfileMediaLightbox from '@/components/profile/ProfileMediaLightbox'
-import ProfilePosts from '@/components/profile/ProfilePosts'
-import ProfileStats from '@/components/profile/ProfileStats'
-import ProfileHeaderLeft from '@/components/profile/ProfileHeaderLeft'
-import ProfileContactInfo from '@/components/profile/ProfileContactInfo'
+import { useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { X } from 'lucide-react'
 import { getUserTypeDisplayName } from '@/lib/validations'
-import { UserType, Gender } from '@prisma/client'
+// removed unused prisma type imports
 import { formatLocation } from '@/lib/utils'
-import ProfileAboutTab from '@/components/profile/ProfileAboutTab'
-import ProfileIdentity from '@/components/profile/ProfileIdentity'
-import ProfileViewSelector from '@/components/profile/ProfileViewSelector'
-import ProfileGalleryGrid from '@/components/profile/ProfileGalleryGrid'
-import ProfileVisitorsTab from '@/components/profile/ProfileVisitorsTab'
-import ProfileTabsBar from '@/components/profile/ProfileTabsBar'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
-import { uploadFiles } from '@/utils/uploadthing'
+// Sheet moved into ProfileHeroEditSheet component
 import { useToast } from '@/components/ui/toast'
-import Link from 'next/link'
+import ProfileLoading from '@/components/profile/ProfileLoading'
+import { useProfileVisitors } from '@/components/profile/hooks/useProfileVisitors'
+import { useProfileMedia } from '@/components/profile/hooks/useProfileMedia'
+import { useProfileData } from '@/components/profile/hooks/useProfileData'
+import { useOrgConnections } from '@/components/profile/hooks/useOrgConnections'
+import ProfileNotFound from '@/components/profile/ProfileNotFound'
+import type { ProfileData as ProfileDataType } from '@/components/profile/hooks/useProfileData'
+import { useAvatarSize } from '@/components/profile/hooks/useAvatarSize'
+import ProfileMainContent from '@/components/profile/ProfileMainContent'
 
-interface ProfileData {
-  user: {
-    id: string
-    email: string
-    userType: UserType
-    onboardingStatus: string
-    isActive: boolean
-    createdAt: string
-    profile?: {
-      id: string
-      displayName?: string
-      bio?: string
-      avatar?: string
-      location?: string
-      age?: number
-      gender?: Gender
-      preferences?: any
-      slogan?: string
-      nationality?: string | string[]
-      languages?: string[]
-      height?: string
-      weight?: string
-      bodyType?: string
-      hairColor?: string
-      eyeColor?: string
-      description?: string
-      services?: string
-      gallery?: string[]
-      media?: any[]
-      address?: string
-      city?: string
-      country?: string
-      zipCode?: string
-      phone?: string
-      website?: string
-      socialMedia?: Record<string, string>
-      companyName?: string
-      businessType?: string
-      established?: string
-    }
-    posts: any[]
-    followers: any[]
-    following: any[]
-    stories: any[]
-  }
-}
-
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
-}
-
-function orgTypeLabel(t: string): string {
-  if (t === 'AGENCY') return 'AGENTUR'
-  if (t === 'CLUB') return 'CLUB'
-  if (t === 'STUDIO') return 'STUDIO'
-  return t
-}
+// ProfileData type is imported from useProfileData
 
 export default function ProfileComponent({ userId }: { userId?: string }) {
   const { data: session } = useSession()
   const router = useRouter()
-  const [profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { profileData, setProfileData, loading, fetchProfile, selectedView, setSelectedView } = useProfileData(userId)
   const [activeTab, setActiveTab] = useState('about')
   const editBtnRef = useRef<HTMLButtonElement | null>(null)
-  const [avatarSize, setAvatarSize] = useState<number | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
-  const [deletingIndex, setDeletingIndex] = useState<number | null>(null)
-  const [settingAvatarUrl, setSettingAvatarUrl] = useState<string | null>(null)
-  const [selectedView, setSelectedView] = useState<'STANDARD' | 'ALT1' | 'ALT2' | null>(null)
   const [savingView, setSavingView] = useState(false)
   const [savedViewAt, setSavedViewAt] = useState<number | null>(null)
   // Visitors popup state
   const [showVisitors, setShowVisitors] = useState(false)
-  const [visitors, setVisitors] = useState<{ id: string; displayName: string; avatar: string | null; visitedAt: string }[] | null>(null)
-  const [anonCount, setAnonCount] = useState<number>(0)
-  const [loadingVisitors, setLoadingVisitors] = useState(false)
-  const [visitorDays, setVisitorDays] = useState<number>(30)
-  // Edit view sheet
-  const [showEditView, setShowEditView] = useState(false)
-  const [heroMobileLayout, setHeroMobileLayout] = useState<'cover' | 'half' | 'compact'>('cover')
-  const [savingHeroPrefs, setSavingHeroPrefs] = useState(false)
-  const [heroUploads, setHeroUploads] = useState<string[]>([])
-  const [uploadingHero, setUploadingHero] = useState(false)
+  const { visitors, anonCount, loadingVisitors, visitorDays, setVisitorDays } = useProfileVisitors(showVisitors, 30)
   // Escort join-with-code
   const { show } = useToast()
-  const [joinCode, setJoinCode] = useState('')
-  const [joining, setJoining] = useState(false)
-  const [myOrgs, setMyOrgs] = useState<Array<{ id: string; userType: string; name: string; avatar: string | null; city: string | null; country: string | null }> | null>(null)
-  const [loadingMyOrgs, setLoadingMyOrgs] = useState(false)
-  const [unlinking, setUnlinking] = useState<string | null>(null)
 
 
   const isOwnProfile = !userId || userId === session?.user?.id
 
-  useEffect(() => {
-    fetchProfile()
-  }, [userId])
+  // ProfileData loading handled by useProfileData hook
 
-  // Load current linked orgs for escorts
-  const loadMyOrgs = async () => {
-    try {
-      setLoadingMyOrgs(true)
-      const res = await fetch('/api/girls/my-orgs', { cache: 'no-store' })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.error || 'Fehler beim Laden')
-      setMyOrgs(Array.isArray(data?.items) ? data.items : [])
-    } catch (e) {
-      setMyOrgs([])
-    } finally {
-      setLoadingMyOrgs(false)
-    }
-  }
+  // Org connections hook
+  const {
+    joinCode,
+    setJoinCode,
+    joining,
+    myOrgs,
+    loadingMyOrgs,
+    unlinking,
+    handleSubmitJoin,
+    unlinkOrg,
+  } = useOrgConnections(!!profileData && isOwnProfile && profileData.user.userType === 'ESCORT', show)
 
-  useEffect(() => {
-    if (!profileData) return
-    const utype = profileData?.user?.userType
-    if (isOwnProfile && utype === 'ESCORT') {
-      loadMyOrgs()
-    }
-  }, [profileData?.user?.id, profileData?.user?.userType])
+  // Visitors logic moved to useProfileVisitors hook
 
-  const unlinkOrg = async (orgId: string) => {
-    try {
-      if (typeof window !== 'undefined') {
-        const ok = window.confirm('Verknüpfung wirklich entfernen?')
-        if (!ok) return
-      }
-      setUnlinking(orgId)
-      const res = await fetch('/api/girls/my-orgs', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgId }) })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.error || 'Fehler beim Entfernen')
-      show('Verbindung entfernt', { variant: 'success' })
-      await loadMyOrgs()
-    } catch (e: any) {
-      show(e?.message || 'Fehler', { variant: 'error' })
-    } finally {
-      setUnlinking(null)
-    }
-  }
+  // Avatar-Größe per Hook ermitteln
+  const avatarSize = useAvatarSize(isOwnProfile, profileData, editBtnRef)
 
-  // Load recent visitors when popup opens
-  useEffect(() => {
-    if (!showVisitors) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        setLoadingVisitors(true)
-        const res = await fetch(`/api/visitors?limit=32&days=${visitorDays}`, { cache: 'no-store' })
-        if (!res.ok) return
-        const data = await res.json()
-        if (cancelled) return
-        setVisitors(data?.visitors || [])
-        setAnonCount(Number(data?.anonCount || 0))
-      } catch {
-        // no-op
-      } finally {
-        setLoadingVisitors(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [showVisitors, visitorDays])
+  // fetchProfile now provided by useProfileData hook
 
-  // Avatar-Größe an Button-Breite anpassen (Breite = Höhe)
-  useLayoutEffect(() => {
-    if (!isOwnProfile) return
-    const btn = editBtnRef.current
-    if (!btn) return
+  // Prepare profile for child hooks (must be before any early returns)
+  const rawProfile = profileData?.user?.profile as any
 
-    const measureNow = () => setAvatarSize(btn.getBoundingClientRect().width)
-    const rafMeasure = () => requestAnimationFrame(measureNow)
+  // Media logic hook (must be unconditional for stable hook order)
+  const { mediaItems, deletingIndex, settingAvatarUrl, handleDeleteMedia, handleSetAvatar } = useProfileMedia(rawProfile, fetchProfile)
 
-    // Initial messen nach Layout
-    measureNow()
-    // Kurz nach dem nächsten Frame nachmessen
-    const rafId = requestAnimationFrame(measureNow)
-    // Nach Font-Ladeereignis erneut messen (falls verfügbar)
-    let fontPromise: Promise<any> | null = null
-    // @ts-ignore - fonts ist nicht in allen TS-DOM-Typen vorhanden
-    if (document && (document as any).fonts?.ready) {
-      // @ts-ignore
-      fontPromise = (document as any).fonts.ready.then(() => rafMeasure())
-    }
-    // Leicht verzögert erneut messen (Fallback)
-    const t = setTimeout(measureNow, 150)
-
-    // Beobachte Breitenänderungen des Buttons (z. B. bei responsive Layouts)
-    const ro = new ResizeObserver((entries) => {
-      // Remeasure via border-box (getBoundingClientRect) für exakte Pixel inkl. Padding/Borders
-      if (btn) setAvatarSize(btn.getBoundingClientRect().width)
-    })
-    ro.observe(btn)
-    const onResize = () => measureNow()
-    window.addEventListener('resize', onResize)
-    return () => {
-      ro.disconnect()
-      clearTimeout(t)
-      cancelAnimationFrame(rafId)
-      window.removeEventListener('resize', onResize)
-    }
-  }, [isOwnProfile, profileData])
-
-  const fetchProfile = async () => {
-    try {
-      const response = await fetch('/api/profile', { credentials: 'include' as RequestCredentials })
-      if (response.status === 401) {
-        try {
-          const cb = typeof window !== 'undefined' ? window.location.pathname : '/profile'
-          router.push(`/auth/signin?callbackUrl=${encodeURIComponent(cb)}`)
-        } catch {
-          if (typeof window !== 'undefined') {
-            const cb = window.location.pathname
-            window.location.href = `/auth/signin?callbackUrl=${encodeURIComponent(cb)}`
-          }
-        }
-        return
-      }
-      if (response.ok) {
-        const data = await response.json()
-        setProfileData(data)
-        const pv = data?.user?.profile?.profileView as any
-        if (pv === 'STANDARD' || pv === 'ALT1' || pv === 'ALT2') {
-          setSelectedView(pv)
-        } else {
-          setSelectedView('STANDARD')
-        }
-        // initialize hero mobile layout from preferences if present
-        try {
-          const prefs = (data?.user?.profile as any)?.preferences || {}
-          const mobile = prefs?.hero?.mobileLayout
-          if (mobile === 'cover' || mobile === 'half' || mobile === 'compact') {
-            setHeroMobileLayout(mobile)
-          } else {
-            setHeroMobileLayout('cover')
-          }
-        } catch {}
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // No inner hero anymore
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <svg
-            className="w-14 h-14 text-[hsl(345.3,82.7%,40.8%)]"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <rect x="1" y="1" width="7.33" height="7.33">
-              <animate id="spinner_oJFS" begin="0;spinner_5T1J.end+0.2s" attributeName="x" dur="0.6s" values="1;4;1" />
-              <animate begin="0;spinner_5T1J.end+0.2s" attributeName="y" dur="0.6s" values="1;4;1" />
-              <animate begin="0;spinner_5T1J.end+0.2s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="0;spinner_5T1J.end+0.2s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="8.33" y="1" width="7.33" height="7.33">
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="x" dur="0.6s" values="8.33;11.33;8.33" />
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="y" dur="0.6s" values="1;4;1" />
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="1" y="8.33" width="7.33" height="7.33">
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="x" dur="0.6s" values="1;4;1" />
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="y" dur="0.6s" values="8.33;11.33;8.33" />
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.1s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="15.66" y="1" width="7.33" height="7.33">
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="x" dur="0.6s" values="15.66;18.66;15.66" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="y" dur="0.6s" values="1;4;1" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="8.33" y="8.33" width="7.33" height="7.33">
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="x" dur="0.6s" values="8.33;11.33;8.33" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="y" dur="0.6s" values="8.33;11.33;8.33" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="1" y="15.66" width="7.33" height="7.33">
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="x" dur="0.6s" values="1;4;1" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="y" dur="0.6s" values="15.66;18.66;15.66" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.2s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="15.66" y="8.33" width="7.33" height="7.33">
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="x" dur="0.6s" values="15.66;18.66;15.66" />
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="y" dur="0.6s" values="8.33;11.33;8.33" />
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="8.33" y="15.66" width="7.33" height="7.33">
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="x" dur="0.6s" values="8.33;11.33;8.33" />
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="y" dur="0.6s" values="15.66;18.66;15.66" />
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.3s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-            <rect x="15.66" y="15.66" width="7.33" height="7.33">
-              <animate id="spinner_5T1J" begin="spinner_oJFS.begin+0.4s" attributeName="x" dur="0.6s" values="15.66;18.66;15.66" />
-              <animate begin="spinner_oJFS.begin+0.4s" attributeName="y" dur="0.6s" values="15.66;18.66;15.66" />
-              <animate begin="spinner_oJFS.begin+0.4s" attributeName="width" dur="0.6s" values="7.33;1.33;7.33" />
-              <animate begin="spinner_oJFS.begin+0.4s" attributeName="height" dur="0.6s" values="7.33;1.33;7.33" />
-            </rect>
-          </svg>
-          <div className="text-sm font-light tracking-widest text-gray-600">PROFIL WIRD GELADEN...</div>
-        </div>
-        {showVisitors && (
-          <div className="fixed inset-0 z-[100]">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setShowVisitors(false)} />
-            <div className="absolute inset-0 flex items-center justify-center p-4">
-              <div className="bg-white w-full max-w-lg border border-gray-200 p-4 sm:p-6 relative">
-                <button className="absolute top-2 right-2 p-2 text-gray-600 hover:text-pink-500" onClick={() => setShowVisitors(false)} aria-label="Schließen">
-                  <X className="h-5 w-5" />
-                </button>
-                <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-1">Profil-Besucher</h3>
-                <div className="text-xs text-gray-500 mb-4">Letzte 30 Tage</div>
-                {loadingVisitors ? (
-                  <div className="text-sm text-gray-600">Lädt…</div>
-                ) : (
-                  <Fragment>
-                    <div className="grid grid-cols-5 sm:grid-cols-6 gap-3">
-                      {(visitors || []).map((v) => (
-                        <div key={v.id} className="flex flex-col items-center gap-2">
-                          <div className="h-12 w-12 bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
-                            {v.avatar ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={v.avatar} alt={v.displayName} className="h-full w-full object-cover" />
-                            ) : (
-                              <span className="text-gray-600 text-sm">{(v.displayName || '').charAt(0).toUpperCase()}</span>
-                            )}
-                          </div>
-                          <div className="text-[10px] tracking-widest text-gray-700 text-center truncate w-full" title={v.displayName}>{v.displayName}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 text-sm text-gray-700">
-                      Nichtregistrierte Besucher: <span className="font-medium">{anonCount}</span>
-                    </div>
-                  </Fragment>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    )
+    return <ProfileLoading />
   }
 
   if (!profileData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm font-light tracking-widest text-red-600">PROFIL NICHT GEFUNDEN</div>
-        {showVisitors && (
-          <div className="fixed inset-0 z-[100]">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setShowVisitors(false)} />
-            <div className="absolute inset-0 flex items-center justify-center p-4">
-              <div className="bg-white w-full max-w-lg border border-gray-200 p-4 sm:p-6 relative">
-                <button className="absolute top-2 right-2 p-2 text-gray-600 hover:text-pink-500" onClick={() => setShowVisitors(false)} aria-label="Schließen">
-                  <X className="h-5 w-5" />
-                </button>
-                <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-1">Profil-Besucher</h3>
-                <div className="text-xs text-gray-500 mb-4">Letzte 30 Tage</div>
-                {loadingVisitors ? (
-                  <div className="text-sm text-gray-600">Lädt…</div>
-                ) : (
-                  <Fragment>
-                    <div className="grid grid-cols-5 sm:grid-cols-6 gap-3">
-                      {(visitors || []).map((v) => (
-                        <div key={v.id} className="flex flex-col items-center gap-2">
-                          <div className="h-12 w-12 bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
-                            {v.avatar ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={v.avatar} alt={v.displayName} className="h-full w-full object-cover" />
-                            ) : (
-                              <span className="text-gray-600 text-sm">{(v.displayName || '').charAt(0).toUpperCase()}</span>
-                            )}
-                          </div>
-                          <div className="text-[10px] tracking-widest text-gray-700 text-center truncate w-full" title={v.displayName}>{v.displayName}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 text-sm text-gray-700">
-                      Nichtregistrierte Besucher: <span className="font-medium">{anonCount}</span>
-                    </div>
-                  </Fragment>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <ProfileNotFound
+        showVisitors={showVisitors}
+        onCloseVisitors={() => setShowVisitors(false)}
+        visitors={visitors}
+        anonCount={anonCount}
+        loading={loadingVisitors}
+        days={visitorDays}
+        onDaysChange={(n) => setVisitorDays(n)}
+      />
     )
   }
 
@@ -457,501 +112,88 @@ export default function ProfileComponent({ userId }: { userId?: string }) {
       setSavingView(false)
     }
   }
-  // Medien (Bilder/Videos) aus Profile.media und Profile.gallery vereinheitlichen
-  const mediaItems = (() => {
-    const rawMedia = (profile as any)?.media ?? []
-    const rawGallery = profile?.gallery ?? []
-    const normalizedFromMedia = Array.isArray(rawMedia)
-      ? rawMedia
-          .map((item: any) => {
-            if (!item) return null
-            if (typeof item === 'string') return { type: 'image', url: item, source: 'media' as const }
-            if (item.url) {
-              const isVideo =
-                item.type === 'video' ||
-                !!item.video ||
-                (typeof item.url === 'string' && /\.(mp4|webm|ogg)$/i.test(item.url))
-              return {
-                type: isVideo ? 'video' : 'image',
-                url: item.url,
-                title: item.title,
-                description: item.description,
-                thumbnail: item.thumbnail,
-                source: 'media' as const,
-              }
-            }
-            if (item.image) return { type: 'image', url: item.image, source: 'media' as const }
-            if (item.video) return { type: 'video', url: item.video, thumbnail: item.thumbnail, source: 'media' as const }
-            return null
-          })
-          .filter(Boolean)
-      : []
-    const normalizedFromGallery = Array.isArray(rawGallery)
-      ? (rawGallery as string[]).map((url) => ({ type: 'image' as const, url, source: 'gallery' as const }))
-      : []
-    return [...(normalizedFromMedia as any[]), ...normalizedFromGallery]
-  })()
+  // media and hero hooks already initialized above to keep hooks order stable
 
-  // Merge temporary hero uploads so they appear in the grid immediately after upload
-  const heroGridItems = ([
-    ...heroUploads.map((url) => ({ type: 'image', url } as any)),
-    ...(mediaItems as any[]),
-  ]) as any[]
-
-  // Entfernt ein Medium aus media oder gallery und persistiert die Änderung
-  const handleDeleteMedia = async (item: any, index: number) => {
-    if (!profile) return
-    setDeletingIndex(index)
-    try {
-      const currentMediaRaw = Array.isArray((profile as any).media) ? [...(profile as any).media] : []
-      const currentGalleryRaw = Array.isArray(profile.gallery) ? [...profile.gallery] : []
-
-      let newMediaRaw = currentMediaRaw
-      let newGalleryRaw = currentGalleryRaw
-
-      if (item.source === 'media') {
-        newMediaRaw = currentMediaRaw.filter((m: any) => {
-          if (!m) return false
-          if (typeof m === 'string') return m !== item.url
-          if (m.url) return m.url !== item.url
-          if (m.image) return m.image !== item.url
-          if (m.video) return m.video !== item.url
-          return true
-        })
-      } else if (item.source === 'gallery') {
-        newGalleryRaw = currentGalleryRaw.filter((url: string) => url !== item.url)
-      }
-
-      const resp = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileData: { media: newMediaRaw, gallery: newGalleryRaw } }),
-      })
-
-      if (!resp.ok) {
-        console.error('Fehler beim Aktualisieren des Profils')
-        return
-      }
-
-      // Profil neu laden, damit UI und normalisierte mediaItems konsistent sind
-      await fetchProfile()
-
-      // Lightbox-Index anpassen, falls nötig
-      setLightboxIndex((prev) => {
-        if (prev === null) return prev
-        if (prev === index) return null
-        if (prev > index) return prev - 1
-        return prev
-      })
-    } catch (err) {
-      console.error('Löschen fehlgeschlagen:', err)
-    } finally {
-      setDeletingIndex(null)
-    }
+  // Deletion handled by hook; adjust lightbox index after deletion
+  const onDeleteMedia = async (item: any, index: number) => {
+    await handleDeleteMedia(item, index)
+    setLightboxIndex((prev) => {
+      if (prev === null) return prev
+      if (prev === index) return null
+      if (prev > index) return prev - 1
+      return prev
+    })
   }
 
-  // Set an image from gallery/media as profile avatar
-  const handleSetAvatar = async (url: string) => {
-    if (!profile) return
-    try {
-      setSettingAvatarUrl(url)
-      const resp = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileData: { avatar: url } }),
-      })
-      if (!resp.ok) {
-        console.error('Fehler beim Setzen des Avatars')
-        return
+  // Avatar setzen über Hook; lokale Optimierung weiterhin hier
+  const onSetAvatar = async (url: string) => {
+    await handleSetAvatar(url)
+    setProfileData((prev) => {
+      if (!prev) return prev
+      const next: ProfileDataType = {
+        ...prev,
+        user: {
+          ...prev.user,
+          profile: { ...(prev.user.profile as any), avatar: url } as any,
+        },
       }
-      // Update local state optimistically
-      setProfileData((prev: ProfileData | null) => {
-        if (!prev) return prev
-        const next: ProfileData = {
-          ...prev,
-          user: {
-            ...prev.user,
-            profile: { ...(prev.user.profile as any), avatar: url } as any,
-          },
-        }
-        return next
-      })
-    } catch (e) {
-      console.error('Avatar-Update fehlgeschlagen:', e)
-    } finally {
-      setSettingAvatarUrl(null)
-    }
-  }
-
-  const handleSetHeroImage = async (url: string) => {
-    if (!profile) return
-    try {
-      const currentPrefs = ((profile as any)?.preferences) || {}
-      const nextPrefs = { ...currentPrefs, hero: { ...(currentPrefs.hero || {}), imageUrl: url } }
-      const resp = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileData: { preferences: nextPrefs } }),
-      })
-      if (!resp.ok) {
-        console.error('Fehler beim Setzen des Hero-Bilds')
-        return
-      }
-      setProfileData((prev) => {
-        if (!prev) return prev
-        const next: ProfileData = {
-          ...prev,
-          user: {
-            ...prev.user,
-            profile: { ...(prev.user.profile as any), preferences: nextPrefs } as any,
-          },
-        }
-        return next
-      })
-    } catch (e) {
-      console.error('Hero-Bild setzen fehlgeschlagen:', e)
-    }
-  }
-
-  // Upload a custom hero image and select it immediately
-  const handleUploadHero = async (file: File) => {
-    try {
-      setUploadingHero(true)
-      const res = await uploadFiles('postImages', { files: [file] })
-      const url = Array.isArray(res) ? (res[0]?.url as string | undefined) : undefined
-      if (url) {
-        // Show immediately in grid
-        setHeroUploads((prev: string[]) => [url, ...prev])
-        // Persist as hero image selection
-        await handleSetHeroImage(url)
-      }
-    } catch (e) {
-      console.error('Hero-Upload fehlgeschlagen:', e)
-    } finally {
-      setUploadingHero(false)
-    }
-  }
-
-  const handleSaveHeroPrefs = async () => {
-    if (!profile) return
-    try {
-      setSavingHeroPrefs(true)
-      const currentPrefs = ((profile as any)?.preferences) || {}
-      const nextPrefs = {
-        ...currentPrefs,
-        hero: { ...(currentPrefs.hero || {}), mobileLayout: heroMobileLayout },
-      }
-      const resp = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileData: { preferences: nextPrefs } }),
-      })
-      if (!resp.ok) {
-        console.error('Fehler beim Speichern der Ansicht-Einstellungen')
-        return
-      }
-      // reflect in local state
-      setProfileData((prev) => {
-        if (!prev) return prev
-        const next: ProfileData = {
-          ...prev,
-          user: {
-            ...prev.user,
-            profile: { ...(prev.user.profile as any), preferences: nextPrefs } as any,
-          },
-        }
-        return next
-      })
-      setShowEditView(false)
-    } catch (e) {
-      console.error('Speichern fehlgeschlagen:', e)
-    } finally {
-      setSavingHeroPrefs(false)
-    }
+      return next
+    })
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 overflow-x-hidden">
-      {/* Profile Header */}
-      <div className="bg-white border border-gray-100 rounded-none">
-        <div className="p-4 sm:p-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Avatar and Basic Info */}
-            <ProfileHeaderLeft
-              isOwnProfile={isOwnProfile}
-              avatarUrl={profile?.avatar}
-              displayName={displayName}
-              avatarSize={avatarSize}
-              onEdit={() => router.push('/onboarding?edit=1')}
-              onOpenVisitors={() => setShowVisitors(true)}
-              editBtnRef={editBtnRef}
-            />
-            
-            {/* Profile Details */}
-            <ProfileIdentity
-              displayName={displayName}
-              userTypeLabel={getUserTypeDisplayName(userType)}
-              profile={profile}
-              formattedLocation={formattedLocation}
-              isOwnProfile={isOwnProfile}
-            />
-            <ProfileStats
-              postsCount={user.posts.length}
-              followersCount={user.followers.length}
-              followingCount={user.following.length}
-              storiesCount={user.stories.length}
-            />
-          </div>
-        </div>
-      </div>
+    <ProfileMainContent
+      // header basics
+      isOwnProfile={isOwnProfile}
+      profile={profile}
+      user={user}
+      userType={userType as any}
+      displayName={displayName}
+      formattedLocation={formattedLocation}
+      avatarSize={avatarSize}
+      editBtnRef={editBtnRef}
+      onEdit={() => router.push('/onboarding?edit=1')}
+      onOpenVisitors={() => setShowVisitors(true)}
+      userTypeLabel={getUserTypeDisplayName(userType as any)}
 
-      {/* Join Agency/Club/Studio (move above ProfileViewSelector) */}
-      {isOwnProfile && userType === 'ESCORT' && (
-        <div className="bg-white border border-gray-100 rounded-none">
-          <div className="p-4 sm:p-8">
-            <div className="text-xs font-light tracking-widest text-gray-600 mb-2">ZU AGENTUR, CLUB ODER STUDIO HINZUFÜGEN</div>
-            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-              <input
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="Code eingeben"
-                className="flex-1 border border-gray-300 px-3 py-2 text-sm tracking-widest uppercase"
-              />
-              <button
-                type="button"
-                onClick={async () => {
-                  const code = joinCode.trim().toUpperCase()
-                  if (!code) { show('Bitte Code eingeben', { variant: 'error' }); return }
-                  setJoining(true)
-                  try {
-                    const res = await fetch('/api/girls/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
-                    const data = await res.json().catch(() => ({}))
-                    if (!res.ok) throw new Error(data?.error || 'Fehler beim Verbinden')
-                    show('Erfolgreich verbunden', { variant: 'success' })
-                    setJoinCode('')
-                    await loadMyOrgs()
-                  } catch (e: any) {
-                    show(e?.message || 'Fehler', { variant: 'error' })
-                  } finally {
-                    setJoining(false)
-                  }
-                }}
-                disabled={joining}
-                className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600 disabled:opacity-50"
-              >
-                {joining ? 'Verbinde…' : 'VERBINDEN'}
-              </button>
-            </div>
+      // org connections
+      showOrgSection={isOwnProfile && userType === 'ESCORT'}
+      joinCode={joinCode}
+      setJoinCode={setJoinCode}
+      joining={joining}
+      onSubmitJoin={handleSubmitJoin}
+      loadingMyOrgs={loadingMyOrgs}
+      myOrgs={myOrgs as any}
+      unlinking={unlinking}
+      onUnlink={unlinkOrg}
 
-            {/* Current orgs */}
-            <div className="mt-4">
-              <div className="text-[10px] tracking-widest text-gray-500 mb-2">AKTUELL VERBUNDEN</div>
-              {loadingMyOrgs ? (
-                <div className="text-sm text-gray-500">Lade…</div>
-              ) : !myOrgs || myOrgs.length === 0 ? (
-                <div className="text-sm text-gray-500">Noch keine Verbindung vorhanden.</div>
-              ) : (
-                <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {myOrgs.map((o) => {
-                    const base = o.userType === 'AGENCY' ? '/agency' : '/club-studio'
-                    const href = `${base}/${o.id}/${slugify(o.name || o.userType)}`
-                    return (
-                      <li key={o.id} className="border border-gray-200 p-3 flex items-center gap-3">
-                        <Link href={href} className="h-10 w-10 bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
-                          {o.avatar ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={o.avatar} alt={o.name} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center text-[10px] text-gray-500">Kein Logo</div>
-                          )}
-                        </Link>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <Link href={href} className="text-sm font-medium tracking-widest text-gray-900 truncate hover:text-pink-600">
-                              {o.name.toUpperCase?.() ?? o.name}
-                            </Link>
-                            <span className="text-[10px] uppercase tracking-widest border border-gray-300 text-gray-700 px-1 py-0.5">{orgTypeLabel(o.userType)}</span>
-                          </div>
-                          <div className="text-xs text-gray-500 truncate">{[o.city, o.country].filter(Boolean).join(', ')}</div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => unlinkOrg(o.id)}
-                          disabled={unlinking === o.id}
-                          className="px-2 py-1 text-[10px] uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600 disabled:opacity-50"
-                        >
-                          {unlinking === o.id ? 'Entferne…' : 'Entfernen'}
-                        </button>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Profile View Selection (owner only, non-MEMBER) */}
-      {isOwnProfile && userType !== 'MEMBER' && (
-        <ProfileViewSelector
-          selected={selectedView}
-          onChange={(v) => setSelectedView(v)}
-          onSave={handleSaveProfileView}
-          saving={savingView}
-          savedAt={savedViewAt}
-          onEdit={() => setShowEditView(true)}
-        />
-      )}
+      // view section
+      selectedView={selectedView}
+      onChangeView={(v) => setSelectedView(v)}
+      onSaveView={handleSaveProfileView}
+      savingView={savingView}
+      savedViewAt={savedViewAt}
 
-      {/* Profile Tabs */}
-      <div className="bg-white border border-gray-100 rounded-none">
-        <ProfileTabsBar active={activeTab as any} onChange={(key: string) => setActiveTab(key)} />
-        
-        {/* Tab Content */}
-        <div className="p-4 sm:p-8">
-          {activeTab === 'about' && (
-            <>
-              <ProfileAboutTab profile={profile} userType={userType} />
-            </>
-          )}
-          
-          {activeTab === 'posts' && (
-            <ProfilePosts posts={user.posts} displayName={displayName} avatar={profile?.avatar} />
-          )}
-          
-          {activeTab === 'gallery' && (
-            <ProfileGalleryGrid
-              mediaItems={mediaItems as any}
-              isOwnProfile={isOwnProfile}
-              currentAvatarUrl={profile?.avatar || null}
-              settingAvatarUrl={settingAvatarUrl}
-              deletingIndex={deletingIndex}
-              onSetAvatar={(url) => handleSetAvatar(url)}
-              onDelete={(item, index) => handleDeleteMedia(item, index)}
-              onOpenLightbox={(index) => setLightboxIndex(index)}
-            />
-          )}
-          
-          {activeTab === 'contact' && profile && (
-            <ProfileContactInfo profile={profile} city={profile?.city} country={profile?.country} />
-          )}
-          
-          {activeTab === 'visitors' && (
-            <ProfileVisitorsTab visitors={visitors || []} />
-          )}
-        </div>
-      </div>
-      {/* Visitors Modal (global, shows over content) */}
-      <ProfileVisitorsModal
-        open={showVisitors}
-        onClose={() => setShowVisitors(false)}
-        visitors={visitors}
-        anonCount={anonCount}
-        loading={loadingVisitors}
-        days={visitorDays}
-        onDaysChange={(n) => setVisitorDays(n)}
-      />
-      <ProfileMediaLightbox
-        open={lightboxIndex !== null && !!mediaItems[lightboxIndex]}
-        item={lightboxIndex !== null && mediaItems[lightboxIndex] ? {
-          type: (mediaItems[lightboxIndex] as any).type,
-          url: (mediaItems[lightboxIndex] as any).url,
-          thumbnail: (mediaItems[lightboxIndex] as any).thumbnail,
-        } : null}
-        onClose={() => setLightboxIndex(null)}
-      />
-      {/* Right Sheet: Ansicht bearbeiten */}
-      <Sheet open={showEditView} onOpenChange={setShowEditView}>
-        <SheetContent
-          side="right"
-          className="bg-white border-l border-gray-200"
-          style={{ width: 'min(96vw, 1080px)', maxWidth: 'none' }}
-        >
-          <SheetHeader className="p-6">
-            <SheetTitle className="text-lg font-thin tracking-wider text-gray-800">ANSICHT BEARBEITEN</SheetTitle>
-            <div className="text-sm text-gray-600">Passe das Hero-Bild und die mobile Hero-Ansicht deines öffentlichen Profils an.</div>
-          </SheetHeader>
-          <div className="px-6 pb-6 space-y-8 overflow-y-auto">
-            {/* Hero Image Picker */}
-            <div>
-              <div className="text-xs font-light tracking-widest text-gray-600 mb-2">HERO-BILD</div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {(heroGridItems as any[]).map((item, idx) => {
-                  const url = (item as any).url
-                  const heroCurrent = ((profile as any)?.preferences?.hero?.imageUrl) || null
-                  const isActive = !!url && url === heroCurrent
-                  const isVideo = (item as any).type === 'video'
-                  return (
-                    <button
-                      key={url + '-' + idx}
-                      type="button"
-                      onClick={() => !isVideo && url && handleSetHeroImage(url)}
-                      className={`relative aspect-[3/4] border ${isActive ? 'border-pink-500' : 'border-gray-200'} overflow-hidden group ${isVideo ? 'opacity-50 cursor-not-allowed' : 'hover:border-pink-500'}`}
-                      title={isVideo ? 'Videos können nicht als Hero-Bild gesetzt werden' : (isActive ? 'Aktuelles Hero-Bild' : 'Als Hero-Bild setzen')}
-                    >
-                      {item.type === 'image' ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={url} alt="Hero Auswahl" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">Video</div>
-                      )}
-                      {isActive && (
-                        <span className="absolute top-1 right-1 bg-pink-500 text-white text-[10px] px-1 py-0.5">AKTIV</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-              <div className="mt-2 text-xs text-gray-500">Tipp: Wähle ein vertikales Bild für die beste Darstellung.</div>
-              <div className="mt-3">
-                <label className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-300 text-xs tracking-widest uppercase text-gray-800 hover:border-pink-500 cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0]
-                      if (f) handleUploadHero(f)
-                    }}
-                  />
-                  {uploadingHero ? 'HOCHLADEN…' : 'EIGENES BILD HOCHLADEN'}
-                </label>
-                {uploadingHero && <span className="ml-2 text-xs text-gray-500">Bitte warten…</span>}
-              </div>
-            </div>
+      // tabs
+      activeTab={activeTab}
+      onChangeTab={(key: string) => setActiveTab(key)}
+      mediaItems={mediaItems as any}
+      settingAvatarUrl={settingAvatarUrl}
+      deletingIndex={deletingIndex}
+      onSetAvatar={onSetAvatar}
+      onDeleteMedia={onDeleteMedia}
+      onOpenLightbox={(index: number) => setLightboxIndex(index)}
+      visitors={visitors || []}
 
-            {/* Mobile Hero Layout */}
-            <div>
-              <div className="text-xs font-light tracking-widest text-gray-600 mb-2">MOBILE HERO-ANSICHT</div>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input type="radio" name="mobile-hero" className="accent-pink-500" checked={heroMobileLayout === 'cover'} onChange={() => setHeroMobileLayout('cover')} />
-                  Vollbild (empfohlen)
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input type="radio" name="mobile-hero" className="accent-pink-500" checked={heroMobileLayout === 'half'} onChange={() => setHeroMobileLayout('half')} />
-                  Halb-Höhe
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input type="radio" name="mobile-hero" className="accent-pink-500" checked={heroMobileLayout === 'compact'} onChange={() => setHeroMobileLayout('compact')} />
-                  Kompakt
-                </label>
-              </div>
-            </div>
-          </div>
-          <SheetFooter className="p-6">
-            <button
-              type="button"
-              onClick={handleSaveHeroPrefs}
-              disabled={savingHeroPrefs}
-              className={`px-5 py-2 text-xs tracking-widest uppercase ${savingHeroPrefs ? 'bg-pink-400' : 'bg-pink-500 hover:bg-pink-600'} text-white`}
-            >
-              {savingHeroPrefs ? 'SPEICHERN…' : 'EINSTELLUNGEN SPEICHERN'}
-            </button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    </div>
-)
+      // overlays
+      showVisitors={showVisitors}
+      onCloseVisitors={() => setShowVisitors(false)}
+      anonCount={anonCount}
+      loadingVisitors={loadingVisitors}
+      visitorDays={visitorDays}
+      onDaysChange={(n: number) => setVisitorDays(n)}
+      lightboxIndex={lightboxIndex}
+      onCloseLightbox={() => setLightboxIndex(null)}
+    />
+  )
 }

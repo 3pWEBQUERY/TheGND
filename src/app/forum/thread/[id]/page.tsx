@@ -81,6 +81,15 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     })
   }
 
+  function slugifyName(input: string) {
+    return input
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '')
+  }
+
   function PostItem({ node, depth }: { node: PostNode; depth: number }) {
     return (
       <div
@@ -105,7 +114,17 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
                 )}
               </Avatar>
               <div className="truncate">
-                <div className="text-sm text-gray-900 truncate">{node.author.profile?.displayName || node.author.email}</div>
+                <div className="text-sm text-gray-900 truncate">
+                  {(() => {
+                    const dn = node.author.profile?.displayName || node.author.email
+                    const slug = slugifyName(dn)
+                    return (
+                      <Link href={`/user/${node.author.id}/${slug}`} className="hover:underline">
+                        {dn}
+                      </Link>
+                    )
+                  })()}
+                </div>
                 <div className="text-[11px] text-gray-500">{formatDateTime(new Date(node.createdAt))}</div>
               </div>
             </div>

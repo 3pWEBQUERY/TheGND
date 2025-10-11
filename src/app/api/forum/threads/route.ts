@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { awardEvent } from '@/lib/gamification'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,6 +69,11 @@ export async function POST(req: NextRequest) {
         content: String(content),
       },
     })
+
+    // Gamification: award points for creating a new thread
+    try {
+      await awardEvent(session.user.id, 'FORUM_THREAD' as any, 25, { forumSlug, threadId: thread.id })
+    } catch {}
 
     return NextResponse.json({ ok: true, threadId: thread.id }, { status: 201 })
   } catch (e: any) {

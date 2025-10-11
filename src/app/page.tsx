@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
+import AdBanner from '@/components/AdBanner'
 import HeroSection from '@/components/homepage/HeroSection'
 import EscortsGridSection from '@/components/homepage/EscortsGridSection'
 import AgencyGridSection from '@/components/homepage/AgencyGridSection'
@@ -93,12 +94,15 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
       <HeroSection />
+      <AdBanner placement="home_top" className="my-8" />
       <StoriesGallery />
       <FeaturedPlacesSection />
+      <AdBanner placement="home_mid" className="my-8" />
       <EscortsGridSection />
       <VisionSection />
       <AgencyGridSection />
       <ClubStudioGridSection />
+      <AdBanner placement="home_bottom" className="my-8" />
       <JoinCtaSection />
       <Footer />
     </div>

@@ -39,8 +39,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = await (prisma as any).blogPost.findUnique({ where: { slug } })
+  const post = await (prisma as any).blogPost.findUnique({
+    where: { slug },
+    include: {
+      author: {
+        select: {
+          id: true,
+          profile: { select: { displayName: true, avatar: true, bio: true } },
+        },
+      },
+    },
+  })
   if (!post || !post.published) return notFound()
+
+  // Compute reading time from raw markdown content (approx. 200 wpm)
+  const raw = (post.content || '').toString()
+  const wordCount = raw.trim().length > 0 ? raw.trim().split(/\s+/).length : 0
+  const readingTimeMin = Math.max(1, Math.ceil(wordCount / 200))
+  // Placeholder for clicks (views) until tracking is implemented
+  const clicks = 0
 
   return (
     <div className="min-h-screen bg-white">
@@ -62,11 +79,15 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-light tracking-[0.25em] text-white">{post.title}</h1>
             <div className="mt-4 h-[2px] w-24 bg-gradient-to-r from-pink-600/0 via-pink-500/80 to-pink-600/0" />
-            {post.publishedAt && (
-              <div className="mt-3 text-[11px] uppercase tracking-widest text-neutral-200">
-                {new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(post.publishedAt))}
-              </div>
-            )}
+            <div className="mt-3 text-[11px] uppercase tracking-widest text-neutral-200 flex flex-wrap items-center gap-x-4 gap-y-2">
+              {post.publishedAt && (
+                <span>
+                  Veröffentlicht: {new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(post.publishedAt))}
+                </span>
+              )}
+              <span>Lesedauer: {readingTimeMin} Min</span>
+              <span>Klicks: {clicks}</span>
+            </div>
             {post.excerpt && (
               <p className="mt-6 text-neutral-200 text-base md:text-lg leading-relaxed">{post.excerpt}</p>
             )}
@@ -85,6 +106,36 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
             <div dangerouslySetInnerHTML={{ __html: renderMarkdownToSafeHtml(post.content) }} />
           </div>
         )}
+
+        {/* Author info */}
+        <div className="mt-14">
+          <div className="h-[2px] w-64 sm:w-80 md:w-96 lg:w-[32rem] mx-auto bg-gradient-to-r from-pink-600/0 via-pink-500/80 to-pink-600/0" />
+          <div className="mt-6 flex items-center gap-4">
+            {post.author?.profile?.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.author.profile.avatar}
+                alt={post.author?.profile?.displayName || 'Autor'}
+                className="h-16 w-16 object-cover border border-gray-200"
+              />
+            ) : (
+              <div className="h-16 w-16 bg-pink-100 text-pink-700 grid place-items-center border border-gray-200">
+                <span className="text-lg font-medium">
+                  {(post.author?.profile?.displayName || 'A').slice(0, 1).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-gray-500">Autor</div>
+              <div className="text-base font-medium text-gray-900">
+                {post.author?.profile?.displayName || 'Unbekannter Autor'}
+              </div>
+              {post.author?.profile?.bio && (
+                <p className="mt-1 text-sm text-gray-600 max-w-2xl">{post.author.profile.bio}</p>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
 
       <Footer />

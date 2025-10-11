@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { EscortItem } from '@/types/escort'
 import { ShieldCheck, BadgeCheck, Star } from 'lucide-react'
@@ -23,6 +23,8 @@ function slugify(input: string): string {
 export default function EscortsResultsGrid({ items, loading, total }: Props) {
   const [ratingsMap, setRatingsMap] = useState<Record<string, { avg: number; count: number }>>({})
   const [presenceMap, setPresenceMap] = useState<Record<string, { online: boolean; lastSeenAt?: string | null }>>({})
+  const [boostedIds, setBoostedIds] = useState<Set<string>>(new Set())
+  const [vipIds, setVipIds] = useState<Set<string>>(new Set())
 
   // Enrich ratings from comments API if not provided by search endpoint
   useEffect(() => {
@@ -42,6 +44,54 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
     })()
     return () => { cancelled = true }
   }, [items])
+
+  // Fetch VIP_BADGE holders among current items
+  useEffect(() => {
+    if (!items || items.length === 0) { setVipIds(new Set()); return }
+    const ids = Array.from(new Set(items.map((e) => e.id).filter(Boolean)))
+    if (ids.length === 0) { setVipIds(new Set()); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/badges/has?badge=VIP_BADGE&ids=${encodeURIComponent(ids.join(','))}`, { cache: 'no-store' })
+        if (!res.ok) { if (!cancelled) setVipIds(new Set()); return }
+        const data = await res.json()
+        const has: string[] = Array.isArray(data?.has) ? data.has : []
+        if (!cancelled) setVipIds(new Set(has))
+      } catch {
+        if (!cancelled) setVipIds(new Set())
+      }
+    })()
+    return () => { cancelled = true }
+  }, [items])
+
+  // Fetch active PROFILE_BOOST_7D perk for current items and store boosted IDs
+  useEffect(() => {
+    if (!items || items.length === 0) { setBoostedIds(new Set()); return }
+    const ids = Array.from(new Set(items.map((e) => e.id).filter(Boolean)))
+    if (ids.length === 0) { setBoostedIds(new Set()); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/perks/active?perk=PROFILE_BOOST_7D&ids=${encodeURIComponent(ids.join(','))}&days=7`, { cache: 'no-store' })
+        if (!res.ok) { if (!cancelled) setBoostedIds(new Set()); return }
+        const data = await res.json()
+        const act: string[] = Array.isArray(data?.active) ? data.active : []
+        if (!cancelled) setBoostedIds(new Set(act))
+      } catch {
+        if (!cancelled) setBoostedIds(new Set())
+      }
+    })()
+    return () => { cancelled = true }
+  }, [items])
+
+  const sortedItems = useMemo(() => {
+    if (!items) return items
+    if (!boostedIds || boostedIds.size === 0) return items
+    const boosted = items.filter((e) => boostedIds.has(e.id))
+    const regular = items.filter((e) => !boostedIds.has(e.id))
+    return [...boosted, ...regular]
+  }, [items, boostedIds])
 
   useEffect(() => {
     if (!items || items.length === 0) return
@@ -106,17 +156,18 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
               </div>
             ))}
 
-          {items?.map((e) => {
+          {sortedItems?.map((e) => {
             const slug = e.name ? slugify(e.name) : 'escort'
             const href = `/escorts/${e.id}/${slug}`
             const isWeek = Boolean((e as any)?.isEscortOfWeek) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_WEEK'))
             const isMonth = Boolean((e as any)?.isEscortOfMonth) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_MONTH'))
             const highlight = isMonth ? 'month' : (isWeek ? 'week' : null)
+            const isBoosted = boostedIds.has(e.id)
             const frameClasses = highlight
               ? (isMonth
                   ? 'ring-2 ring-amber-400 shadow-lg shadow-amber-200/60'
                   : 'ring-2 ring-pink-400 shadow-lg shadow-pink-200/60')
-              : ''
+              : (isBoosted ? 'ring-2 ring-rose-400 shadow-lg shadow-rose-200/60' : '')
             // Build rating from item fields or from ratingsMap fallback (comments API)
             const comments: any[] | undefined = Array.isArray((e as any)?.comments) ? (e as any).comments : undefined
             const reviews: any[] | undefined = Array.isArray((e as any)?.reviews) ? (e as any).reviews : undefined
@@ -152,14 +203,20 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
                     ) : (
                       <div className="h-full w-full bg-gray-300" />
                     )}
-                    {highlight && (
+                    {(highlight || isBoosted) && (
                       <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-center">
-                        <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'}`}>
-                          {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
-                        </span>
+                        {highlight ? (
+                          <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-medium ${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'}`}>
+                            {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-[10px] uppercase tracking-widest font-medium bg-rose-500 text-white">
+                            BOOST
+                          </span>
+                        )}
                       </div>
                     )}
-                    {(e.isVerified || e.isAgeVerified) && (
+                    {(e.isVerified || e.isAgeVerified || vipIds.has(e.id)) && (
                       <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
                         {e.isVerified && (
                           <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
@@ -169,6 +226,11 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
                         {(e.isAgeVerified || e.isVerified) && (
                           <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
                             <ShieldCheck className="h-4 w-4" />
+                          </span>
+                        )}
+                        {vipIds.has(e.id) && (
+                          <span title="VIP" className="inline-flex items-center justify-center h-6 px-2 bg-white/90 border border-amber-300 text-amber-700 text-[10px] font-semibold tracking-widest">
+                            VIP
                           </span>
                         )}
                       </div>

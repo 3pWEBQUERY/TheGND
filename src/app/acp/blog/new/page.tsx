@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useUploadThing } from '@/utils/uploadthing'
 import { renderMarkdownToSafeHtml } from '@/lib/markdown'
+import CategorySelect from '@/components/blog/CategorySelect'
 
 export default function AcpBlogNewPage() {
   const router = useRouter()
@@ -13,6 +14,7 @@ export default function AcpBlogNewPage() {
   const [content, setContent] = useState('')
   const [coverImage, setCoverImage] = useState('')
   const [published, setPublished] = useState(false)
+  const [category, setCategory] = useState<'AKTUELLES' | 'INTERESSANT_HEISSES' | 'VON_USER_FUER_USER'>('AKTUELLES')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [files, setFiles] = useState<File[]>([])
@@ -32,7 +34,7 @@ export default function AcpBlogNewPage() {
       }
       const res = await fetch('/api/acp/blog/posts', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, slug: slug || undefined, excerpt, content, coverImage: cover, published })
+        body: JSON.stringify({ title, slug: slug || undefined, excerpt, content, coverImage: cover, published, category })
       })
       if (!res.ok) throw new Error((await res.json()).error || 'failed')
       const data = await res.json()
@@ -49,6 +51,21 @@ export default function AcpBlogNewPage() {
       <h1 className="text-2xl font-light tracking-widest text-gray-900">NEUER BLOG-BEITRAG</h1>
       {error && <p className="mt-3 text-sm text-amber-700">{error}</p>}
       <div className="mt-6 space-y-6">
+        <div>
+          <label className="text-xs uppercase tracking-widest text-gray-800">Kategorie</label>
+          <div className="mt-2">
+            <CategorySelect
+              name="category"
+              defaultValue={category}
+              onChange={(v) => setCategory(v as any)}
+              options={[
+                { value: 'AKTUELLES', label: 'AKTUELLES' },
+                { value: 'INTERESSANT_HEISSES', label: 'INTERESSANT & HEISSES' },
+                { value: 'VON_USER_FUER_USER', label: 'VON USER FÜR USER' },
+              ]}
+            />
+          </div>
+        </div>
         <div>
           <label className="text-xs uppercase tracking-widest text-gray-800">Titel</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />

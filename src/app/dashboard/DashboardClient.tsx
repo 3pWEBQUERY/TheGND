@@ -30,6 +30,7 @@ import MatchingToolbar from '@/components/dashboard/MatchingToolbar'
 import MemberMatchingSection from '@/components/dashboard/MemberMatchingSection'
 import BusinessOnly from '@/components/dashboard/BusinessOnly'
 import DashboardSettings from '@/components/dashboard/DashboardSettings'
+import BlogDashboard from '@/components/blog/BlogDashboard'
 
  
 
@@ -384,6 +385,9 @@ export default function DashboardClient() {
           
           {activeTab === 'forum' && (
             <ForumDashboard />
+          )}
+          {activeTab === 'blog' && (
+            <BlogDashboard />
           )}
           {activeTab === 'jobs' && (
             <BusinessOnly isBusiness={isBusiness} fallbackMessage="Nur Agenturen, Clubs oder Studios können Jobs verwalten.">

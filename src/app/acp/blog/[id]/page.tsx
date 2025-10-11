@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUploadThing } from '@/utils/uploadthing'
 import { renderMarkdownToSafeHtml } from '@/lib/markdown'
+import CategorySelect from '@/components/blog/CategorySelect'
 
 export default function AcpBlogEditPage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string | null>(null)
@@ -83,6 +84,21 @@ export default function AcpBlogEditPage({ params }: { params: Promise<{ id: stri
         <p className="mt-6 text-sm text-gray-500">Lade…</p>
       ) : (
         <div className="mt-6 space-y-6">
+          <div>
+            <label className="text-xs uppercase tracking-widest text-gray-800">Kategorie</label>
+            <div className="mt-2">
+              <CategorySelect
+                name="category"
+                defaultValue={post.category || 'AKTUELLES'}
+                onChange={(v) => setPost({ ...post, category: v })}
+                options={[
+                  { value: 'AKTUELLES', label: 'AKTUELLES' },
+                  { value: 'INTERESSANT_HEISSES', label: 'INTERESSANT & HEISSES' },
+                  { value: 'VON_USER_FUER_USER', label: 'VON USER FÜR USER' },
+                ]}
+              />
+            </div>
+          </div>
           <div>
             <label className="text-xs uppercase tracking-widest text-gray-800">Titel</label>
             <input value={post.title || ''} onChange={(e) => setPost({ ...post, title: e.target.value })} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getActivePerkUsers } from '@/lib/perks'
 import { z } from 'zod'
 import path from 'path'
 import { promises as fs } from 'fs'
@@ -138,6 +139,18 @@ export async function GET(request: NextRequest) {
         createdAt: 'desc'
       }
     })
+
+    // Perk-based spotlight reordering: move authors with STORY_SPOTLIGHT_7D to the top
+    try {
+      const authorIds = Array.from(new Set(stories.map((s) => s.authorId)))
+      const active = await getActivePerkUsers(authorIds, 'STORY_SPOTLIGHT_7D', 7)
+      if (active.size > 0) {
+        const boosted = stories.filter((s) => active.has(s.authorId))
+        const regular = stories.filter((s) => !active.has(s.authorId))
+        // Keep relative order inside groups
+        return NextResponse.json([...boosted, ...regular])
+      }
+    } catch {}
 
     return NextResponse.json(stories)
   } catch (error) {

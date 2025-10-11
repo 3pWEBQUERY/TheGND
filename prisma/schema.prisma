@@ -822,6 +822,13 @@ enum MarketingOrderStatus {
   CANCELED
 }
 
+// Blog categories
+enum BlogCategory {
+  AKTUELLES
+  INTERESSANT_HEISSES
+  VON_USER_FUER_USER
+}
+
 model MarketingOrder {
   id          String                @id @default(cuid())
   userId      String
@@ -882,6 +889,7 @@ model BlogPost {
   coverImage  String?
   published   Boolean  @default(false)
   publishedAt DateTime?
+  category    BlogCategory @default(AKTUELLES)
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
@@ -1031,7 +1039,13 @@ enum GamificationEventType {
   DAILY_LOGIN
   FORUM_POST
   FORUM_REPLY
+  FORUM_THREAD
+  FORUM_THREAD_CLOSE
+  FORUM_THREAD_OPEN
   FEED_POST
+  BLOG_POST
+  BLOG_PUBLISH
+  BLOG_UPDATE_MAJOR
   COMMENT_VERIFIED
   REGULAR_USE
 }

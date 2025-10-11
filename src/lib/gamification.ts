@@ -51,6 +51,46 @@ async function ensureDefaults() {
       },
     })
 
+    // New badges: first forum contribution and first blog post
+    await db.badge.upsert({
+      where: { key: 'FIRST_FORUM_POST' },
+      update: {},
+      create: {
+        key: 'FIRST_FORUM_POST',
+        name: 'Erster Forenbeitrag',
+        description: 'Du hast deinen ersten Beitrag im Forum erstellt.',
+        icon: '💬',
+        pointsReward: 30,
+        active: true,
+      },
+    })
+    await db.badge.upsert({
+      where: { key: 'FIRST_BLOG_POST' },
+      update: {},
+      create: {
+        key: 'FIRST_BLOG_POST',
+        name: 'Erster Blog-Beitrag',
+        description: 'Du hast deinen ersten Blog-Beitrag erstellt.',
+        icon: '✍️',
+        pointsReward: 30,
+        active: true,
+      },
+    })
+
+    // Badge representing VIP status (used when claiming VIP_BADGE_30D)
+    await db.badge.upsert({
+      where: { key: 'VIP_BADGE' },
+      update: {},
+      create: {
+        key: 'VIP_BADGE',
+        name: 'VIP',
+        description: 'Besonderer VIP-Status',
+        icon: '🌟',
+        pointsReward: 0,
+        active: true,
+      },
+    })
+
     // Perks
     await db.perk.upsert({
       where: { key: 'BRONZE' },
@@ -82,6 +122,96 @@ async function ensureDefaults() {
         name: 'Gold Vorteil',
         description: 'Premium Bonus für Power-User.',
         thresholdPts: 5000,
+        active: true,
+      },
+    })
+
+    // Extra perks (cool stuff)
+    await db.perk.upsert({
+      where: { key: 'PROFILE_BOOST_7D' },
+      update: {},
+      create: {
+        key: 'PROFILE_BOOST_7D',
+        name: 'Profil-Boost (7 Tage)',
+        description: 'Mehr Sichtbarkeit in Listen und Empfehlungen für 7 Tage.',
+        thresholdPts: 800,
+        active: true,
+      },
+    })
+    await db.perk.upsert({
+      where: { key: 'CHAT_THEME_PACK' },
+      update: {},
+      create: {
+        key: 'CHAT_THEME_PACK',
+        name: 'Chat Themenpaket',
+        description: 'Exklusive Chat-Themes und Sticker freischalten.',
+        thresholdPts: 900,
+        active: true,
+      },
+    })
+    await db.perk.upsert({
+      where: { key: 'NAME_CHANGE_TOKEN' },
+      update: {},
+      create: {
+        key: 'NAME_CHANGE_TOKEN',
+        name: 'Namensänderung-Token',
+        description: 'Einmalige Änderung des Anzeigenamens.',
+        thresholdPts: 1200,
+        active: true,
+      },
+    })
+    await db.perk.upsert({
+      where: { key: 'AD_FREE_30D' },
+      update: {},
+      create: {
+        key: 'AD_FREE_30D',
+        name: 'Werbefrei (30 Tage)',
+        description: 'Eine werbefreie Erfahrung für 30 Tage.',
+        thresholdPts: 1500,
+        active: true,
+      },
+    })
+    await db.perk.upsert({
+      where: { key: 'VIP_BADGE_30D' },
+      update: {},
+      create: {
+        key: 'VIP_BADGE_30D',
+        name: 'VIP-Badge (30 Tage)',
+        description: 'Ein besonderes VIP-Emblem neben deinem Namen.',
+        thresholdPts: 2500,
+        active: true,
+      },
+    })
+    await db.perk.upsert({
+      where: { key: 'STORY_SPOTLIGHT_7D' },
+      update: {},
+      create: {
+        key: 'STORY_SPOTLIGHT_7D',
+        name: 'Story-Spotlight (7 Tage)',
+        description: 'Hervorgehobene Platzierung deiner Stories für 7 Tage.',
+        thresholdPts: 3000,
+        active: true,
+      },
+    })
+    await db.perk.upsert({
+      where: { key: 'MARKETING_HOME_TILE_7D' },
+      update: {},
+      create: {
+        key: 'MARKETING_HOME_TILE_7D',
+        name: 'Startseiten-Kachel (7 Tage)',
+        description: 'Gesponserte Kachel auf der Startseite für 7 Tage.',
+        thresholdPts: 3500,
+        active: true,
+      },
+    })
+    await db.perk.upsert({
+      where: { key: 'MONTH_MEMBERSHIP_1M' },
+      update: {},
+      create: {
+        key: 'MONTH_MEMBERSHIP_1M',
+        name: 'Monatsmitgliedschaft (1 Monat)',
+        description: 'Ein Monat Mitgliedschaft als Belohnung – einmalig einlösbar.',
+        thresholdPts: 10000,
         active: true,
       },
     })
@@ -128,6 +258,14 @@ async function awardBadgesForEvent(userId: string, type: string, profile: { stre
       where: { userId, badge: { key: 'FIRST_POST' } },
     })
     if (!has) toAward.push('FIRST_POST')
+  }
+  if (type === 'FORUM_POST' || type === 'FORUM_REPLY' || type === 'FORUM_THREAD') {
+    const hasForum = await db.userBadge.findFirst({ where: { userId, badge: { key: 'FIRST_FORUM_POST' } } })
+    if (!hasForum) toAward.push('FIRST_FORUM_POST')
+  }
+  if (type === 'BLOG_POST') {
+    const hasBlog = await db.userBadge.findFirst({ where: { userId, badge: { key: 'FIRST_BLOG_POST' } } })
+    if (!hasBlog) toAward.push('FIRST_BLOG_POST')
   }
   if (profile.streakDays >= 3) {
     const has = await db.userBadge.findFirst({ where: { userId, badge: { key: 'STREAK_3' } } })
@@ -311,7 +449,7 @@ export async function getGamificationOverview(userId: string) {
     id: `badge-${ub.id}`,
     type: 'BADGE_AWARDED',
     points: ub?.badge?.pointsReward ?? 0,
-    metadata: JSON.stringify({ badgeKey: ub?.badge?.key, badgeName: ub?.badge?.name }),
+    metadata: JSON.stringify({ badgeKey: ub?.badge?.key, badgeName: ub?.badge?.name, badgeIcon: ub?.badge?.icon }),
     createdAt: ub.awardedAt,
   }))
 

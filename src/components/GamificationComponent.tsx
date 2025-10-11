@@ -228,8 +228,13 @@ export default function GamificationComponent() {
             <ul className="space-y-3">
               {data.events.map((e) => (
                 <li key={e.id} className="flex items-center justify-between border border-gray-100 p-3 bg-gray-50">
-                  <div className="text-sm font-light tracking-wide text-gray-800">
-                    {renderEventTitle(e)}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="shrink-0 text-base">
+                      {renderEventIcon(e)}
+                    </div>
+                    <div className="text-sm font-light tracking-wide text-gray-800 truncate">
+                      {renderEventTitle(e)}
+                    </div>
                   </div>
                   <div className="text-xs font-light tracking-widest text-pink-600">+{e.points} P</div>
                 </li>
@@ -251,8 +256,20 @@ function renderEventTitle(e: { type: string; createdAt: string; metadata?: strin
       return `Forum Beitrag • ${when}`
     case 'FORUM_REPLY':
       return `Forum Antwort • ${when}`
+    case 'FORUM_THREAD':
+      return `Forum Thema erstellt • ${when}`
     case 'FEED_POST':
       return `Feed Beitrag • ${when}`
+    case 'BLOG_POST':
+      return `Blog Beitrag erstellt • ${when}`
+    case 'BLOG_PUBLISH':
+      return `Blog Beitrag veröffentlicht • ${when}`
+    case 'BLOG_UPDATE_MAJOR':
+      return `Blog Beitrag aktualisiert (große Änderung) • ${when}`
+    case 'FORUM_THREAD_CLOSE':
+      return `Forum Thema geschlossen • ${when}`
+    case 'FORUM_THREAD_OPEN':
+      return `Forum Thema geöffnet • ${when}`
     case 'BADGE_AWARDED': {
       let name = 'Abzeichen erhalten'
       try {
@@ -275,5 +292,39 @@ function renderEventTitle(e: { type: string; createdAt: string; metadata?: strin
       return `Regelmäßige Nutzung • ${when}`
     default:
       return `${e.type} • ${when}`
+  }
+}
+
+function renderEventIcon(e: { type: string; metadata?: string | null }) {
+  // Try to parse metadata once
+  let meta: any = null
+  try { meta = e.metadata ? JSON.parse(e.metadata) : null } catch {}
+  switch (e.type) {
+    case 'DAILY_LOGIN':
+      return <span aria-hidden>✅</span>
+    case 'FORUM_POST':
+      return <span aria-hidden>💬</span>
+    case 'FORUM_REPLY':
+      return <span aria-hidden>↩️</span>
+    case 'FORUM_THREAD':
+      return <span aria-hidden>🧵</span>
+    case 'FORUM_THREAD_CLOSE':
+      return <span aria-hidden>🔒</span>
+    case 'FORUM_THREAD_OPEN':
+      return <span aria-hidden>🔓</span>
+    case 'FEED_POST':
+      return <span aria-hidden>📰</span>
+    case 'BLOG_POST':
+      return <span aria-hidden>✍️</span>
+    case 'BLOG_PUBLISH':
+      return <span aria-hidden>🚀</span>
+    case 'BLOG_UPDATE_MAJOR':
+      return <span aria-hidden>🛠️</span>
+    case 'BADGE_AWARDED':
+      return <span aria-hidden>{meta?.badgeIcon || '🎖️'}</span>
+    case 'PERK_CLAIMED':
+      return <span aria-hidden>🏅</span>
+    default:
+      return <span aria-hidden>⭐</span>
   }
 }

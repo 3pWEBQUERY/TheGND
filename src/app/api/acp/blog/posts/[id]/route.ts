@@ -23,6 +23,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (typeof body.excerpt === 'string' || body.excerpt === null) data.excerpt = body.excerpt
     if (typeof body.content === 'string' || body.content === null) data.content = body.content
     if (typeof body.coverImage === 'string' || body.coverImage === null) data.coverImage = body.coverImage
+    if (typeof body.category === 'string') {
+      const catValues = ['AKTUELLES', 'INTERESSANT_HEISSES', 'VON_USER_FUER_USER']
+      if (catValues.includes(body.category)) data.category = body.category
+    }
     if (typeof body.published === 'boolean') {
       data.published = body.published
       data.publishedAt = body.published ? new Date() : null

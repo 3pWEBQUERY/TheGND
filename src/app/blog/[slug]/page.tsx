@@ -46,19 +46,31 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
 
-      {/* Hero */}
-      <section className="relative bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-14">
-          <h1 className="text-3xl md:text-4xl font-light tracking-widest text-gray-900">{post.title}</h1>
-          <div className="mt-3 w-24 h-px bg-pink-500" />
-          {post.publishedAt && (
-            <div className="mt-3 text-[11px] uppercase tracking-widest text-gray-500">
-              {new Date(post.publishedAt).toLocaleDateString()}
-            </div>
-          )}
-          {post.excerpt && (
-            <p className="mt-4 text-sm text-gray-600 max-w-2xl">{post.excerpt}</p>
-          )}
+      {/* Hero Section (matching /blog) */}
+      <section className="relative overflow-hidden mb-12 md:mb-16">
+        <div className="absolute inset-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.coverImage || '/blog.jpg'}
+            alt="Hero Background"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/0 to-white/0 md:to-white/0" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-40 pb-24 md:pt-48 md:pb-40">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-6xl font-light tracking-[0.25em] text-white">{post.title}</h1>
+            <div className="mt-4 h-[2px] w-24 bg-gradient-to-r from-pink-600/0 via-pink-500/80 to-pink-600/0" />
+            {post.publishedAt && (
+              <div className="mt-3 text-[11px] uppercase tracking-widest text-neutral-200">
+                {new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(post.publishedAt))}
+              </div>
+            )}
+            {post.excerpt && (
+              <p className="mt-6 text-neutral-200 text-base md:text-lg leading-relaxed">{post.excerpt}</p>
+            )}
+          </div>
         </div>
       </section>
 

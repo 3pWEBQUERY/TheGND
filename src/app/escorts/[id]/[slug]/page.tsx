@@ -235,9 +235,20 @@ async function getEscort(id: string) {
     isOnline = !!(ts && Date.now() - ts <= ONLINE_THRESHOLD_MS)
   } catch {}
 
+  // VIP badge check
+  let isVIP = false
+  try {
+    const vip = await (prisma as any).badge.findUnique({ where: { key: 'VIP_BADGE' }, select: { id: true } })
+    if (vip?.id) {
+      const has = await (prisma as any).userBadge.findFirst({ where: { userId: id, badgeId: vip.id }, select: { id: true } })
+      isVIP = !!has
+    }
+  } catch {}
+
   return {
     id: user.id,
     isOnline,
+    vip: isVIP,
     profileView: profile?.profileView ?? 'STANDARD',
     name: profile?.displayName ?? null,
     slogan: profile?.slogan ?? null,
@@ -635,6 +646,9 @@ export default async function EscortProfilePage({ params, searchParams }: { para
               {hasApprovedVerification && (
                 <VerifiedBadges className="hidden md:flex" translucent />
               )}
+              {(data as any)?.vip && (
+                <span title="VIP" className="inline-flex items-center justify-center h-6 px-2 bg-white/90 border border-amber-300 text-amber-700 text-[10px] font-semibold tracking-widest">VIP</span>
+              )}
             </div>
             {(city || country) && (
               <p className="text-sm text-gray-200">{city || country}</p>
@@ -700,6 +714,9 @@ export default async function EscortProfilePage({ params, searchParams }: { para
                 {name && <h1 className="text-2xl font-light tracking-widest text-gray-900">{name.toUpperCase?.() ?? name}</h1>}
                 {hasApprovedVerification && (
                   <VerifiedBadges />
+                )}
+                {(data as any)?.vip && (
+                  <span title="VIP" className="inline-flex items-center justify-center h-6 px-2 bg-white/90 border border-amber-300 text-amber-700 text-[10px] font-semibold tracking-widest">VIP</span>
                 )}
               </div>
               {ratingCount > 0 && (

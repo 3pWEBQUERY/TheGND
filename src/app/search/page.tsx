@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import MinimalistNavigation from '@/components/homepage/MinimalistNavigation'
+import AdBanner from '@/components/AdBanner'
 import Footer from '@/components/homepage/Footer'
 import Tabs from '@/components/Tabs'
 import EscortsSearch from '@/components/escorts/EscortsSearch'
@@ -313,6 +314,7 @@ export default function GlobalSearchPage() {
                       setSort={setEscortSort}
                     />
                     <EscortsResultsGrid items={escortItems} loading={escortLoading} total={escortTotal} />
+                    <AdBanner placement="search_escort_mid" className="my-8" />
                     {escortHasMore && (
                       <section className="bg-white pb-16">
                         <div className="max-w-7xl mx-auto px-6">
@@ -358,6 +360,7 @@ export default function GlobalSearchPage() {
                       error={null}
                     />
                     <AgencyResultsGrid items={agencyItems} loading={agencyLoading} total={agencyTotal} />
+                    <AdBanner placement="search_agency_mid" className="my-8" />
                     {agencyHasMore && (
                       <section className="bg-white pb-16">
                         <div className="max-w-7xl mx-auto px-6">
@@ -403,6 +406,7 @@ export default function GlobalSearchPage() {
                       error={null}
                     />
                     <ClubStudioResultsGrid items={clubItems} loading={clubLoading} total={clubTotal} />
+                    <AdBanner placement="search_club_mid" className="my-8" />
                     {clubHasMore && (
                       <section className="bg-white pb-16">
                         <div className="max-w-7xl mx-auto px-6">
@@ -448,6 +452,7 @@ export default function GlobalSearchPage() {
                       error={null}
                     />
                     <ClubStudioResultsGrid items={studioItems} loading={studioLoading} total={studioTotal} />
+                    <AdBanner placement="search_studio_mid" className="my-8" />
                     {studioHasMore && (
                       <section className="bg-white pb-16">
                         <div className="max-w-7xl mx-auto px-6">

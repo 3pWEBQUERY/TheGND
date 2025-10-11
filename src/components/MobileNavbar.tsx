@@ -194,7 +194,10 @@ export default function MobileNavbar() {
                   Dashboard
                 </Link>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => {
+                    const origin = typeof window !== 'undefined' ? window.location.origin : '/'
+                    signOut({ callbackUrl: `${origin}/` })
+                  }}
                   className="mt-1 w-full px-3 py-2 rounded-lg text-left text-sm tracking-wider text-white/90 hover:bg-white/10 flex items-center gap-2"
                   role="menuitem"
                 >

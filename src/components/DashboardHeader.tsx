@@ -46,7 +46,8 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
   const [seoAvailable, setSeoAvailable] = useState(false)
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/' })
+    const origin = typeof window !== 'undefined' ? window.location.origin : '/'
+    signOut({ callbackUrl: `${origin}/` })
   }
 
   const markNotificationRead = async (id: string) => {

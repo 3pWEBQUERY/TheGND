@@ -219,7 +219,7 @@ export default function MinimalistNavigation() {
                       <Link href="/settings" onClick={() => setMobileNavOpen(false)} className={`flex items-center gap-2 px-3 py-2 tracking-widest uppercase ${isActive('/settings') ? 'bg-white/10 text-white' : 'text-white/90 hover:bg-white/10'}`}>
                         <SettingsIcon className="h-4 w-4" /> Einstellungen
                       </Link>
-                      <button onClick={() => { setMobileNavOpen(false); setTimeout(() => signOut(), 150) }} className="w-full flex items-center gap-2 px-3 py-2 text-white/90 hover:bg-white/10 tracking-widest uppercase">
+                      <button onClick={() => { setMobileNavOpen(false); setTimeout(() => { const origin = typeof window !== 'undefined' ? window.location.origin : '/'; signOut({ callbackUrl: `${origin}/` }) }, 150) }} className="w-full flex items-center gap-2 px-3 py-2 text-white/90 hover:bg-white/10 tracking-widest uppercase">
                         <LogOutIcon className="h-4 w-4" /> Abmelden
                       </button>
                       <div className="my-2 h-px bg-white/10" />

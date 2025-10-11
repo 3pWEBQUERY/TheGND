@@ -158,6 +158,27 @@ export default function GamificationComponent() {
               const recent = unlocked && !claimed && unlockedAt ? (Date.now() - unlockedAt.getTime()) < 24 * 60 * 60 * 1000 : false
               const pctRaw = Math.max(0, Math.min(100, Math.floor((data.profile.points / Math.max(1, p.thresholdPts)) * 100)))
               const pct = claimed ? 100 : pctRaw
+              // Remaining time for time-limited perks
+              const D: Record<string, number> = {
+                PROFILE_BOOST_7D: 7,
+                STORY_SPOTLIGHT_7D: 7,
+                VIP_BADGE_30D: 30,
+                AD_FREE_30D: 30,
+                MARKETING_HOME_TILE_7D: 7,
+              }
+              let remainingLabel: string | null = null
+              if (claimed && p.claimedAt && D[p.key]) {
+                const endsAt = new Date(new Date(p.claimedAt).getTime() + D[p.key] * 24 * 60 * 60 * 1000)
+                const diffMs = endsAt.getTime() - Date.now()
+                if (diffMs > 0) {
+                  const days = Math.floor(diffMs / (24 * 60 * 60 * 1000))
+                  const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+                  if (days > 0) remainingLabel = `noch ${days} Tag${days === 1 ? '' : 'e'} ${hours} Std`
+                  else remainingLabel = `noch ${hours} Std`
+                } else {
+                  remainingLabel = 'abgelaufen'
+                }
+              }
               return (
                 <div
                   key={p.id}
@@ -195,6 +216,9 @@ export default function GamificationComponent() {
                         />
                       </div>
                     </div>
+                    {claimed && remainingLabel && (
+                      <div className="mt-2 text-[10px] uppercase tracking-widest text-amber-600">{remainingLabel}</div>
+                    )}
                   </div>
                   <div className="mt-4">
                     <button

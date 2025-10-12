@@ -47,12 +47,12 @@ export default function MatchingToolbar({ isMember, showAuto, showPrefs, reelsEf
         </div>
       </div>
       {isMember && (
-        <div className="mt-3 flex items-center justify-end gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:items-center sm:justify-end">
           <Button
             variant="outline"
             size="sm"
             onClick={onOpenAuto}
-            className={`uppercase tracking-widest ${showAuto ? 'border-pink-500 text-pink-600' : 'text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}
+            className={`w-full sm:w-auto uppercase tracking-widest ${showAuto ? 'border-pink-500 text-pink-600' : 'text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}
           >
             AUTO-NACHRICHT
           </Button>
@@ -61,7 +61,7 @@ export default function MatchingToolbar({ isMember, showAuto, showPrefs, reelsEf
             size="sm"
             aria-pressed={showPrefs}
             onClick={onTogglePrefs}
-            className="uppercase tracking-widest text-gray-700 hover:border-pink-500 hover:text-pink-600"
+            className="w-full sm:w-auto uppercase tracking-widest text-gray-700 hover:border-pink-500 hover:text-pink-600"
           >
             {showPrefs ? 'VORSCHLÄGE' : 'PRÄFERENZEN'}
           </Button>
@@ -70,7 +70,7 @@ export default function MatchingToolbar({ isMember, showAuto, showPrefs, reelsEf
             size="sm"
             aria-pressed={reelsEffects}
             onClick={onToggleEffects}
-            className={`uppercase tracking-widest ${reelsEffects ? 'border-pink-500 text-pink-600' : 'text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}
+            className={`w-full sm:w-auto uppercase tracking-widest ${reelsEffects ? 'border-pink-500 text-pink-600' : 'text-gray-700 hover:border-pink-500 hover:text-pink-600'}`}
           >
             EFFEKTE
           </Button>

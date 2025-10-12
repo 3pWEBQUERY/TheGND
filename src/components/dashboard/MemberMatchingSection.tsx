@@ -74,56 +74,56 @@ export default function MemberMatchingSection({ showAuto, showPrefs, matchingVie
             />
           </div>
 
-          {/* Right vertical toolbar (view toggle row + actions) */}
+          {/* Right vertical toolbar (icon-only, stacked) */}
           <div className="hidden md:flex flex-col gap-2 sticky top-24 self-start">
-            {/* View toggle row: GRID + REELS side-by-side, icon-only */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                aria-pressed={false}
-                aria-label="Grid"
-                onClick={() => onSetView('grid')}
-                className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center"
-              >
-                <GridIcon className="h-4 w-4" strokeWidth={1} />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                aria-pressed={true}
-                aria-label="Reels"
-                onClick={() => onSetView('reels')}
-                className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center border-pink-500 text-pink-600"
-              >
-                <Film className="h-4 w-4" strokeWidth={1} />
-              </Button>
-            </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={onOpenAuto}
-              className={`uppercase tracking-widest font-light inline-flex items-center gap-2 ${showAuto ? 'border-pink-500 text-pink-600' : ''}`}
+              aria-pressed={false}
+              aria-label="Grid"
+              onClick={() => onSetView('grid')}
+              className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center"
             >
-              <MessageSquare className="h-4 w-4" /> AUTO-NACHRICHT
+              <GridIcon className="h-4 w-4" strokeWidth={1} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-pressed={true}
+              aria-label="Tinder Style"
+              onClick={() => onSetView('reels')}
+              className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center border-pink-500 text-pink-600"
+            >
+              <Film className="h-4 w-4" strokeWidth={1} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Auto Nachricht"
+              onClick={onOpenAuto}
+              className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${showAuto ? 'border-pink-500 text-pink-600' : ''}`}
+            >
+              <MessageSquare className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               aria-pressed={showPrefs}
+              aria-label="Präferenzen"
               onClick={onTogglePrefs}
-              className={`uppercase tracking-widest font-light inline-flex items-center gap-2 ${showPrefs ? 'border-pink-500 text-pink-600' : ''}`}
+              className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${showPrefs ? 'border-pink-500 text-pink-600' : ''}`}
             >
-              <SlidersHorizontal className="h-4 w-4" /> PRÄFERENZEN
+              <SlidersHorizontal className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               aria-pressed={reelsEffects}
+              aria-label="Effekte"
               onClick={onToggleEffects}
-              className={`uppercase tracking-widest font-light inline-flex items-center gap-2 ${reelsEffects ? 'border-pink-500 text-pink-600' : ''}`}
+              className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${reelsEffects ? 'border-pink-500 text-pink-600' : ''}`}
             >
-              <Sparkles className="h-4 w-4" /> EFFEKTE
+              <Sparkles className="h-4 w-4" />
             </Button>
           </div>
         </div>

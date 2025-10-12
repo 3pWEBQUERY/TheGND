@@ -17,10 +17,10 @@ type Props = {
 export default function MatchingControls({ resetting, resetResult, onUndo, onResetSoft, onResetHard }: Props) {
   return (
     <Tooltip.Provider delayDuration={100}>
-      <div className="mt-8 flex items-center gap-3">
-        <Button variant="outline" size="sm" onClick={onUndo} className="uppercase tracking-widest text-gray-700 hover:border-gray-400 hover:text-pink-600">
+      <div className="mt-8 grid grid-cols-1 gap-2 sm:flex sm:items-center sm:gap-3">
+        <Button variant="outline" size="sm" onClick={onUndo} className="w-full sm:w-auto uppercase tracking-widest text-gray-700 hover:border-gray-400 hover:text-pink-600 inline-flex items-center justify-center sm:justify-start gap-2">
           <Undo2 className="h-4 w-4" />
-          Rückgängig
+          RÜCKGÄNGIG
         </Button>
 
         <Tooltip.Root>
@@ -30,9 +30,9 @@ export default function MatchingControls({ resetting, resetResult, onUndo, onRes
               size="sm"
               onClick={onResetSoft}
               disabled={!!resetting}
-              className={`uppercase tracking-widest ${resetting ? 'text-gray-400' : 'text-gray-700 hover:border-amber-500 hover:text-amber-600'}`}
+              className={`w-full sm:w-auto uppercase tracking-widest inline-flex items-center justify-center sm:justify-start gap-2 ${resetting ? 'text-gray-400' : 'text-gray-700 hover:border-amber-500 hover:text-amber-600'}`}
             >
-              Soft-Reset
+              SOFT-RESET
             </Button>
           </Tooltip.Trigger>
           <Tooltip.Portal>
@@ -45,7 +45,7 @@ export default function MatchingControls({ resetting, resetResult, onUndo, onRes
 
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <Button variant="destructive" size="sm" onClick={onResetHard} disabled={!!resetting} className="uppercase tracking-widest">Zurücksetzen</Button>
+            <Button variant="destructive" size="sm" onClick={onResetHard} disabled={!!resetting} className="w-full sm:w-auto uppercase tracking-widest">ZURÜCKSETZEN</Button>
           </Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Content sideOffset={6} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md max-w-xs">

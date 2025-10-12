@@ -8,6 +8,7 @@ import MatchingControls from '@/components/dashboard/MatchingControls'
 import MemberMutualMatches from '@/components/dashboard/MemberMutualMatches'
 import { Button } from '@/components/ui/button'
 import { Undo2, RotateCcw, RefreshCcw, Grid as GridIcon, Film, MessageSquare, SlidersHorizontal, Sparkles } from 'lucide-react'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 const DynamicAutoMessage = dynamic(() => import('@/components/matching/AutoMessageSettings'), { ssr: false })
 
@@ -74,57 +75,98 @@ export default function MemberMatchingSection({ showAuto, showPrefs, matchingVie
             />
           </div>
 
-          {/* Right vertical toolbar (icon-only, stacked) */}
+          {/* Right vertical toolbar (icon-only, stacked) with tooltips */}
           <div className="hidden md:flex flex-col gap-2 sticky top-24 self-start">
-            <Button
-              variant="outline"
-              size="sm"
-              aria-pressed={false}
-              aria-label="Grid"
-              onClick={() => onSetView('grid')}
-              className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center"
-            >
-              <GridIcon className="h-4 w-4" strokeWidth={1} />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-pressed={true}
-              aria-label="Tinder Style"
-              onClick={() => onSetView('reels')}
-              className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center border-pink-500 text-pink-600"
-            >
-              <Film className="h-4 w-4" strokeWidth={1} />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Auto Nachricht"
-              onClick={onOpenAuto}
-              className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${showAuto ? 'border-pink-500 text-pink-600' : ''}`}
-            >
-              <MessageSquare className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-pressed={showPrefs}
-              aria-label="Präferenzen"
-              onClick={onTogglePrefs}
-              className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${showPrefs ? 'border-pink-500 text-pink-600' : ''}`}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-pressed={reelsEffects}
-              aria-label="Effekte"
-              onClick={onToggleEffects}
-              className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${reelsEffects ? 'border-pink-500 text-pink-600' : ''}`}
-            >
-              <Sparkles className="h-4 w-4" />
-            </Button>
+            <Tooltip.Provider delayDuration={100}>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={false}
+                    aria-label="Grid"
+                    onClick={() => onSetView('grid')}
+                    className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center"
+                  >
+                    <GridIcon className="h-4 w-4" strokeWidth={1} />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Grid</Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={true}
+                    aria-label="Tinder Style"
+                    onClick={() => onSetView('reels')}
+                    className="h-9 w-9 p-0 rounded-full inline-flex items-center justify-center border-pink-500 text-pink-600"
+                  >
+                    <Film className="h-4 w-4" strokeWidth={1} />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Tinder Style</Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label="Auto Nachricht"
+                    onClick={onOpenAuto}
+                    className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${showAuto ? 'border-pink-500 text-pink-600' : ''}`}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Auto Nachricht</Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={showPrefs}
+                    aria-label="Präferenzen"
+                    onClick={onTogglePrefs}
+                    className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${showPrefs ? 'border-pink-500 text-pink-600' : ''}`}
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Präferenzen</Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={reelsEffects}
+                    aria-label="Effekte"
+                    onClick={onToggleEffects}
+                    className={`h-9 w-9 p-0 rounded-full inline-flex items-center justify-center ${reelsEffects ? 'border-pink-500 text-pink-600' : ''}`}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Effekte</Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </Tooltip.Provider>
           </div>
         </div>
       ) : (

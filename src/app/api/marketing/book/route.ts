@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma'
 
 // Pricing table (cents) mirrored from frontend
 const PRICE_CENTS: Record<string, Record<number, number>> = {
+  home_top: { 7: 11999, 14: 19999, 30: 34999 },
+  home_mid: { 7: 9999, 14: 16999, 30: 29999 },
+  home_bottom: { 7: 7999, 14: 13999, 30: 24999 },
   home_banner: { 7: 14999, 14: 25999, 30: 44999 },
   home_tile: { 7: 8999, 14: 14999, 30: 25999 },
   results_top: { 7: 11999, 14: 19999, 30: 34999 },
@@ -12,7 +15,11 @@ const PRICE_CENTS: Record<string, Record<number, number>> = {
   sponsored_post: { 7: 9999, 14: 16999, 30: 29999 },
 }
 
-const KEY_TO_ENUM: Record<string, 'HOME_BANNER' | 'HOME_TILE' | 'RESULTS_TOP' | 'SIDEBAR' | 'SPONSORED_POST'> = {
+// Use plain string values for enum; ensure Prisma Client is regenerated after schema changes
+const KEY_TO_ENUM: Record<string, any> = {
+  home_top: 'HOME_TOP',
+  home_mid: 'HOME_MID',
+  home_bottom: 'HOME_BOTTOM',
   home_banner: 'HOME_BANNER',
   home_tile: 'HOME_TILE',
   results_top: 'RESULTS_TOP',

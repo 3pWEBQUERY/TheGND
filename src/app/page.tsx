@@ -94,15 +94,21 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <MinimalistNavigation />
       <HeroSection />
-      <AdBanner placement="home_top" className="my-8" />
+      <div className="max-w-7xl mx-auto px-6">
+        <AdBanner placement="home_top" className="my-8" />
+      </div>
       <StoriesGallery />
       <FeaturedPlacesSection />
-      <AdBanner placement="home_mid" className="my-8" />
+      <div className="max-w-7xl mx-auto px-6">
+        <AdBanner placement="home_mid" className="my-8" />
+      </div>
       <EscortsGridSection />
       <VisionSection />
       <AgencyGridSection />
       <ClubStudioGridSection />
-      <AdBanner placement="home_bottom" className="my-8" />
+      <div className="max-w-7xl mx-auto px-6">
+        <AdBanner placement="home_bottom" className="my-8" />
+      </div>
       <JoinCtaSection />
       <Footer />
     </div>

@@ -13,7 +13,7 @@ export default function MarketingPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
-  type PlacementKey = 'home_banner' | 'home_tile' | 'results_top' | 'sidebar' | 'sponsored_post'
+  type PlacementKey = 'home_top' | 'home_mid' | 'home_bottom' | 'home_banner' | 'home_tile' | 'results_top' | 'sidebar' | 'sponsored_post'
   type Duration = 7 | 14 | 30
 
   // Auth guard: redirect unauthenticated users to sign-in
@@ -25,6 +25,9 @@ export default function MarketingPage() {
   }, [status, router])
 
   const PRICES: Record<PlacementKey, Record<Duration, number>> = {
+    home_top: { 7: 119.99, 14: 199.99, 30: 349.99 },
+    home_mid: { 7: 99.99, 14: 169.99, 30: 299.99 },
+    home_bottom: { 7: 79.99, 14: 139.99, 30: 249.99 },
     home_banner: { 7: 149.99, 14: 259.99, 30: 449.99 },
     home_tile: { 7: 89.99, 14: 149.99, 30: 259.99 },
     results_top: { 7: 119.99, 14: 199.99, 30: 349.99 },
@@ -107,6 +110,27 @@ export default function MarketingPage() {
     desc: string
     defaultDuration: Duration
   }> = [
+    {
+      key: 'home_top',
+      title: 'Startseite – Anzeige Top',
+      dims: 'Empfehlung: 1200×300px',
+      desc: 'Banner im oberen Bereich der Startseite – gleich nach dem Hero sichtbar.',
+      defaultDuration: 14,
+    },
+    {
+      key: 'home_mid',
+      title: 'Startseite – Anzeige Mitte',
+      dims: 'Empfehlung: 1200×300px',
+      desc: 'Banner in der Mitte der Startseite – im Scrollverlauf platziert.',
+      defaultDuration: 14,
+    },
+    {
+      key: 'home_bottom',
+      title: 'Startseite – Anzeige Bottom',
+      dims: 'Empfehlung: 1200×300px',
+      desc: 'Banner am Ende der Startseite – Abschluss mit klarer Botschaft.',
+      defaultDuration: 14,
+    },
     {
       key: 'home_banner',
       title: 'Startseite – Storie Banner',
@@ -217,7 +241,7 @@ export default function MarketingPage() {
                 {/* Controls */}
                 <div className="mt-6 flex items-end justify-between gap-6 flex-wrap">
                   <div className="flex-1 min-w-52">
-                    {(p.key === 'home_banner' || p.key === 'sidebar' || p.key === 'sponsored_post') && (
+                    {(p.key === 'home_banner' || p.key === 'home_top' || p.key === 'home_mid' || p.key === 'home_bottom' || p.key === 'sidebar' || p.key === 'sponsored_post') && (
                       <div className="mb-4">
                         <span className="text-xs font-light tracking-widest text-gray-800 uppercase">Ziel-URL</span>
                         <input

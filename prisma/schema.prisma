@@ -805,6 +805,9 @@ model AppSetting {
 
 // Marketing / Advertising
 enum MarketingPlacementKey {
+  HOME_TOP
+  HOME_MID
+  HOME_BOTTOM
   HOME_BANNER
   HOME_TILE
   RESULTS_TOP

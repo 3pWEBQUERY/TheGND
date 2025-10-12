@@ -9,7 +9,7 @@ import { useUploadThing } from '@/utils/uploadthing'
 import { useRouter } from 'next/navigation'
 
 // Reuse the same keys as on the marketing selection page
- type PlacementKey = 'home_banner' | 'home_tile' | 'results_top' | 'sidebar' | 'sponsored_post'
+ type PlacementKey = 'home_top' | 'home_mid' | 'home_bottom' | 'home_banner' | 'home_tile' | 'results_top' | 'sidebar' | 'sponsored_post'
  type Duration = 7 | 14 | 30
 
 const PLACEMENTS: Array<{
@@ -18,6 +18,9 @@ const PLACEMENTS: Array<{
   dims: string
   desc: string
 }> = [
+  { key: 'home_top', title: 'Startseite – Anzeige Top', dims: 'Empfehlung: 1200×300px', desc: 'Banner im oberen Bereich der Startseite.' },
+  { key: 'home_mid', title: 'Startseite – Anzeige Mitte', dims: 'Empfehlung: 1200×300px', desc: 'Banner in der Mitte der Startseite.' },
+  { key: 'home_bottom', title: 'Startseite – Anzeige Bottom', dims: 'Empfehlung: 1200×300px', desc: 'Banner am Ende der Startseite.' },
   { key: 'home_banner', title: 'Startseite – Storie Banner', dims: 'Empfehlung: 1080×1920px', desc: 'Vertikales Storie‑Banner.' },
   { key: 'home_tile', title: 'Startseite – Featured Tile', dims: 'Empfehlung: 800×800px', desc: 'Quadratische Kachel im Startseiten‑Grid.' },
   { key: 'results_top', title: 'Suche – Top Banner', dims: 'Empfehlung: 1200×300px', desc: 'Breites Banner über den Suchergebnissen.' },
@@ -111,6 +114,11 @@ export default function MarketingUploadPage() {
 
   const handleSubmit = async () => {
     if (!hasCart) return
+    if (status !== 'authenticated') {
+      const cb = encodeURIComponent('/marketing/upload')
+      router.replace(`/auth/signin?callbackUrl=${cb}`)
+      return
+    }
     setSubmitting(true)
     setSubmitMessage({ type: 'idle' })
     try {
@@ -124,10 +132,15 @@ export default function MarketingUploadPage() {
       const res = await fetch('/api/marketing/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ items }),
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.error || 'Buchung fehlgeschlagen')
+      let data: any = {}
+      try { data = await res.json() } catch {}
+      if (!res.ok) {
+        const msg = data?.error || `Buchung fehlgeschlagen (${res.status})`
+        throw new Error(msg)
+      }
       setSubmitMessage({ type: 'success', text: 'Buchung gespeichert.' })
       // Clean up cart after successful submit
       localStorage.removeItem('marketingCart')
@@ -198,7 +211,7 @@ export default function MarketingUploadPage() {
                     </div>
 
                     {/* Ziel-URL Eingabe für relevante Placements */}
-                    {(key === 'home_banner' || key === 'sidebar' || key === 'sponsored_post') && (
+                    {(key === 'home_banner' || key === 'home_top' || key === 'home_mid' || key === 'home_bottom' || key === 'sidebar' || key === 'sponsored_post') && (
                       <div className="mt-4 border border-gray-200 p-4">
                         <label className="block text-[11px] text-gray-600 uppercase tracking-widest">Ziel-URL</label>
                         <input

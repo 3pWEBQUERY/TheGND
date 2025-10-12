@@ -337,6 +337,11 @@ export default function MinimalistNavigation() {
                               {t('misc.adBanner', { defaultValue: 'Werbebanner' })}
                             </div>
                           )}
+                          {navAd && (
+                            <div className="pointer-events-none absolute top-2 left-2 z-10">
+                              <span className="inline-block bg-pink-500 text-white text-[10px] uppercase tracking-widest px-2 py-0.5">WERBUNG</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

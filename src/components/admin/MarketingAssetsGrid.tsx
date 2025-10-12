@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import ReviewAssetButtons from '@/components/admin/ReviewAssetButtons'
 import { useMemo, useState } from 'react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 function statusLabel(s: string) {
   if (s === 'APPROVED') return 'Freigegeben'
@@ -22,6 +23,25 @@ function placementLabel(k: string) {
 
 function formatCHF(n: number) {
   return new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(n)
+}
+
+function aspectFor(pk: string) {
+  switch (pk) {
+    case 'HOME_BANNER':
+    case 'HOME_TOP':
+    case 'HOME_MID':
+    case 'HOME_BOTTOM':
+    case 'RESULTS_TOP':
+      return 'aspect-[4/1]'
+    case 'HOME_TILE':
+      return 'aspect-square'
+    case 'SIDEBAR':
+      return 'aspect-[3/5]'
+    case 'SPONSORED_POST':
+      return 'aspect-[3/2]'
+    default:
+      return 'aspect-video'
+  }
 }
 
 export type MarketingAssetItem = {
@@ -150,19 +170,33 @@ export default function MarketingAssetsGrid({ initialAssets, statusFilter }: { i
   return (
     <div className="mt-6">
       {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <label className="text-xs text-gray-500">Placement:</label>
-        <select value={placementFilter} onChange={(e) => setPlacementFilter(e.target.value)} className="border border-gray-200 bg-white text-sm px-2 py-1">
-          {placements.map(p => (
-            <option key={p} value={p}>{p === 'ALL' ? 'Alle' : p.replace(/_/g, ' ')}</option>
-          ))}
-        </select>
-        <label className="text-xs text-gray-500 ml-2">Zeitraum:</label>
-        <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value as any)} className="border border-gray-200 bg-white text-sm px-2 py-1">
-          <option value="ALL">Alle</option>
-          <option value="D7">Letzte 7 Tage</option>
-          <option value="D30">Letzte 30 Tage</option>
-        </select>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Placement:</span>
+          <Select value={placementFilter} onValueChange={(v) => setPlacementFilter(v)}>
+            <SelectTrigger className="w-48 h-8 border-gray-200 text-sm">
+              <SelectValue placeholder="Alle" />
+            </SelectTrigger>
+            <SelectContent>
+              {placements.map((p) => (
+                <SelectItem key={p} value={p}>{p === 'ALL' ? 'Alle' : p.replace(/_/g, ' ')}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Zeitraum:</span>
+          <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as 'ALL' | 'D7' | 'D30')}>
+            <SelectTrigger className="w-48 h-8 border-gray-200 text-sm">
+              <SelectValue placeholder="Alle" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Alle</SelectItem>
+              <SelectItem value="D7">Letzte 7 Tage</SelectItem>
+              <SelectItem value="D30">Letzte 30 Tage</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <button onClick={exportCSV} className="ml-auto px-2 py-1 border text-xs hover:border-pink-500 hover:text-pink-600">CSV exportieren</button>
       </div>
 
@@ -178,29 +212,31 @@ export default function MarketingAssetsGrid({ initialAssets, statusFilter }: { i
             <div className={`text-[11px] uppercase tracking-widest px-2 py-0.5 ${statusClass(a.status)}`}>{statusLabel(a.status)}</div>
             <div className="text-[11px] text-gray-500">{new Date(a.createdAt).toLocaleString('de-CH')}</div>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={a.url} alt="Asset" className="w-full h-44 object-cover" />
+          <div className={`w-full bg-gray-50 border-t border-b ${aspectFor(a.orderItem.placementKey)}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={a.url} alt="Asset" className="w-full h-full object-contain" />
+          </div>
           <div className="p-4 text-sm">
-            <div className="text-gray-900 font-medium">{placementLabel(a.orderItem.placementKey)}</div>
+            <div className="text-gray-900 font-medium capitalize">{placementLabel(a.orderItem.placementKey)}</div>
             <div className="text-xs text-gray-600">Dauer: {a.orderItem.durationDays} Tage</div>
             <div className="text-xs text-gray-600">Preis: {formatCHF(a.orderItem.priceCents / 100)}</div>
             {a.reviewNote && <div className="mt-2 text-xs text-gray-500">Notiz: {a.reviewNote}</div>}
-            <div className="mt-3 flex items-center justify-between">
-              <Link href={`/acp/marketing?status=${statusFilter}`} className="text-xs text-gray-500 hover:text-gray-700">#{a.orderItem.order.id}</Link>
-              {a.status === 'PENDING' ? (
-                <div className="flex items-center gap-2">
-                  <ReviewAssetButtons assetId={a.id} hideReject onDone={(ns) => onReviewed(a.id, ns)} />
-                  <button
-                    onClick={() => { setDialogAssetId(a.id); setDialogNote(''); setDialogOpen(true) }}
-                    className="px-3 py-1 text-xs uppercase tracking-widest border border-rose-300 text-rose-700 hover:bg-rose-50"
-                  >
-                    Ablehnen
-                  </button>
-                </div>
-              ) : (
-                <div className="text-[11px] text-gray-500 uppercase tracking-widest">Keine Aktion</div>
-              )}
+            <div className="mt-3">
+              <Link href={`/acp/marketing?status=${statusFilter}`} className="text-xs text-gray-500 hover:text-gray-700 break-all">#{a.orderItem.order.id}</Link>
             </div>
+            {a.status === 'PENDING' ? (
+              <div className="mt-2 flex items-center gap-2">
+                <ReviewAssetButtons assetId={a.id} hideReject onDone={(ns) => onReviewed(a.id, ns)} />
+                <button
+                  onClick={() => { setDialogAssetId(a.id); setDialogNote(''); setDialogOpen(true) }}
+                  className="px-3 py-1 text-xs uppercase tracking-widest border border-rose-300 text-rose-700 hover:bg-rose-50"
+                >
+                  Ablehnen
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 text-[11px] text-gray-500 uppercase tracking-widest">Keine Aktion</div>
+            )}
           </div>
         </div>
       ))}

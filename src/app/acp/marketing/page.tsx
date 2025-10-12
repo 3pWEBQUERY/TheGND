@@ -79,11 +79,13 @@ export default async function ACPMarketingPage({ searchParams }: { searchParams:
         status: a.status,
         reviewNote: a.reviewNote,
         createdAt: a.createdAt,
+        reviewedAt: a.reviewedAt ?? null,
         orderItem: {
           id: a.orderItem.id,
           placementKey: a.orderItem.placementKey,
           durationDays: a.orderItem.durationDays,
           priceCents: a.orderItem.priceCents,
+          createdAt: a.orderItem.createdAt,
           order: { id: a.orderItem.order.id },
         },
       }))} statusFilter={status as any} />

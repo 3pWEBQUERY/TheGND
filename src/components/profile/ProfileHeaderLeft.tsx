@@ -17,8 +17,21 @@ type Props = {
 export default function ProfileHeaderLeft({ isOwnProfile, avatarUrl, displayName, avatarSize, onEdit, onOpenVisitors, editBtnRef, showBannerButton, onOpenBanner }: Props) {
   return (
     <div className="flex flex-col items-center lg:items-start space-y-3">
+      {/* Mobile: full-width square avatar */}
+      <div className="w-full bg-gray-100 flex items-center justify-center aspect-square sm:hidden">
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-3xl font-light tracking-widest text-gray-600">
+            {displayName.charAt(0).toUpperCase()}
+          </span>
+        )}
+      </div>
+
+      {/* Desktop: fixed-size avatar */}
       <div
-        className="bg-gray-100 flex-none flex items-center justify-center"
+        className="hidden sm:flex bg-gray-100 flex-none items-center justify-center"
         style={{
           width: avatarSize ?? 0,
           height: avatarSize ?? 0,
@@ -40,7 +53,8 @@ export default function ProfileHeaderLeft({ isOwnProfile, avatarUrl, displayName
         <button
           ref={editBtnRef}
           onClick={onEdit}
-          className="bg-pink-500 hover:bg-pink-600 text-white text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center space-x-2"
+          className="w-full sm:w-auto bg-pink-500 hover:bg-pink-600 text-white text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center justify-center sm:justify-start space-x-2"
+          style={{ maxWidth: avatarSize ?? undefined }}
         >
           <Edit className="h-4 w-4" />
           <span>PROFIL BEARBEITEN</span>
@@ -50,8 +64,8 @@ export default function ProfileHeaderLeft({ isOwnProfile, avatarUrl, displayName
       {isOwnProfile && showBannerButton && (
         <button
           onClick={onOpenBanner}
-          className="border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-500 text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center space-x-2"
-          style={{ width: avatarSize ?? undefined }}
+          className="w-full sm:w-auto border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-500 text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center justify-center sm:justify-start space-x-2"
+          style={{ maxWidth: avatarSize ?? undefined }}
         >
           <ImageIcon className="h-4 w-4" />
           <span>PROFIL BANNER</span>
@@ -61,8 +75,8 @@ export default function ProfileHeaderLeft({ isOwnProfile, avatarUrl, displayName
       {isOwnProfile && (
         <button
           onClick={onOpenVisitors}
-          className="border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-500 text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center space-x-2"
-          style={{ width: avatarSize ?? undefined }}
+          className="w-full sm:w-auto border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-500 text-xs font-light tracking-widest px-6 py-3 transition-colors uppercase flex items-center justify-center sm:justify-start space-x-2"
+          style={{ maxWidth: avatarSize ?? undefined }}
         >
           <Users className="h-4 w-4" />
           <span>BESUCHER</span>

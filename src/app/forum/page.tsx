@@ -96,9 +96,9 @@ export default async function ForumHomePage() {
                 {cat.forums.map((f: any) => (
                   <div
                     key={f.id}
-                    className="group block p-0 sm:pr-5 transition-colors duration-200 hover:bg-pink-50/40 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2 focus:ring-offset-white"
+                    className="group block p-3 sm:pr-5 transition-colors duration-200 hover:bg-pink-50/40 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2 focus:ring-offset-white"
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto_auto] gap-0 items-stretch overflow-hidden">
+                    <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto_auto] gap-3 sm:gap-0 items-start sm:items-stretch overflow-hidden">
                       {/* Image column (latest thread image if available, else forum image) */}
                       <div className="hidden sm:block overflow-hidden">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -149,7 +149,7 @@ export default async function ForumHomePage() {
                         )}
                       </div>
                       {/* Latest thread column (vertically centered) */}
-                      <div className="min-w-0 sm:flex sm:items-center sm:px-5">
+                      <div className="min-w-0 mt-2 sm:mt-0 sm:flex sm:items-center sm:px-5">
                         {f.threads?.[0] && (
                           <div className="flex items-center gap-3">
                             <Avatar className="h-6 w-6 bg-gray-200">
@@ -183,7 +183,7 @@ export default async function ForumHomePage() {
                         )}
                       </div>
                       {/* Right stats column (restore right padding, vertically centered) */}
-                      <div className="text-right sm:pr-5 flex items-center justify-end gap-2">
+                      <div className="text-right sm:pr-5 flex items-center justify-end gap-2 mt-2 sm:mt-0">
                         <div className="text-xs uppercase tracking-widest text-gray-500">Themen</div>
                         <div className="text-sm text-gray-900">{f._count.threads}</div>
                       </div>

@@ -162,7 +162,7 @@ export default function BlogDashboard() {
 
       {/* Create new post */}
       {tab === 'create' && (
-      <section className="border border-gray-200 p-4">
+      <section className="border border-gray-200 p-4 max-w-2xl mx-auto w-full">
         <h3 className="sr-only">Neuen Beitrag erstellen</h3>
         <div className="mt-4 grid gap-5">
           <div>
@@ -194,14 +194,14 @@ export default function BlogDashboard() {
           <div>
             <label className="text-xs uppercase tracking-widest text-gray-800">Cover Bild</label>
             <input value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Bild-URL oder hochladen" className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
-            <div className="mt-3 flex items-center gap-3">
-              <input type="file" accept="image/*" onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files).slice(0,1) : [])} />
+            <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <input className="w-full text-sm" type="file" accept="image/*" onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files).slice(0,1) : [])} />
               <button type="button" disabled={isUploading || files.length === 0} onClick={async () => {
                 if (files.length === 0) return
                 const res = await startUpload([files[0]])
                 const url = res && res[0] ? (res[0] as any).ufsUrl || (res[0] as any).url : null
                 if (url) setCoverImage(url)
-              }} className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">
+              }} className="w-full sm:w-auto px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">
                 {isUploading ? 'Lade hoch…' : 'Hochladen'}
               </button>
             </div>
@@ -218,7 +218,7 @@ export default function BlogDashboard() {
             </label>
           </div>
           <div>
-            <button disabled={saving || isUploading} onClick={create} className="px-5 py-3 bg-pink-600 text-white text-xs uppercase tracking-widest rounded-none">{saving || isUploading ? 'Speichere…' : 'Beitrag erstellen'}</button>
+            <button disabled={saving || isUploading} onClick={create} className="w-full sm:w-auto px-5 py-3 bg-pink-600 text-white text-xs uppercase tracking-widest rounded-none">{saving || isUploading ? 'Speichere…' : 'Beitrag erstellen'}</button>
           </div>
         </div>
       </section>
@@ -236,12 +236,13 @@ export default function BlogDashboard() {
           <div className="space-y-4">
             {posts.map((p) => (
               <div key={p.id} className="border border-gray-200">
-                <div className="p-4 flex items-center justify-between gap-4">
+                {/* Header row becomes grid on mobile so buttons fall below and align right */}
+                <div className="p-4 grid gap-4 sm:flex sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4 min-w-0">
                     {p.coverImage && (
                       <div className="shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.coverImage} alt={p.title} className="h-14 w-20 object-cover border border-gray-200" />
+                        <img src={p.coverImage} alt={p.title} className="h-20 w-28 sm:h-14 sm:w-20 object-cover border border-gray-200" />
                       </div>
                     )}
                     <div className="min-w-0">
@@ -251,9 +252,9 @@ export default function BlogDashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => beginEdit(p)} className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40">Bearbeiten</button>
-                    <button onClick={() => remove(p.id)} className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40">Löschen</button>
+                  <div className="flex items-center gap-3 justify-self-end sm:justify-self-auto mt-1 sm:mt-0">
+                    <button onClick={() => beginEdit(p)} className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40">BEARBEITEN</button>
+                    <button onClick={() => remove(p.id)} className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40">LÖSCHEN</button>
                   </div>
                 </div>
                 {editingId === p.id && (

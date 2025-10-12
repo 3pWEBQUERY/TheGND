@@ -92,7 +92,7 @@ export default function CreateGroupForm() {
       </div>
       <div className="flex justify-end">
         <button type="submit" disabled={loading} className="px-3 py-2 text-sm border border-gray-300 hover:bg-gray-50">
-          {loading ? '...' : 'Gruppe erstellen'}
+          {loading ? '...' : 'GRUPPE ERSTELLEN'}
         </button>
       </div>
     </form>

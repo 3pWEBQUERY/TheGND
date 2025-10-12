@@ -203,77 +203,82 @@ export default function EscortsSearch({ q, setQ, location, setLocation, onSubmit
             <div className="mt-6">
               <h4 className="text-xs tracking-widest text-gray-800 mb-2">BELIEBTE SCHLAGWÖRTER</h4>
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {/* Verified toggles */}
-              <Button
-                type="button"
-                variant={verifiedOnly ? 'default' : 'outline'}
-                className={verifiedOnly ? 'bg-emerald-600 hover:bg-emerald-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-emerald-500 rounded-none'}
-                onClick={() => setVerifiedOnly?.(!verifiedOnly)}
-              >
-                VERIFIZIERT
-              </Button>
-              <Button
-                type="button"
-                variant={ageVerifiedOnly ? 'default' : 'outline'}
-                className={ageVerifiedOnly ? 'bg-rose-600 hover:bg-rose-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-rose-500 rounded-none'}
-                onClick={() => setAgeVerifiedOnly?.(!ageVerifiedOnly)}
-              >
-                18+
-              </Button>
-              <Button
-                type="button"
-                variant={hasVideoOnly ? 'default' : 'outline'}
-                className={hasVideoOnly ? 'bg-indigo-600 hover:bg-indigo-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-indigo-500 rounded-none'}
-                onClick={() => setHasVideoOnly?.(!hasVideoOnly)}
-              >
-                MIT VIDEOS
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="text-sm font-light tracking-widest border-gray-300 hover:border-pink-500 rounded-none"
-                onClick={() => {
-                  // Clear search text and location as well
-                  setQ('')
-                  setLocation('')
-                  onFiltersChange?.({
-                    height: '',
-                    weight: '',
-                    breastType: '',
-                    breastSize: '',
-                    eyeColor: '',
-                    hairColor: '',
-                    hairLength: '',
-                    clothingStyle: '',
-                    clothingSize: '',
-                    ageMin: '',
-                    ageMax: '',
-                    gender: '',
-                    nationality: [],
-                    languages: [],
-                    services: [],
-                  })
-                  setVerifiedOnly?.(false)
-                  setAgeVerifiedOnly?.(false)
-                  setHasVideoOnly?.(false)
-                  // Optional: Filterbereich schließen
-                  setFiltersOpen(false)
-                  // Force remount of selects to ensure visual reset
-                  setResetKey((k) => k + 1)
-                }}
-              >
-                ZURÜCKSETZEN
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="text-sm font-light tracking-widest border-gray-300 hover:border-pink-500 rounded-none"
-                onClick={() => setFiltersOpen((v) => !v)}
-              >
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                FILTER
-              </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Left: three quick toggles */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant={verifiedOnly ? 'default' : 'outline'}
+                  className={verifiedOnly ? 'bg-emerald-600 hover:bg-emerald-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-emerald-500 rounded-none'}
+                  onClick={() => setVerifiedOnly?.(!verifiedOnly)}
+                >
+                  VERIFIZIERT
+                </Button>
+                <Button
+                  type="button"
+                  variant={ageVerifiedOnly ? 'default' : 'outline'}
+                  className={ageVerifiedOnly ? 'bg-rose-600 hover:bg-rose-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-rose-500 rounded-none'}
+                  onClick={() => setAgeVerifiedOnly?.(!ageVerifiedOnly)}
+                >
+                  18+
+                </Button>
+                <Button
+                  type="button"
+                  variant={hasVideoOnly ? 'default' : 'outline'}
+                  className={hasVideoOnly ? 'bg-indigo-600 hover:bg-indigo-700 text-white rounded-none' : 'text-sm font-light tracking-widest border-gray-300 hover:border-indigo-500 rounded-none'}
+                  onClick={() => setHasVideoOnly?.(!hasVideoOnly)}
+                >
+                  MIT VIDEOS
+                </Button>
+              </div>
+              {/* Right: reset + filter */}
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-sm font-light tracking-widest border-gray-300 hover:border-pink-500 rounded-none"
+                  onClick={() => {
+                    // Clear search text and location as well
+                    setQ('')
+                    setLocation('')
+                    onFiltersChange?.({
+                      height: '',
+                      weight: '',
+                      breastType: '',
+                      breastSize: '',
+                      eyeColor: '',
+                      hairColor: '',
+                      hairLength: '',
+                      clothingStyle: '',
+                      clothingSize: '',
+                      ageMin: '',
+                      ageMax: '',
+                      gender: '',
+                      nationality: [],
+                      languages: [],
+                      services: [],
+                    })
+                    setVerifiedOnly?.(false)
+                    setAgeVerifiedOnly?.(false)
+                    setHasVideoOnly?.(false)
+                    // Optional: Filterbereich schließen
+                    setFiltersOpen(false)
+                    // Force remount of selects to ensure visual reset
+                    setResetKey((k) => k + 1)
+                  }}
+                >
+                  ZURÜCKSETZEN
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-sm font-light tracking-widest border-gray-300 hover:border-pink-500 rounded-none"
+                  onClick={() => setFiltersOpen((v) => !v)}
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  FILTER
+                </Button>
+              </div>
             </div>
 
             {/* Aktive Filter-Chips */}

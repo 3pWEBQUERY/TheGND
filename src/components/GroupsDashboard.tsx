@@ -198,7 +198,7 @@ export default function GroupsDashboard() {
               <div key={g.id} className="border border-gray-200 bg-white p-4">
                 <div className="flex items-start gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={g.cover || '/2.jpg'} alt="Cover" className="w-14 h-14 object-cover border" />
+                  <img src={g.cover || '/2.jpg'} alt="Cover" className="w-16 h-16 sm:w-14 sm:h-14 object-cover border" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">
@@ -207,13 +207,18 @@ export default function GroupsDashboard() {
                           <span className={`text-[10px] px-2 py-0.5 uppercase tracking-widest border ${g.privacy === 'PRIVATE' ? 'text-gray-700 border-gray-300' : 'text-pink-600 border-pink-200'}`}>{g.privacy === 'PRIVATE' ? 'PRIVAT' : 'ÖFFENTLICH'}</span>
                         )}
                       </div>
-                      <div className="shrink-0 flex gap-2">
-                        <button onClick={() => setEditingSlug(s => (s === g.slug ? null : g.slug))} className="px-2 py-1 text-xs border border-gray-300 hover:bg-gray-50">Bearbeiten</button>
-                        <button onClick={() => onOpenMembers(g.slug)} className="px-2 py-1 text-xs border border-gray-300 hover:bg-gray-50">Mitglieder</button>
+                      <div className="shrink-0 hidden sm:flex gap-2">
+                        <button onClick={() => setEditingSlug(s => (s === g.slug ? null : g.slug))} className="px-2 py-1 text-xs uppercase tracking-widest border border-gray-300 hover:bg-gray-50">BEARBEITEN</button>
+                        <button onClick={() => onOpenMembers(g.slug)} className="px-2 py-1 text-xs uppercase tracking-widest border border-gray-300 hover:bg-gray-50">MITGLIEDER</button>
                       </div>
                     </div>
                     {g.description && <div className="text-sm text-gray-600 mt-1 line-clamp-2">{g.description}</div>}
                     <div className="text-xs text-gray-500 mt-2">{g._count?.members ?? 0} Mitglieder · {g._count?.posts ?? 0} Beiträge</div>
+                    {/* Mobile actions under counts */}
+                    <div className="mt-2 flex gap-2 sm:hidden">
+                      <button onClick={() => setEditingSlug(s => (s === g.slug ? null : g.slug))} className="px-2 py-1 text-xs uppercase tracking-widest border border-gray-300 hover:bg-gray-50">BEARBEITEN</button>
+                      <button onClick={() => onOpenMembers(g.slug)} className="px-2 py-1 text-xs uppercase tracking-widest border border-gray-300 hover:bg-gray-50">MITGLIEDER</button>
+                    </div>
                   </div>
                 </div>
 
@@ -234,8 +239,8 @@ export default function GroupsDashboard() {
         <div className="flex items-center justify-between text-sm text-gray-600">
           <div>Seite {page} von {Math.max(1, Math.ceil(total / Math.max(1, limit)))} · {total} Gruppen</div>
           <div className="space-x-2">
-            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className={`px-3 py-1.5 border border-gray-300 ${page <= 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-50'}`}>Zurück</button>
-            <button disabled={page >= Math.max(1, Math.ceil(total / Math.max(1, limit)))} onClick={() => setPage(p => p + 1)} className={`px-3 py-1.5 border border-gray-300 ${page >= Math.max(1, Math.ceil(total / Math.max(1, limit))) ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-50'}`}>Weiter</button>
+            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className={`px-3 py-1.5 border border-gray-300 text-xs uppercase tracking-widest ${page <= 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-50'}`}>ZURÜCK</button>
+            <button disabled={page >= Math.max(1, Math.ceil(total / Math.max(1, limit)))} onClick={() => setPage(p => p + 1)} className={`px-3 py-1.5 border border-gray-300 text-xs uppercase tracking-widest ${page >= Math.max(1, Math.ceil(total / Math.max(1, limit))) ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-50'}`}>WEITER</button>
           </div>
         </div>
       </div>

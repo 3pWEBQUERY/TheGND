@@ -50,11 +50,13 @@ export type MarketingAssetItem = {
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
   reviewNote?: string | null
   createdAt: string
+  reviewedAt?: string | null
   orderItem: {
     id: string
     placementKey: string
     durationDays: number
     priceCents: number
+    createdAt: string
     order: { id: string }
   }
 }
@@ -206,10 +208,20 @@ export default function MarketingAssetsGrid({ initialAssets, statusFilter }: { i
           {toast.text}
         </div>
       )}
-      {grid.map((a) => (
+      {grid.map((a) => {
+        const now = Date.now()
+        const start = a.reviewedAt ? new Date(a.reviewedAt).getTime() : new Date(a.orderItem.createdAt).getTime()
+        const end = start + a.orderItem.durationDays * 24 * 60 * 60 * 1000
+        const isActive = start <= now && end > now
+        return (
         <div key={a.id} className="border border-gray-200 bg-white shadow-sm">
           <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-            <div className={`text-[11px] uppercase tracking-widest px-2 py-0.5 ${statusClass(a.status)}`}>{statusLabel(a.status)}</div>
+            <div className="flex items-center gap-2">
+              <div className={`text-[11px] uppercase tracking-widest px-2 py-0.5 ${statusClass(a.status)}`}>{statusLabel(a.status)}</div>
+              {isActive && (
+                <div className="text-[11px] uppercase tracking-widest px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200">AKTIV</div>
+              )}
+            </div>
             <div className="text-[11px] text-gray-500">{new Date(a.createdAt).toLocaleString('de-CH')}</div>
           </div>
           <div className={`w-full bg-gray-50 border-t border-b ${aspectFor(a.orderItem.placementKey)}`}>
@@ -239,7 +251,8 @@ export default function MarketingAssetsGrid({ initialAssets, statusFilter }: { i
             )}
           </div>
         </div>
-      ))}
+        )
+      })}
       {grid.length === 0 && (
         <div className="col-span-full mt-10 text-sm text-gray-600">Keine Assets im aktuellen Filter.</div>
       )}

@@ -92,7 +92,7 @@ export default function MemberMatchingSection({ showAuto, showPrefs, matchingVie
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Grid</Tooltip.Content>
+                  <Tooltip.Content side="right" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Grid</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
 
@@ -110,7 +110,7 @@ export default function MemberMatchingSection({ showAuto, showPrefs, matchingVie
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Tinder Style</Tooltip.Content>
+                  <Tooltip.Content side="right" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Tinder Style</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
 
@@ -127,7 +127,7 @@ export default function MemberMatchingSection({ showAuto, showPrefs, matchingVie
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Auto Nachricht</Tooltip.Content>
+                  <Tooltip.Content side="right" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Auto Nachricht</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
 
@@ -145,7 +145,7 @@ export default function MemberMatchingSection({ showAuto, showPrefs, matchingVie
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Präferenzen</Tooltip.Content>
+                  <Tooltip.Content side="right" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Präferenzen</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
 
@@ -163,7 +163,7 @@ export default function MemberMatchingSection({ showAuto, showPrefs, matchingVie
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side="left" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Effekte</Tooltip.Content>
+                  <Tooltip.Content side="right" sideOffset={8} className="rounded bg-gray-900 text-white px-2 py-1 text-xs shadow-md">Effekte</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
             </Tooltip.Provider>

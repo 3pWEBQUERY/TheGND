@@ -25,18 +25,9 @@ export default function Footer() {
               <SiX className="w-6 h-6" />
             </a>
             <a
-              href="https://www.tumblr.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Tumblr"
-              className="text-white hover:text-pink-600 transition-colors"
-            >
-              <SiTumblr className="w-6 h-6" />
-            </a>
-            <a
               href="https://www.instagram.com"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="https://www.instagram.com/thegnd.io/"
               aria-label="Instagram"
               className="text-white hover:text-pink-600 transition-colors"
             >

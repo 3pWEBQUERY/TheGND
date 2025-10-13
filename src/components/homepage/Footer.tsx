@@ -18,7 +18,7 @@ export default function Footer() {
             <a
               href="https://x.com"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="https://x.com/TheGND_io"
               aria-label="X (Twitter)"
               className="text-white hover:text-pink-600 transition-colors"
             >

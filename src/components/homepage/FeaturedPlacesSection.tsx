@@ -116,7 +116,7 @@ function CityCard({ name, index }: { name: string; index: number }) {
       className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
       aria-label={`Escorts in ${name} anzeigen`}
     >
-      <div className="relative w-full pt-[140%] md:pt-[180%] lg:pt-[200%] overflow-hidden bg-gray-200">
+      <div className="relative w-full aspect-[2/3] sm:aspect-[3/4] overflow-hidden bg-gray-200">
         {/* Background image */}
         <div
           className="absolute inset-0 bg-center bg-cover transition-transform duration-300 group-hover:scale-105"
@@ -171,9 +171,9 @@ export default function FeaturedPlacesSection() {
                 </div>
 
                 {/* Tablet/Desktop (4-column slider with hidden scrollbar) */}
-                <div className="hidden md:flex gap-4 lg:gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory">
+                <div className="hidden md:flex gap-6 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory">
                   {c.cities.map((city, i) => (
-                    <div key={`${c.key}-${city}`} className="flex-none w-[calc((100%-3rem)/4)] lg:w-[calc((100%-3.75rem)/4)] snap-start">
+                    <div key={`${c.key}-${city}`} className="flex-none w-[calc((100%-4.5rem)/4)] snap-start">
                       <CityCard name={city} index={i} />
                     </div>
                   ))}

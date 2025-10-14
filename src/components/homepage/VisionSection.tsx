@@ -42,7 +42,7 @@ export default function VisionSection() {
               ENTDECKE WEITER
             </Button>
           </div>
-          <div className="aspect-[4/5] bg-gray-200 relative flex">
+          <div className="aspect-[4/5] md:aspect-[4/3] lg:aspect-[9/16] bg-gray-200 relative flex">
             {/* Active Escort Image */}
             <div className="flex-1 h-full bg-gray-300 flex items-center justify-center overflow-hidden">
               {(!loading && items && items.length > 0) ? (

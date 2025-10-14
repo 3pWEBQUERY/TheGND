@@ -42,32 +42,38 @@ export default function AgencyResultsGrid({ items, loading, total }: Props) {
             const label = e.name || 'Agentur'
             const href = `/agency/${e.id}/${slugify(label)}`
             return (
-              <Link href={href} key={e.id} className="group cursor-pointer block">
-                <div className="h-44 sm:h-48 md:h-56 lg:h-64 bg-gray-200 relative overflow-hidden mb-2">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  {e.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={e.image} alt={label} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-300" />
-                  )}
-                  {e.isVerified && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
-                        <BadgeCheck className="h-4 w-4" />
-                      </span>
+              <div key={e.id} className="group cursor-pointer rounded-none">
+                <Link href={href} className="block">
+                  <div className="h-44 sm:h-48 md:h-56 lg:h-64 bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors">
+                    {e.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={e.image} alt={label} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300" />
+                    )}
+                    {e.isVerified && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                          <BadgeCheck className="h-4 w-4" />
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+                <div className="px-3 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Link href={href} className="block truncate">
+                        <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">{(e.name?.toUpperCase?.() ?? e.name) || '—'}</h3>
+                      </Link>
+                      {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
                     </div>
-                  )}
-                </div>
-                <div className="text-center">
-                  {e.name && (
-                    <h3 className="text-sm font-light tracking-widest text-gray-800">{e.name.toUpperCase?.() ?? e.name}</h3>
-                  )}
+                  </div>
                   {(e.city || e.country) && (
-                    <p className="text-xs text-gray-500 mt-1">{e.city || e.country}</p>
+                    <div className="mt-1 text-sm text-gray-700">{e.city || e.country}</div>
                   )}
                 </div>
-              </Link>
+              </div>
             )
           })}
 

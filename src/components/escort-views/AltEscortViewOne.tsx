@@ -105,12 +105,17 @@ export default function AltEscortViewOne(props: {
                 <a href={contact.website} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">WEBSEITE</a>
               )}
             </div>
-            {ratingCount > 0 && (
-              <div className="flex items-center gap-2">
-                <RatingDonut value={ratingAvg} size={32} strokeWidth={6} showValue={false} />
-                <div className="text-xs text-gray-700">{ratingAvg.toFixed(1)} / 5 <span className="text-gray-500">({ratingCount})</span></div>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <span className={`px-2 py-0.5 border text-[10px] uppercase tracking-widest ${((data as any)?.available ? 'border-emerald-300 text-emerald-700' : 'border-rose-300 text-rose-700')}`}>
+                {((data as any)?.available ? 'VERFÜGBAR' : 'NICHT VERFÜGBAR')}
+              </span>
+              {ratingCount > 0 && (
+                <>
+                  <RatingDonut value={ratingAvg} size={32} strokeWidth={6} showValue={false} />
+                  <div className="text-xs text-gray-700">{ratingAvg.toFixed(1)} / 5 <span className="text-gray-500">({ratingCount})</span></div>
+                </>
+              )}
+            </div>
             {socials && Object.keys(socials).length > 0 && (
               <div>
                 <div className="text-[10px] tracking-widest text-gray-500 mb-1">SOCIALS</div>

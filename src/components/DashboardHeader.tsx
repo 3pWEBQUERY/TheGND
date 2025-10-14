@@ -347,15 +347,6 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                 DASHBOARD
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'dashboard' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
-              <Link 
-                href="/dashboard?tab=blog"
-                className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
-                  activeTab === 'blog' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
-                }`}
-              >
-                BLOG
-                <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'blog' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </Link>
               {/* PROFILE DROPDOWN (desktop) */}
               <div className="relative" ref={profileNavRef}>
                 <button
@@ -420,6 +411,15 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
               >
                 FORUM
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'forum' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+              </Link>
+              <Link 
+                href="/dashboard?tab=blog"
+                className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
+                  activeTab === 'blog' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
+                }`}
+              >
+                BLOG
+                <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'blog' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
               {(userType === 'AGENCY' || userType === 'CLUB' || userType === 'STUDIO') && (
                 <Link 

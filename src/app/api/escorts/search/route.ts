@@ -310,6 +310,7 @@ export async function GET(request: Request) {
       isEscortOfWeek: isWeek,
       isEscortOfMonth: isMonth,
       badges,
+      createdAt: (u as any)?.createdAt ? new Date((u as any).createdAt as any).toISOString() : null,
       latitude: u.profile?.latitude ?? null,
       longitude: u.profile?.longitude ?? null,
       locationFormatted: u.profile?.locationFormatted ?? null,

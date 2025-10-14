@@ -63,8 +63,7 @@ export default function AgencyGridSection() {
             return (
               <div key={e.id} className="group cursor-pointer rounded-none">
                 <Link href={href} className="block">
-                  <div className="h-44 sm:h-48 md:h-56 lg:h-64 bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors mb-2">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="h-44 sm:h-48 md:h-56 lg:h-64 bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors">
                     {e.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={e.image} alt={label} className="h-full w-full object-cover" />
@@ -80,12 +79,17 @@ export default function AgencyGridSection() {
                     )}
                   </div>
                 </Link>
-                <div className="text-center">
-                  {e.name && (
-                    <h3 className="text-sm font-light tracking-widest text-gray-800">{e.name.toUpperCase?.() ?? e.name}</h3>
-                  )}
+                <div className="px-3 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Link href={href} className="block truncate">
+                        <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">{(e.name?.toUpperCase?.() ?? e.name) || '—'}</h3>
+                      </Link>
+                      {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
+                    </div>
+                  </div>
                   {(e.city || e.country) && (
-                    <p className="text-xs text-gray-500 mt-1">{e.city || e.country}</p>
+                    <div className="mt-1 text-sm text-gray-700">{e.city || e.country}</div>
                   )}
                 </div>
               </div>

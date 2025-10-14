@@ -4,6 +4,7 @@ export type EscortItem = {
   city: string | null
   country: string | null
   image: string | null
+  createdAt?: string | null
   visibility?: 'PUBLIC' | 'VERIFIED' | 'PRIVATE'
   isVerified?: boolean
   isAgeVerified?: boolean

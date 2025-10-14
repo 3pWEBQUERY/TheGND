@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ProfileHeader from '@/components/profile/ProfileHeader'
 import ProfileOrgConnections from '@/components/profile/ProfileOrgConnections'
 import ProfileViewSection from '@/components/profile/ProfileViewSection'
@@ -108,6 +108,34 @@ export default function ProfileMainContent(props: {
     onCloseLightbox,
   } = props
   const [bannerOpen, setBannerOpen] = useState(false)
+  const [avail, setAvail] = useState<boolean | null>(null)
+  const [savingAvail, setSavingAvail] = useState(false)
+
+  useEffect(() => {
+    if (!isOwnProfile || userType !== 'ESCORT') return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/availability', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json().catch(() => ({}))
+        if (!cancelled) setAvail(!!data?.available)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [isOwnProfile, userType])
+
+  const setAvailability = async (v: boolean) => {
+    if (!isOwnProfile || userType !== 'ESCORT') return
+    setSavingAvail(true)
+    try {
+      const res = await fetch('/api/availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ available: v }) })
+      if (res.ok) {
+        setAvail(v)
+      }
+    } catch {}
+    setSavingAvail(false)
+  }
 
   return (
     <div>
@@ -141,6 +169,28 @@ export default function ProfileMainContent(props: {
             unlinking={unlinking}
             onUnlink={onUnlink}
           />
+        )}
+
+        {isOwnProfile && userType === 'ESCORT' && (
+          <div className="bg-white border border-gray-200 p-6">
+            <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">VERFÜGBARKEIT</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setAvailability(true)}
+                disabled={savingAvail}
+                className={`px-3 py-2 text-xs uppercase tracking-widest border ${avail ? 'border-emerald-600 text-emerald-700' : 'border-gray-300 text-gray-700'} hover:border-pink-500 hover:text-pink-600 disabled:opacity-50`}
+              >
+                VERFÜGBAR
+              </button>
+              <button
+                onClick={() => setAvailability(false)}
+                disabled={savingAvail}
+                className={`px-3 py-2 text-xs uppercase tracking-widest border ${avail === false ? 'border-rose-600 text-rose-700' : 'border-gray-300 text-gray-600'} hover:border-pink-500 hover:text-pink-600 disabled:opacity-50`}
+              >
+                NICHT VERFÜGBAR
+              </button>
+            </div>
+          </div>
         )}
 
         <ProfileViewSection

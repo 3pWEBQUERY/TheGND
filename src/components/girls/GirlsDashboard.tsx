@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useToast } from '@/components/ui/toast'
+import ConnectedEscortsSlider from '@/components/dashboard/ConnectedEscortsSlider'
 
 export default function GirlsDashboard() {
   const { show } = useToast()
@@ -72,29 +73,7 @@ export default function GirlsDashboard() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 p-6">
-        <h3 className="text-lg font-thin tracking-wider text-gray-800 mb-4">VERKNÜPFTE ESCORTS</h3>
-        {loadingGirls ? (
-          <div className="text-sm text-gray-500">Lade…</div>
-        ) : !girls || girls.length === 0 ? (
-          <div className="text-sm text-gray-500">Noch keine Escorts verbunden.</div>
-        ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {girls.map((g) => (
-              <li key={g.id} className="border border-gray-200 p-3 flex items-center gap-3">
-                <div className="h-12 w-12 bg-gray-100 border border-gray-200 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {g.profile?.avatar ? <img src={g.profile.avatar} alt={g.profile?.displayName || 'Escort'} className="h-full w-full object-cover" /> : <div className="h-full w-full flex items-center justify-center text-xs text-gray-500">Kein Bild</div>}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-medium tracking-wider text-gray-900 truncate">{g.profile?.displayName || g.email}</div>
-                  <div className="text-xs text-gray-500 truncate">{[g.profile?.city, g.profile?.country].filter(Boolean).join(', ')}</div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ConnectedEscortsSlider heading="AKTUELLE ESCORTS" items={girls ?? undefined as any} />
     </div>
   )
 }

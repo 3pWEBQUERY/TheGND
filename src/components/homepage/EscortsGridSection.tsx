@@ -135,6 +135,14 @@ export default function EscortsGridSection() {
                   ? 'ring-2 ring-amber-400 shadow-lg shadow-amber-200/60'
                   : 'ring-2 ring-pink-400 shadow-lg shadow-pink-200/60')
               : ''
+            const isNew = (() => {
+              const ts = (e as any)?.createdAt
+              if (!ts) return false
+              const t = new Date(ts as any).getTime()
+              if (!t) return false
+              const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+              return Date.now() - t <= SEVEN_DAYS
+            })()
             // Build rating from item fields or from ratingsMap fallback (comments API)
             const comments: any[] | undefined = Array.isArray((e as any)?.comments) ? (e as any).comments : undefined
             const reviews: any[] | undefined = Array.isArray((e as any)?.reviews) ? (e as any).reviews : undefined
@@ -179,8 +187,14 @@ export default function EscortsGridSection() {
                         </span>
                       </div>
                     )}
-                    {(e.isVerified || e.isAgeVerified) && (
+                    {(isNew || e.isVerified || e.isAgeVerified) && (
                       <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                        {isNew && (
+                          <span title="Neu" className="inline-flex items-center gap-1 h-6 px-2 bg-white/90 border border-pink-200 text-pink-600 text-[10px] font-semibold tracking-widest">
+                            <span className="h-2 w-2 rounded-full bg-pink-600"></span>
+                            NEU
+                          </span>
+                        )}
                         {e.isVerified && (
                           <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
                             <BadgeCheck className="h-4 w-4" />

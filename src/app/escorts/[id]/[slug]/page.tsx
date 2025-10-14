@@ -72,7 +72,11 @@ const capitalizeWords = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase()
 const parseJsonish = (s: string): any => {
   try {
     const trimmed = s.trim()
-    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+    if (
+      (trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    ) {
       return JSON.parse(trimmed)
     }
   } catch {}
@@ -245,10 +249,27 @@ async function getEscort(id: string) {
     }
   } catch {}
 
+  let isAvailable = false
+  try {
+    const avail = await (prisma as any).appSetting.findUnique({ where: { key: `escort:availability:${id}` } })
+    const av = (() => { try { return avail?.value ? JSON.parse(avail.value) : {} } catch { return {} } })()
+    isAvailable = !!av.available
+  } catch {}
+
+  let openingHoursObj: any = null
+  try {
+    const oh = user?.profile?.openingHours
+    if (oh && typeof oh === 'string') {
+      const parsed = JSON.parse(oh)
+      if (parsed && typeof parsed === 'object') openingHoursObj = parsed
+    }
+  } catch {}
+
   return {
     id: user.id,
     isOnline,
     vip: isVIP,
+    available: isAvailable,
     profileView: profile?.profileView ?? 'STANDARD',
     name: profile?.displayName ?? null,
     slogan: profile?.slogan ?? null,
@@ -262,6 +283,7 @@ async function getEscort(id: string) {
     mediaImages,
     services,
     socials,
+    openingHours: openingHoursObj,
     location: {
       address: profile?.address ?? null,
       city: profile?.city ?? null,
@@ -719,12 +741,17 @@ export default async function EscortProfilePage({ params, searchParams }: { para
                   <span title="VIP" className="inline-flex items-center justify-center h-6 px-2 bg-white/90 border border-amber-300 text-amber-700 text-[10px] font-semibold tracking-widest">VIP</span>
                 )}
               </div>
-              {ratingCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <RatingDonut value={ratingAvg} size={32} strokeWidth={6} showValue={false} />
-                  <div className="text-xs text-gray-700">{ratingAvg.toFixed(1)} / 5 <span className="text-gray-500">({ratingCount})</span></div>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 border text-[10px] uppercase tracking-widest ${((data as any)?.available ? 'border-emerald-300 text-emerald-700' : 'border-rose-300 text-rose-700')}`}>
+                  {((data as any)?.available ? 'VERFÜGBAR' : 'NICHT VERFÜGBAR')}
+                </span>
+                {ratingCount > 0 && (
+                  <>
+                    <RatingDonut value={ratingAvg} size={32} strokeWidth={6} showValue={false} />
+                    <div className="text-xs text-gray-700">{ratingAvg.toFixed(1)} / 5 <span className="text-gray-500">({ratingCount})</span></div>
+                  </>
+                )}
+              </div>
             </div>
             {(city || country) && (
               <p className="text-sm text-gray-500 mt-1">{city || country}</p>
@@ -879,6 +906,19 @@ export default async function EscortProfilePage({ params, searchParams }: { para
                           className="text-sm text-gray-700 mt-3 leading-relaxed"
                           buttonClassName="mt-3 text-xs font-light tracking-widest uppercase text-pink-500 hover:text-pink-600"
                         />
+                      </div>
+                    )}
+                    {(data as any)?.openingHours && Object.keys((data as any).openingHours || {}).length > 0 && (
+                      <div className="mt-8">
+                        <h2 className="text-lg font-light tracking-widest text-gray-800">ANWESENHEITSZEITEN</h2>
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {Object.entries((data as any).openingHours).map(([day, hours]: any) => (
+                            <div key={day} className="text-sm text-gray-800 flex items-center justify-between border border-gray-200 px-3 py-2">
+                              <span className="text-[10px] tracking-widest text-gray-500 mr-3">{String(day).toUpperCase()}</span>
+                              <span className="text-gray-900">{typeof hours === 'string' ? hours : (Array.isArray(hours) ? hours.join(', ') : '')}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

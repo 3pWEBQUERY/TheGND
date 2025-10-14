@@ -45,6 +45,14 @@ function EscortListRow({ e }: { e: EscortItem }) {
   const isWeek = Boolean((e as any)?.isEscortOfWeek) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_WEEK'))
   const isMonth = Boolean((e as any)?.isEscortOfMonth) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_MONTH'))
   const highlightLabel = isMonth ? 'ESCORT OF THE MONTH' : (isWeek ? 'ESCORT OF THE WEEK' : null)
+  const isNew = (() => {
+    const ts = (e as any)?.createdAt
+    if (!ts) return false
+    const t = new Date(ts as any).getTime()
+    if (!t) return false
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+    return Date.now() - t <= SEVEN_DAYS
+  })()
 
   const images = useMemo(() => {
     const arr: string[] = []
@@ -67,6 +75,14 @@ function EscortListRow({ e }: { e: EscortItem }) {
               <img src={main} alt={e.name ?? ''} className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full bg-gray-300" />
+            )}
+            {isNew && (
+              <div className="absolute top-2 right-2 z-10">
+                <span title="Neu" className="inline-flex items-center gap-1 h-6 px-2 bg-white/90 border border-pink-200 text-pink-600 text-[10px] font-semibold tracking-widest">
+                  <span className="h-2 w-2 rounded-full bg-pink-600"></span>
+                  NEU
+                </span>
+              </div>
             )}
           </div>
         </Link>

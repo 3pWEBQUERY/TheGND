@@ -5,7 +5,7 @@ export default function StoriesHero() {
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/stories.jpg"
+          src="/stories-hero.jpg"
           alt="Stories Hero"
           className="h-full w-full object-cover"
         />

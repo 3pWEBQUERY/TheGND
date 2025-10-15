@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { PenSquare, Sparkles } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { PenSquare, Sparkles, CheckCircle, Wand2, PlusCircle, FileText, AlignLeft, Type, ChevronDown } from 'lucide-react'
 import { useUploadThing } from '@/utils/uploadthing'
 import { renderMarkdownToSafeHtml } from '@/lib/markdown'
 
@@ -47,7 +47,7 @@ export default function BlogDashboard() {
   // AI assist (Mistral) state
   const [assistMode, setAssistMode] = useState<'proofread' | 'improve' | 'extend'>('improve')
   const [assistLanguage, setAssistLanguage] = useState<string>('de')
-  const [assistSource, setAssistSource] = useState<'content' | 'excerpt'>('content')
+  const [assistSource, setAssistSource] = useState<'content' | 'excerpt' | 'title'>('content')
   const [assistLoading, setAssistLoading] = useState(false)
   const [assistOutput, setAssistOutput] = useState('')
   const ASSIST_MODES = [
@@ -55,6 +55,9 @@ export default function BlogDashboard() {
     { k: 'improve', l: 'Verbessern' },
     { k: 'extend', l: 'Verlängern' },
   ] as const
+
+  const [langOpen, setLangOpen] = useState(false)
+  const langRef = useRef<HTMLDivElement>(null)
 
   const load = async () => {
     try {
@@ -72,15 +75,23 @@ export default function BlogDashboard() {
   }
 
   const runAssist = async () => {
-    const text = (assistSource === 'content' ? content : excerpt).trim()
-    if (!text) return
+    const hasContent = content.trim().length > 0
+    const hasExcerpt = excerpt.trim().length > 0
+    const willGenerateExcerpt = assistSource === 'excerpt' && !hasExcerpt && hasContent
+    const willGenerateTitle = assistSource === 'title' && (hasContent || hasExcerpt)
+    const inputText = willGenerateExcerpt
+      ? `Erstelle aus dem folgenden Inhalt eine Kurzbeschreibung in ${assistLanguage.toUpperCase()}. Anforderungen: 1–2 Sätze, prägnant, neugierig machend, ohne Emojis.\n\n${content.trim()}`
+      : willGenerateTitle
+      ? `Erstelle aus dem folgenden ${hasContent ? 'Inhalt' : 'Kurzbeschreibung'} einen prägnanten Blog-Titel in ${assistLanguage.toUpperCase()}. Anforderungen: max. 60 Zeichen, klar, anziehend, ohne Emojis und Anführungszeichen. Nur den Titel zurückgeben.\n\n${hasContent ? content.trim() : excerpt.trim()}`
+      : (assistSource === 'content' ? content : assistSource === 'excerpt' ? excerpt : title).trim()
+    if (!inputText) return
     try {
       setAssistLoading(true)
       setAssistOutput('')
       const res = await fetch('/api/blog/assist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, mode: assistMode, language: assistLanguage })
+        body: JSON.stringify({ text: inputText, mode: assistMode, language: assistLanguage })
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || 'Fehler bei der KI-Verarbeitung')
@@ -93,6 +104,16 @@ export default function BlogDashboard() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
 
   const create = async () => {
     try {
@@ -260,42 +281,87 @@ export default function BlogDashboard() {
 
           {/* Right column: AI Assist */}
           <aside className="border border-gray-200 p-4 bg-white">
-            <div className="text-[10px] uppercase tracking-widest text-gray-600">KI-ASSISTENT (Mistral)</div>
+            <div className="text-[10px] uppercase tracking-widest text-gray-600">KI-ASSISTENT</div>
             <div className="mt-3 grid gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-700">Modus</label>
-                <div className="mt-1 flex flex-wrap gap-2">
+                <label className="text-[10px] uppercase tracking-widest text-gray-700">MODUS</label>
+                <div className="mt-1 grid grid-cols-3 gap-2">
                   {ASSIST_MODES.map(m => (
                     <button
                       key={m.k}
                       type="button"
                       onClick={() => setAssistMode(m.k as 'proofread' | 'improve' | 'extend')}
-                      className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${assistMode===m.k ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}
+                      className={`w-full py-3 flex flex-col items-center justify-center text-[11px] uppercase tracking-widest border ${assistMode===m.k ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}
                     >
-                      {m.l}
+                      {m.k === 'proofread' ? (
+                        <CheckCircle className="h-5 w-5" />
+                      ) : m.k === 'improve' ? (
+                        <Wand2 className="h-5 w-5" />
+                      ) : (
+                        <PlusCircle className="h-5 w-5" />
+                      )}
+                      <span className="mt-1">{m.l}</span>
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-700">Quelle</label>
-                <div className="mt-1 flex gap-2">
-                  <button type="button" onClick={() => setAssistSource('content')} className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${assistSource==='content' ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}>Inhalt</button>
-                  <button type="button" onClick={() => setAssistSource('excerpt')} className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${assistSource==='excerpt' ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}>Kurzbeschreibung</button>
+                <label className="text-[10px] uppercase tracking-widest text-gray-700">QUELLE</label>
+                <div className="mt-1 grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAssistSource('content')}
+                    className={`w-full py-3 flex flex-col items-center justify-center text-[11px] uppercase tracking-widest border ${assistSource==='content' ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}
+                  >
+                    <FileText className="h-5 w-5" />
+                    <span className="mt-1 text-[10px] tracking-normal leading-tight text-center">Inhalt</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAssistSource('excerpt')}
+                    className={`w-full py-3 flex flex-col items-center justify-center text-[11px] uppercase tracking-widest border ${assistSource==='excerpt' ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}
+                  >
+                    <AlignLeft className="h-5 w-5" />
+                    <span className="mt-1 text-[9px] tracking-normal leading-tight text-center break-words">Kurzbeschreibung</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAssistSource('title')}
+                    className={`w-full py-3 flex flex-col items-center justify-center text-[11px] uppercase tracking-widest border ${assistSource==='title' ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}
+                  >
+                    <Type className="h-5 w-5" />
+                    <span className="mt-1 text-[10px] tracking-normal leading-tight text-center">Titel</span>
+                  </button>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-700">Sprache</label>
-                <select value={assistLanguage} onChange={(e) => setAssistLanguage(e.target.value)} className="mt-1 border border-gray-300 px-2 py-1 text-xs tracking-widest uppercase">
-                  <option value="de">DE</option>
-                  <option value="en">EN</option>
-                  <option value="fr">FR</option>
-                  <option value="it">IT</option>
-                  <option value="es">ES</option>
-                </select>
+                <label className="text-[10px] uppercase tracking-widest text-gray-700">SPRACHE</label>
+                <div className="mt-2 relative inline-block" ref={langRef}>
+                  <button
+                    type="button"
+                    onClick={() => setLangOpen(v => !v)}
+                    className="inline-flex items-center justify-between gap-1 w-24 border border-gray-300 bg-white px-2 py-1 text-xs tracking-widest uppercase"
+                  >
+                    {assistLanguage.toUpperCase()} <ChevronDown className="h-4 w-4" />
+                  </button>
+                  {langOpen && (
+                    <div className="absolute z-10 mt-1 w-28 bg-white border border-gray-200 shadow-sm">
+                      {(['de','en','fr','it','es'] as const).map(code => (
+                        <button
+                          key={code}
+                          type="button"
+                          onClick={() => { setAssistLanguage(code); setLangOpen(false) }}
+                          className={`block w-full text-left px-3 py-1.5 text-xs tracking-widest uppercase hover:bg-pink-50 ${assistLanguage===code ? 'bg-pink-50 text-pink-700' : 'text-gray-800'}`}
+                        >
+                          {code}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
-                <button type="button" onClick={runAssist} disabled={assistLoading || !(assistSource==='content' ? content.trim() : excerpt.trim())} className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white text-[11px] uppercase tracking-widest rounded-none disabled:opacity-60">
+                <button type="button" onClick={runAssist} disabled={assistLoading || !(assistSource==='content' ? content.trim() : (assistSource==='excerpt' ? (excerpt.trim() || content.trim()) : (content.trim() || excerpt.trim() || title.trim())))} className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white text-[11px] uppercase tracking-widest rounded-none disabled:opacity-60">
                   {assistLoading ? 'Arbeite…' : 'Text verbessern'}
                 </button>
                 <button type="button" onClick={() => setAssistOutput('')} className="px-4 py-2 border border-gray-300 text-gray-800 text-[11px] uppercase tracking-widest rounded-none">Leeren</button>
@@ -304,6 +370,7 @@ export default function BlogDashboard() {
                 {assistOutput || 'Noch keine Ausgabe.'}
               </div>
               <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={!assistOutput} onClick={() => setTitle(assistOutput)} className="px-3 py-2 text-[11px] uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">In Titel übernehmen</button>
                 <button type="button" disabled={!assistOutput} onClick={() => setContent(assistOutput)} className="px-3 py-2 text-[11px] uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">In Inhalt übernehmen</button>
                 <button type="button" disabled={!assistOutput} onClick={() => setExcerpt(assistOutput)} className="px-3 py-2 text-[11px] uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">In Kurzbeschreibung übernehmen</button>
               </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Bell, Menu, Home, Users2, Building2, BookOpen, Rss, MessageSquare, Briefcase, Search as SearchIcon, Tag, Info as InfoIcon, Settings as SettingsIcon, LogIn as LogInIcon, LogOut as LogOutIcon } from 'lucide-react'
+import { Bell, Menu, Home, Users2, Building2, BookOpen, Rss, MessageSquare, Briefcase, LayoutDashboard, Search as SearchIcon, Tag, Info as InfoIcon, Settings as SettingsIcon, LogIn as LogInIcon, LogOut as LogOutIcon } from 'lucide-react'
  
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -84,7 +84,7 @@ function LocaleSwitcher() {
 }
 
 export default function MinimalistNavigation() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const { t } = useTranslation('common')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [discoverOpen, setDiscoverOpen] = useState(false)
@@ -98,6 +98,7 @@ export default function MinimalistNavigation() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const infoCloseTimer = useRef<number | null>(null)
   const pathname = usePathname()
+  const isAuthed = status === 'authenticated'
 
   // Active path helper (strip locale prefix)
   const stripLocale = (p: string) => (p || '/').replace(/^(?:\/(de|en|fr|it|es|pt|nl|pl|cs|hu|ro))(?:\/+|$)/, '/') || '/'
@@ -190,69 +191,104 @@ export default function MinimalistNavigation() {
               >
                 <Menu className="h-5 w-5" />
               </button>
-              <SheetContent side="left" className="bg-neutral-900/95 text-white border-none ring-1 ring-white/10 backdrop-blur-md w-[84vw] sm:w-[360px] max-w-[360px]">
+              <SheetContent side="left" className="md:hidden bg-neutral-900/95 text-white border-none ring-1 ring-white/10 backdrop-blur-md w-[84vw] sm:w-[360px] max-w-[360px]">
                 <SheetHeader className="p-4">
                   <SheetTitle className="text-white font-light tracking-wider uppercase">THEGND MENÜ</SheetTitle>
                   <div className="mt-2 h-[2px] w-full rounded-full bg-gradient-to-r from-pink-600/0 via-pink-500/80 to-pink-600/0" aria-hidden="true" />
                 </SheetHeader>
                 <div className="px-2 py-3 space-y-1 text-sm">
                   {/* Auth section */}
-                  {!session?.user ? (
-                    <div className="mb-2 space-y-1">
-                      <Link href="/auth/signin" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/15 text-white tracking-widest uppercase">
-                        <LogInIcon className="h-4 w-4" /> Anmelden
-                      </Link>
-                      <Link href="/auth/signup" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-2 px-3 py-2 bg-pink-600 hover:bg-pink-500 text-white tracking-widest uppercase">
-                        <LogInIcon className="h-4 w-4 rotate-180" /> Registrieren
-                      </Link>
+                  {!isAuthed ? (
+                    <div className="mb-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link
+                          href="/auth/signin"
+                          onClick={() => setMobileNavOpen(false)}
+                          className="flex flex-col items-center justify-center gap-1 rounded-none py-3 bg-white/10 hover:bg-white/15 text-white text-[10px] tracking-widest uppercase"
+                        >
+                          <LogInIcon className="h-5 w-5" />
+                          <span>Anmelden</span>
+                        </Link>
+                        <Link
+                          href="/auth/signup"
+                          onClick={() => setMobileNavOpen(false)}
+                          className="flex flex-col items-center justify-center gap-1 rounded-none py-3 bg-pink-600 hover:bg-pink-500 text-white text-[10px] tracking-widest uppercase"
+                        >
+                          <LogInIcon className="h-5 w-5 rotate-180" />
+                          <span>Registrieren</span>
+                        </Link>
+                      </div>
                       <div
                         className="my-3 h-[2px] w-full rounded-full bg-gradient-to-r from-pink-600/0 via-pink-500/80 to-pink-600/0"
                         aria-hidden="true"
                       />
                     </div>
                   ) : (
-                    <div className="mb-2 space-y-1">
+                    <div className="mb-2">
                       <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-white/60">MEIN BEREICH</div>
-                      <Link href="/dashboard" onClick={() => setMobileNavOpen(false)} className={`flex items-center gap-2 px-3 py-2 tracking-widest uppercase ${isActive('/dashboard') ? 'bg-white/10 text-white' : 'text-white/90 hover:bg-white/10'}`}>
-                        <SettingsIcon className="h-4 w-4" /> Dashboard
-                      </Link>
-                      <Link href="/settings" onClick={() => setMobileNavOpen(false)} className={`flex items-center gap-2 px-3 py-2 tracking-widest uppercase ${isActive('/settings') ? 'bg-white/10 text-white' : 'text-white/90 hover:bg-white/10'}`}>
-                        <SettingsIcon className="h-4 w-4" /> Einstellungen
-                      </Link>
-                      <button onClick={() => { setMobileNavOpen(false); setTimeout(() => { const origin = typeof window !== 'undefined' ? window.location.origin : '/'; signOut({ callbackUrl: `${origin}/` }) }, 150) }} className="w-full flex items-center gap-2 px-3 py-2 text-white/90 hover:bg-white/10 tracking-widest uppercase">
-                        <LogOutIcon className="h-4 w-4" /> Abmelden
-                      </button>
+                      <div className="grid grid-cols-3 gap-2 px-2">
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setMobileNavOpen(false)}
+                          className={`flex flex-col items-center justify-center gap-1 py-3 rounded-none ring-1 tracking-widest uppercase text-[10px] ${isActive('/dashboard') ? 'bg-white/15 text-white ring-white/30' : 'bg-white/10 text-white/90 ring-white/20 hover:bg-white/15 hover:ring-white/30'}`}
+                        >
+                          <LayoutDashboard className="h-5 w-5" />
+                          <span>Dashboard</span>
+                        </Link>
+                        <Link
+                          href="/settings"
+                          onClick={() => setMobileNavOpen(false)}
+                          className={`flex flex-col items-center justify-center gap-1 py-3 rounded-none ring-1 tracking-widest uppercase text-[10px] ${isActive('/settings') ? 'bg-white/15 text-white ring-white/30' : 'bg-white/10 text-white/90 ring-white/20 hover:bg-white/15 hover:ring-white/30'}`}
+                        >
+                          <SettingsIcon className="h-5 w-5" />
+                          <span>Einstellungen</span>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setMobileNavOpen(false)
+                            setTimeout(() => {
+                              const origin = typeof window !== 'undefined' ? window.location.origin : '/'
+                              signOut({ callbackUrl: `${origin}/` })
+                            }, 150)
+                          }}
+                          className="flex flex-col items-center justify-center gap-1 py-3 rounded-none bg-white/10 text-white/90 hover:bg-red-600 ring-1 ring-white/20 hover:ring-red-500 tracking-widest uppercase text-[10px]"
+                        >
+                          <LogOutIcon className="h-5 w-5" />
+                          <span>Abmelden</span>
+                        </button>
+                      </div>
                       <div className="my-2 h-px bg-white/10" />
                     </div>
                   )}
 
                   {/* Main navigation items with icons */}
-                  {[
-                    { href: '/', label: 'Startseite', Icon: Home },
-                    { href: '/escorts', label: 'Escorts', Icon: Users2 },
-                    { href: '/agency', label: 'Agenturen', Icon: Building2 },
-                    { href: '/club-studio', label: 'Clubs & Studios', Icon: Building2 },
-                    { href: '/stories', label: 'Stories', Icon: BookOpen },
-                    { href: '/feed', label: 'Feed', Icon: Rss },
-                    { href: '/forum', label: 'Forum', Icon: MessageSquare },
-                    { href: '/jobs', label: 'Jobs', Icon: Briefcase },
-                    { href: '/mieten', label: 'Mieten', Icon: Building2 },
-                    { href: '/blog', label: 'Blog', Icon: BookOpen },
-                    { href: '/search', label: 'Suche', Icon: SearchIcon },
-                    { href: '/preise', label: 'Preise', Icon: Tag },
-                    { href: '/info', label: 'Info', Icon: InfoIcon },
-                  ].map(({ href, label, Icon }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      onClick={() => setMobileNavOpen(false)}
-                      className={`relative flex items-center gap-3 px-3 py-2 tracking-widest uppercase ${isActive(href) ? 'bg-white/10 text-white' : 'text-white/90 hover:bg-white/10'}`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{label}</span>
-                      {isActive(href) && <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-pink-500 rounded-sm" />}
-                    </Link>
-                  ))}
+                  <div className="grid grid-cols-3 gap-2 px-2">
+                    {[
+                      { href: '/', label: 'Startseite', Icon: Home },
+                      { href: '/escorts', label: 'Escorts', Icon: Users2 },
+                      { href: '/agency', label: 'Agenturen', Icon: Building2 },
+                      { href: '/club-studio', label: 'Clubs & Studios', Icon: Building2 },
+                      { href: '/stories', label: 'Stories', Icon: BookOpen },
+                      { href: '/feed', label: 'Feed', Icon: Rss },
+                      { href: '/forum', label: 'Forum', Icon: MessageSquare },
+                      { href: '/jobs', label: 'Jobs', Icon: Briefcase },
+                      { href: '/mieten', label: 'Mieten', Icon: Building2 },
+                      { href: '/blog', label: 'Blog', Icon: BookOpen },
+                      { href: '/search', label: 'Suche', Icon: SearchIcon },
+                      { href: '/preise', label: 'Preise', Icon: Tag },
+                      { href: '/info', label: 'Info', Icon: InfoIcon },
+                    ].map(({ href, label, Icon }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={() => setMobileNavOpen(false)}
+                        className={`flex flex-col items-center justify-center gap-1 py-3 rounded-none tracking-widest uppercase text-[10px] ${isActive(href) ? 'bg-white/15 text-white' : 'bg-white/10 text-white/90 hover:bg-white/15'}`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-center">{label}</span>
+                      </Link>
+                    ))}
+                  </div>
                   <div className="pt-[env(safe-area-inset-bottom)]" />
                 </div>
               </SheetContent>

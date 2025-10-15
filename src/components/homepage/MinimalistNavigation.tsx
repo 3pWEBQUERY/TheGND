@@ -344,7 +344,7 @@ export default function MinimalistNavigation() {
                           </Link>
                           <Link href="/club-studio" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
-                              <img src="/Blubs-Studios.jpg" alt="Clubs & Studios" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src="/Clubs-Studios.jpg" alt="Clubs & Studios" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
                                 <span className="text-xs tracking-widest text-white">{t('categories.clubsStudios', { defaultValue: 'CLUBS & STUDIOS' })}</span>
@@ -387,7 +387,7 @@ export default function MinimalistNavigation() {
                         <div className="grid grid-cols-2 gap-3">
                           <Link href="/stories" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
-                              <img src="/1.jpg" alt="Stories" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src="/Stories.jpg" alt="Stories" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
                                 <span className="text-xs tracking-widest text-white">{t('content.stories', { defaultValue: 'STORIES' })}</span>
@@ -396,7 +396,7 @@ export default function MinimalistNavigation() {
                           </Link>
                           <Link href="/feed" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
-                              <img src="/2.jpg" alt="Feeds" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src="/Feeds.jpg" alt="Feeds" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
                                 <span className="text-xs tracking-widest text-white">{t('content.feeds', { defaultValue: 'FEEDS' })}</span>
@@ -405,7 +405,7 @@ export default function MinimalistNavigation() {
                           </Link>
                           <Link href="/jobs" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
-                              <img src="/1.jpg" alt="Jobs" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src="/Jobs-Nav.jpg" alt="Jobs" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
                                 <span className="text-xs tracking-widest text-white">{t('content.jobs', { defaultValue: 'JOBS' })}</span>
@@ -414,7 +414,7 @@ export default function MinimalistNavigation() {
                           </Link>
                           <Link href="/mieten" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
-                              <img src="/2.jpg" alt="Mieten" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src="/Mieten.jpg" alt="Mieten" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
                                 <span className="text-xs tracking-widest text-white">{t('content.rent', { defaultValue: 'MIETEN' })}</span>

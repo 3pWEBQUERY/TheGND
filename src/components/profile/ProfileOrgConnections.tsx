@@ -46,7 +46,7 @@ export default function ProfileOrgConnections(props: {
             type="button"
             onClick={onSubmitJoin}
             disabled={joining}
-            className="px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:border-pink-500 hover:text-pink-600 disabled:opacity-50"
+            className="px-3 py-2 text-xs uppercase tracking-widest rounded-none bg-pink-600 hover:bg-pink-500 text-white border border-pink-600 hover:border-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {joining ? 'Verbinde…' : 'VERBINDEN'}
           </button>

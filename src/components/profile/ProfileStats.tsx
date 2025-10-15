@@ -9,7 +9,7 @@ type Props = {
 
 export default function ProfileStats({ postsCount, followersCount, followingCount, storiesCount = 0 }: Props) {
   return (
-    <div className="flex gap-8 pt-6 border-t border-gray-100">
+    <div className="flex justify-center md:justify-start gap-8 pt-6 border-t border-gray-100">
       <div className="text-center">
         <div className="text-xl font-thin tracking-wider text-gray-800">{postsCount}</div>
         <div className="text-xs font-light tracking-widest text-gray-500 uppercase">BEITRÄGE</div>

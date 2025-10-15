@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { PenSquare, Sparkles } from 'lucide-react'
 import { useUploadThing } from '@/utils/uploadthing'
 import { renderMarkdownToSafeHtml } from '@/lib/markdown'
 
@@ -43,6 +44,18 @@ export default function BlogDashboard() {
   const [editFiles, setEditFiles] = useState<File[]>([])
   const { startUpload: startEditUpload, isUploading: isEditUploading } = useUploadThing('postImages')
 
+  // AI assist (Mistral) state
+  const [assistMode, setAssistMode] = useState<'proofread' | 'improve' | 'extend'>('improve')
+  const [assistLanguage, setAssistLanguage] = useState<string>('de')
+  const [assistSource, setAssistSource] = useState<'content' | 'excerpt'>('content')
+  const [assistLoading, setAssistLoading] = useState(false)
+  const [assistOutput, setAssistOutput] = useState('')
+  const ASSIST_MODES = [
+    { k: 'proofread', l: 'Korrektur' },
+    { k: 'improve', l: 'Verbessern' },
+    { k: 'extend', l: 'Verlängern' },
+  ] as const
+
   const load = async () => {
     try {
       setLoading(true)
@@ -55,6 +68,27 @@ export default function BlogDashboard() {
       setError(e?.message || 'Fehler beim Laden')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const runAssist = async () => {
+    const text = (assistSource === 'content' ? content : excerpt).trim()
+    if (!text) return
+    try {
+      setAssistLoading(true)
+      setAssistOutput('')
+      const res = await fetch('/api/blog/assist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, mode: assistMode, language: assistLanguage })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Fehler bei der KI-Verarbeitung')
+      setAssistOutput(typeof data?.output === 'string' ? data.output : '')
+    } catch (e: any) {
+      setAssistOutput(e?.message || 'Fehler bei der KI-Verarbeitung')
+    } finally {
+      setAssistLoading(false)
     }
   }
 
@@ -162,64 +196,119 @@ export default function BlogDashboard() {
 
       {/* Create new post */}
       {tab === 'create' && (
-      <section className="border border-gray-200 p-4 max-w-2xl mx-auto w-full">
+      <section className="border border-gray-200 p-4 max-w-7xl mx-auto w-full">
         <h3 className="sr-only">Neuen Beitrag erstellen</h3>
-        <div className="mt-4 grid gap-5">
-          <div>
-            <label className="text-xs uppercase tracking-widest text-gray-800">Titel</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-widest text-gray-800">Slug (optional)</label>
-            <input value={slug} onChange={(e) => setSlug(e.target.value)} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-widest text-gray-800">Kurzbeschreibung</label>
-            <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={3} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-widest text-gray-800">Inhalt (Markdown/HTML)</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={8} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
-            <div className="mt-2">
-              <button type="button" onClick={() => setPreview(v => !v)} className="text-[11px] uppercase tracking-widest text-gray-600 hover:underline">
-                {preview ? 'Vorschau verbergen' : 'Vorschau anzeigen'}
-              </button>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          {/* Left column: form stack */}
+          <div className="grid gap-5">
+            <div>
+              <label className="text-xs uppercase tracking-widest text-gray-800">Titel</label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
             </div>
-            {preview && (
-              <div className="mt-3 border border-gray-200 p-3 bg-gray-50 text-sm text-gray-800">
-                <div dangerouslySetInnerHTML={{ __html: renderMarkdownToSafeHtml(content) }} />
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-widest text-gray-800">Cover Bild</label>
-            <input value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Bild-URL oder hochladen" className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
-            <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <input className="w-full text-sm" type="file" accept="image/*" onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files).slice(0,1) : [])} />
-              <button type="button" disabled={isUploading || files.length === 0} onClick={async () => {
-                if (files.length === 0) return
-                const res = await startUpload([files[0]])
-                const url = res && res[0] ? (res[0] as any).ufsUrl || (res[0] as any).url : null
-                if (url) setCoverImage(url)
-              }} className="w-full sm:w-auto px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">
-                {isUploading ? 'Lade hoch…' : 'Hochladen'}
-              </button>
+            <div>
+              <label className="text-xs uppercase tracking-widest text-gray-800">Slug (optional)</label>
+              <input value={slug} onChange={(e) => setSlug(e.target.value)} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
             </div>
-            {coverImage && (
-              <div className="mt-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={coverImage} alt="Cover" className="w-full max-w-md h-40 object-cover border border-gray-200" />
+            <div>
+              <label className="text-xs uppercase tracking-widest text-gray-800">Kurzbeschreibung</label>
+              <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={3} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-widest text-gray-800">Inhalt (Markdown/HTML)</label>
+              <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={8} className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
+              <div className="mt-2">
+                <button type="button" onClick={() => setPreview(v => !v)} className="text-[11px] uppercase tracking-widest text-gray-600 hover:underline">
+                  {preview ? 'Vorschau verbergen' : 'Vorschau anzeigen'}
+                </button>
               </div>
-            )}
+              {preview && (
+                <div className="mt-3 border border-gray-200 p-3 bg-gray-50 text-sm text-gray-800">
+                  <div dangerouslySetInnerHTML={{ __html: renderMarkdownToSafeHtml(content) }} />
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-widest text-gray-800">Cover Bild</label>
+              <input value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Bild-URL oder hochladen" className="mt-2 w-full border-0 border-b-2 border-gray-200 py-2 text-sm bg-transparent outline-none focus:border-pink-500" />
+              <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <input className="w-full text-sm" type="file" accept="image/*" onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files).slice(0,1) : [])} />
+                <button type="button" disabled={isUploading || files.length === 0} onClick={async () => {
+                  if (files.length === 0) return
+                  const res = await startUpload([files[0]])
+                  const url = res && res[0] ? (res[0] as any).ufsUrl || (res[0] as any).url : null
+                  if (url) setCoverImage(url)
+                }} className="w-full sm:w-auto px-3 py-2 text-xs uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">
+                  {isUploading ? 'Lade hoch…' : 'Hochladen'}
+                </button>
+              </div>
+              {coverImage && (
+                <div className="mt-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={coverImage} alt="Cover" className="w-full max-w-md h-40 object-cover border border-gray-200" />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-gray-800">
+                <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} /> Veröffentlichen
+              </label>
+            </div>
+            <div>
+              <button disabled={saving || isUploading} onClick={create} className="w-full sm:w-auto px-5 py-3 bg-pink-600 text-white text-xs uppercase tracking-widest rounded-none">{saving || isUploading ? 'Speichere…' : 'Beitrag erstellen'}</button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <label className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-gray-800">
-              <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} /> Veröffentlichen
-            </label>
-          </div>
-          <div>
-            <button disabled={saving || isUploading} onClick={create} className="w-full sm:w-auto px-5 py-3 bg-pink-600 text-white text-xs uppercase tracking-widest rounded-none">{saving || isUploading ? 'Speichere…' : 'Beitrag erstellen'}</button>
-          </div>
+
+          {/* Right column: AI Assist */}
+          <aside className="border border-gray-200 p-4 bg-white">
+            <div className="text-[10px] uppercase tracking-widest text-gray-600">KI-ASSISTENT (Mistral)</div>
+            <div className="mt-3 grid gap-3">
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-700">Modus</label>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {ASSIST_MODES.map(m => (
+                    <button
+                      key={m.k}
+                      type="button"
+                      onClick={() => setAssistMode(m.k as 'proofread' | 'improve' | 'extend')}
+                      className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${assistMode===m.k ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}
+                    >
+                      {m.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-700">Quelle</label>
+                <div className="mt-1 flex gap-2">
+                  <button type="button" onClick={() => setAssistSource('content')} className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${assistSource==='content' ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}>Inhalt</button>
+                  <button type="button" onClick={() => setAssistSource('excerpt')} className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${assistSource==='excerpt' ? 'bg-pink-600 text-white border-pink-600' : 'border-gray-300 text-gray-800 hover:bg-pink-50/40'}`}>Kurzbeschreibung</button>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-700">Sprache</label>
+                <select value={assistLanguage} onChange={(e) => setAssistLanguage(e.target.value)} className="mt-1 border border-gray-300 px-2 py-1 text-xs tracking-widest uppercase">
+                  <option value="de">DE</option>
+                  <option value="en">EN</option>
+                  <option value="fr">FR</option>
+                  <option value="it">IT</option>
+                  <option value="es">ES</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={runAssist} disabled={assistLoading || !(assistSource==='content' ? content.trim() : excerpt.trim())} className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white text-[11px] uppercase tracking-widest rounded-none disabled:opacity-60">
+                  {assistLoading ? 'Arbeite…' : 'Text verbessern'}
+                </button>
+                <button type="button" onClick={() => setAssistOutput('')} className="px-4 py-2 border border-gray-300 text-gray-800 text-[11px] uppercase tracking-widest rounded-none">Leeren</button>
+              </div>
+              <div className="min-h-32 border border-gray-200 p-3 bg-gray-50 text-sm text-gray-800 whitespace-pre-wrap">
+                {assistOutput || 'Noch keine Ausgabe.'}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={!assistOutput} onClick={() => setContent(assistOutput)} className="px-3 py-2 text-[11px] uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">In Inhalt übernehmen</button>
+                <button type="button" disabled={!assistOutput} onClick={() => setExcerpt(assistOutput)} className="px-3 py-2 text-[11px] uppercase tracking-widest border border-gray-300 hover:bg-pink-50/40 disabled:opacity-60">In Kurzbeschreibung übernehmen</button>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
       )}
@@ -231,7 +320,67 @@ export default function BlogDashboard() {
         {loading ? (
           <p className="text-sm text-gray-500">Lade…</p>
         ) : posts.length === 0 ? (
-          <p className="text-sm text-gray-500">Noch keine Beiträge.</p>
+          <div className="border border-gray-200 bg-white p-6 sm:p-10 text-center max-w-7xl mx-auto px-6">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-pink-50 text-pink-600">
+              <PenSquare className="h-6 w-6" />
+            </div>
+            <div className="text-sm md:text-base font-medium tracking-widest text-gray-900 uppercase">Jetzt deinen ersten Beitrag erstellen</div>
+            <div className="mt-2 text-sm text-gray-600 max-w-xl mx-auto">Teile Stories, Tipps und Erfahrungen mit der Community. Sichtbarkeit erhöhst du mit Titelbild und Veröffentlichung.</div>
+            <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button onClick={() => setTab('create')} className="px-5 py-3 bg-pink-600 hover:bg-pink-500 text-white text-xs uppercase tracking-widest rounded-none">Beitrag erstellen</button>
+              <button onClick={() => { setTitle(''); setExcerpt(''); setContent(''); setPreview(false); }} className="px-5 py-3 border border-gray-300 text-gray-800 text-xs uppercase tracking-widest rounded-none">Später</button>
+            </div>
+            <div className="mt-6 grid gap-2 sm:grid-cols-3 md:grid-cols-4 text-left">
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Top 5 Tipps für ein gelungenes Shooting</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Hinter den Kulissen: Mein Arbeitsalltag</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">So bekommst du mehr Anfragen</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">5 häufige Fragen meiner Kunden (mit Antworten)</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Meine Lieblings-Locations für Fotos & Videos</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Vorher/Nachher: Profil-Optimierung mit Beispielen</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Ausrüstung: Meine Must‑haves und warum</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Meine Story: So bin ich gestartet</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Sicherheit unterwegs: Tipps & Best Practices</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Deine Geschichten: Was dich bewegt</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Lustigste Geschichten mit Freiern</div>
+              </div>
+              <div className="border border-gray-200 p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                <div className="mt-1 text-sm text-gray-800">Tipps für Einsteiger: So startest du richtig</div>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
             {posts.map((p) => (

@@ -105,6 +105,16 @@ export default function DashboardMobileNavigation({ session, activeTab, setActiv
         >
           FORUM
         </button>
+        {userType === 'ESCORT' && (
+          <button 
+            onClick={() => setActiveTab('dates')}
+            className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${
+              activeTab === 'dates' ? 'text-pink-500 border-pink-500' : 'text-gray-600 border-transparent hover:text-pink-500'
+            }`}
+          >
+            DATE ANFRAGEN
+          </button>
+        )}
         <button 
           onClick={() => setActiveTab('blog')}
           className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${

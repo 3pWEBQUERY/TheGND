@@ -412,6 +412,17 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                 FORUM
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'forum' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
+              {userType === 'ESCORT' && (
+                <Link 
+                  href="/dashboard?tab=dates"
+                  className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
+                    activeTab === 'dates' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
+                  }`}
+                >
+                  DATE ANFRAGEN
+                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'dates' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                </Link>
+              )}
               <Link 
                 href="/dashboard?tab=blog"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${

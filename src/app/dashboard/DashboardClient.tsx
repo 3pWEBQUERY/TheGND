@@ -32,6 +32,8 @@ import BusinessOnly from '@/components/dashboard/BusinessOnly'
 import DashboardSettings from '@/components/dashboard/DashboardSettings'
 import BlogDashboard from '@/components/blog/BlogDashboard'
 import ConnectedEscortsSlider from '@/components/dashboard/ConnectedEscortsSlider'
+import DatesPanel from '@/components/dates/DatesPanel'
+import DatesCalendarWidget from '@/components/dates/DatesCalendarWidget'
 
  
 
@@ -356,6 +358,14 @@ export default function DashboardClient() {
                 onClose={() => setTicketModalOpen(false)}
               />
 
+              {/* Calendar under VERIFIZIERUNGS-TICKET section */}
+              <div className="bg-white border border-gray-200 p-6">
+                <h2 className="text-sm font-light tracking-widest text-gray-800 uppercase">KALENDER</h2>
+                <div className="mt-3">
+                  <DatesCalendarWidget scope={userType === 'ESCORT' ? 'ESCORT' : 'MEMBER'} />
+                </div>
+              </div>
+
               {/* Profile Analytics (shown only if add-on PROFILE_ANALYTICS is globally active and enabled for user) */}
               <ProfileAnalyticsWidget />
 
@@ -363,6 +373,7 @@ export default function DashboardClient() {
               {isBusiness && (
                 <ConnectedEscortsSlider heading="AKTUELLE ESCORTS" />
               )}
+
             </div>
           )}
           
@@ -394,6 +405,9 @@ export default function DashboardClient() {
           )}
           {activeTab === 'blog' && (
             <BlogDashboard />
+          )}
+          {activeTab === 'dates' && (
+            <DatesPanel />
           )}
           {activeTab === 'jobs' && (
             <BusinessOnly isBusiness={isBusiness} fallbackMessage="Nur Agenturen, Clubs oder Studios können Jobs verwalten.">

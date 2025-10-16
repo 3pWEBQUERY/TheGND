@@ -145,4 +145,7 @@
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   /* Brand gradient utility */
   .brand-gradient { background-image: linear-gradient(to bottom right, var(--brand-pink), var(--brand-purple)); }
+  /* Google Places dropdown should float above dialogs */
+  .pac-container { z-index: 2147483647 !important; }
+  .pac-item { cursor: pointer; }
 }

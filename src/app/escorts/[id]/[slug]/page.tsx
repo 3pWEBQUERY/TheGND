@@ -27,6 +27,7 @@ import AltEscortViewTwo from '@/components/escort-views/AltEscortViewTwo'
 import OnlineBadge from '@/components/OnlineBadge'
 import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
 import { headers } from 'next/headers'
+import DateRequestDialog from '@/components/dates/DateRequestDialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -767,6 +768,8 @@ export default async function EscortProfilePage({ params, searchParams }: { para
                     ANRUFEN
                   </a>
                 )}
+                {/* Date booking dialog trigger */}
+                <DateRequestDialog escortId={escortId} escortName={name} defaultCity={city} escortAvatar={image} />
                 {contact.website && (
                   <a href={contact.website} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">
                     WEBSEITE

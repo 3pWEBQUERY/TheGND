@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Wand2 } from 'lucide-react'
 import ProfileTabsBar from '@/components/profile/ProfileTabsBar'
 import ProfileAboutTab from '@/components/profile/ProfileAboutTab'
@@ -44,6 +44,8 @@ export default function ProfileTabs(props: {
     visitors,
   } = props
 
+  const [aiInfoOpen, setAiInfoOpen] = useState(false)
+
   return (
     <div className="bg-white border border-gray-100 rounded-none">
       <ProfileTabsBar active={active as any} onChange={onChange} />
@@ -57,26 +59,25 @@ export default function ProfileTabs(props: {
         {active === 'gallery' && (
           <>
             {isOwnProfile && userType === 'ESCORT' && (
-              <div className="relative mb-12 rounded-none border border-pink-500 border-l-8 border-l-pink-600 bg-gradient-to-r from-pink-200 via-pink-100 to-white p-10 sm:p-12 shadow-xl ring-2 ring-pink-200/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-10 min-h-[260px] sm:min-h-[300px]">
+              <div className="relative mb-6 rounded-none border border-pink-200 border-l-2 border-l-pink-400 bg-gradient-to-r from-pink-50 to-white p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-h-[140px] sm:min-h-[160px]">
                 <div className="flex items-start gap-4">
-                  <div className="hidden sm:flex items-center justify-center h-20 w-20 bg-pink-600 text-white">
-                    <Wand2 className="h-10 w-10" />
+                  <div className="hidden sm:flex items-center justify-center h-10 w-10 bg-pink-600 text-white">
+                    <Wand2 className="h-5 w-5" />
                   </div>
                   <div>
-                    <span className="inline-block mb-3 text-[10px] uppercase tracking-widest text-white bg-pink-600 px-2 py-0.5 animate-pulse">NEU</span>
-                    <h3 className="text-3xl md:text-4xl font-light tracking-wider text-gray-900 mb-3">BILDER PER KI VERBESSERN</h3>
-                    <p className="text-base md:text-lg font-light tracking-wide text-gray-700">Verbessere deine Fotos automatisch – mehr Schärfe, bessere Farben und weniger Rauschen – mit nur einem Klick.</p>
+                    <span className="inline-block mb-1 text-[10px] uppercase tracking-widest text-white bg-pink-600 px-2 py-0.5">NEU</span>
+                    <h3 className="text-lg md:text-xl font-light tracking-wider text-gray-900 mb-0.5">BILDER PER KI VERBESSERN</h3>
+                    <p className="text-xs md:text-sm font-light tracking-wide text-gray-700">Verbessere deine Fotos automatisch – mehr Schärfe, bessere Farben und weniger Rauschen – mit nur einem Klick.</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => { try { window.alert('KI-Optimierung folgt in Kürze.'); } catch {} }}
-                  className="inline-flex items-center gap-2 px-7 py-4 text-base md:text-lg uppercase tracking-widest bg-pink-600 text-white hover:bg-pink-700 shadow-xl shadow-pink-200/60 hover:shadow-2xl transition transform hover:scale-[1.02] ring-2 ring-pink-300"
+                  onClick={() => setAiInfoOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm uppercase tracking-widest bg-pink-600 text-white hover:bg-pink-700 shadow-sm transition"
                 >
-                  <Wand2 className="h-7 w-7" />
+                  <Wand2 className="h-4 w-4" />
                   JETZT VERBESSERN
                 </button>
-                <Wand2 className="absolute -top-4 -right-4 h-32 w-32 rotate-12 text-pink-300/20 hidden md:block pointer-events-none" />
               </div>
             )}
             <ProfileGalleryGrid
@@ -89,6 +90,30 @@ export default function ProfileTabs(props: {
               onDelete={(item, index) => onDelete(item, index)}
               onOpenLightbox={(index) => onOpenLightbox(index)}
             />
+            {aiInfoOpen && (
+              <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+                <div className="bg-white w-full max-w-lg border border-gray-200">
+                  <div className="p-6 space-y-4">
+                    <h3 className="text-lg font-thin tracking-widest text-gray-800 uppercase">KI‑Bildverbesserung</h3>
+                    <p className="text-sm text-gray-700">Mit der KI kannst du deine Fotos mit einem Klick verbessern. Folgende Funktionen sind geplant:</p>
+                    <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                      <li>Automatische Optimierung: Schärfe, Kontrast, Rauschen</li>
+                      <li>Retusche & Hintergrund‑Optimierung (in Arbeit)</li>
+                      <li>Serienverarbeitung mehrerer Bilder (in Arbeit)</li>
+                    </ul>
+                    <div className="text-xs text-gray-500">Diese Funktion befindet sich noch in Arbeit. Verfügbarkeit folgt in Kürze.</div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        onClick={() => setAiInfoOpen(false)}
+                        className="px-4 py-2 text-xs uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-pink-500 hover:text-pink-600"
+                      >
+                        Schließen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
         {active === 'contact' && profile && (

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { PenSquare, Sparkles, CheckCircle, Wand2, PlusCircle, FileText, AlignLeft, Type, ChevronDown } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { PenSquare, Sparkles, CheckCircle, Wand2, PlusCircle, FileText, AlignLeft, Type, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useUploadThing } from '@/utils/uploadthing'
 import { renderMarkdownToSafeHtml } from '@/lib/markdown'
 
@@ -20,11 +21,30 @@ interface BlogPostItem {
 }
 
 export default function BlogDashboard() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [posts, setPosts] = useState<BlogPostItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [tab, setTab] = useState<'list' | 'create'>('list')
+  const IDEAS = [
+    'Top 5 Tipps für ein gelungenes Shooting',
+    'Hinter den Kulissen: Mein Arbeitsalltag',
+    'So bekommst du mehr Anfragen',
+    '5 häufige Fragen meiner Kunden (mit Antworten)',
+    'Meine Lieblings-Locations für Fotos & Videos',
+    'Vorher/Nachher: Profil-Optimierung mit Beispielen',
+    'Ausrüstung: Meine Must‑haves und warum',
+    'Meine Story: So bin ich gestartet',
+    'Sicherheit unterwegs: Tipps & Best Practices',
+    'Deine Geschichten: Was dich bewegt',
+    'Lustigste Geschichten mit Freiern',
+    'Tipps für Einsteiger: So startest du richtig',
+  ] as const
+  const [ideaIdxM, setIdeaIdxM] = useState(0)
+  const [ideaIdxD, setIdeaIdxD] = useState(0)
+  const ideaSlidesD = Array.from({ length: Math.ceil(IDEAS.length / 4) }, (_, i) => IDEAS.slice(i * 4, (i + 1) * 4))
 
   // New post form
   const [title, setTitle] = useState('')
@@ -114,6 +134,22 @@ export default function BlogDashboard() {
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
+
+  useEffect(() => {
+    try {
+      const v = searchParams.get('view')
+      if (v === 'create' || v === 'new') {
+        setTab('create')
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (tab === 'create') {
+      try { document.getElementById('blog-create')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch {}
+    }
+  }, [tab])
 
   const create = async () => {
     try {
@@ -217,7 +253,7 @@ export default function BlogDashboard() {
 
       {/* Create new post */}
       {tab === 'create' && (
-      <section className="border border-gray-200 p-4 max-w-7xl mx-auto w-full">
+      <section id="blog-create" className="border border-gray-200 p-4 max-w-7xl mx-auto w-full">
         <h3 className="sr-only">Neuen Beitrag erstellen</h3>
         <div className="mt-4 grid gap-6 md:grid-cols-2">
           {/* Left column: form stack */}
@@ -383,6 +419,16 @@ export default function BlogDashboard() {
       {/* List of own posts */}
       {tab === 'list' && (
       <section>
+        {/* Mobile header with + NEU action */}
+        <div className="sm:hidden p-4 border border-gray-200 border-b-0 bg-white flex items-center justify-between">
+          <h3 className="text-base font-thin tracking-wider text-gray-800">MEINE BEITRÄGE</h3>
+          <button
+            className="text-xs font-light tracking-widest text-pink-500 hover:text-pink-600 transition-colors uppercase"
+            onClick={() => { setTab('create'); try { router.push('/dashboard?tab=blog&view=create') } catch {}; try { document.getElementById('blog-create')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch {} }}
+          >
+            + NEU
+          </button>
+        </div>
         <h3 className="sr-only">Meine Beiträge</h3>
         {loading ? (
           <p className="text-sm text-gray-500">Lade…</p>
@@ -397,59 +443,50 @@ export default function BlogDashboard() {
               <button onClick={() => setTab('create')} className="px-5 py-3 bg-pink-600 hover:bg-pink-500 text-white text-xs uppercase tracking-widest rounded-none">Beitrag erstellen</button>
               <button onClick={() => { setTitle(''); setExcerpt(''); setContent(''); setPreview(false); }} className="px-5 py-3 border border-gray-300 text-gray-800 text-xs uppercase tracking-widest rounded-none">Später</button>
             </div>
-            <div className="mt-6 grid gap-2 sm:grid-cols-3 md:grid-cols-4 text-left">
+            <div className="mt-6 md:hidden">
               <div className="border border-gray-200 p-3">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Top 5 Tipps für ein gelungenes Shooting</div>
+                <div className="mt-1 text-sm text-gray-800">{IDEAS[ideaIdxM]}</div>
               </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Hinter den Kulissen: Mein Arbeitsalltag</div>
+              <div className="mt-3 flex items-center justify-center gap-3">
+                <button aria-label="Zurück" onClick={() => setIdeaIdxM((i) => (i - 1 + IDEAS.length) % IDEAS.length)} className="p-2 border border-gray-300 hover:bg-pink-50/40">
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button aria-label="Weiter" onClick={() => setIdeaIdxM((i) => (i + 1) % IDEAS.length)} className="p-2 border border-gray-300 hover:bg-pink-50/40">
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">So bekommst du mehr Anfragen</div>
+            </div>
+            <div className="mt-6 hidden md:block">
+              <div className="grid gap-2 md:grid-cols-4 text-left">
+                {ideaSlidesD[ideaIdxD]?.map((txt, idx) => (
+                  <div key={idx} className="border border-gray-200 p-3">
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
+                    <div className="mt-1 text-sm text-gray-800">{txt}</div>
+                  </div>
+                ))}
               </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">5 häufige Fragen meiner Kunden (mit Antworten)</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Meine Lieblings-Locations für Fotos & Videos</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Vorher/Nachher: Profil-Optimierung mit Beispielen</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Ausrüstung: Meine Must‑haves und warum</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Meine Story: So bin ich gestartet</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Sicherheit unterwegs: Tipps & Best Practices</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Deine Geschichten: Was dich bewegt</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Lustigste Geschichten mit Freiern</div>
-              </div>
-              <div className="border border-gray-200 p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-700"><Sparkles className="h-4 w-4 text-pink-600"/> Idee</div>
-                <div className="mt-1 text-sm text-gray-800">Tipps für Einsteiger: So startest du richtig</div>
+              <div className="mt-3 flex items-center justify-center gap-3">
+                <button aria-label="Zurück" onClick={() => setIdeaIdxD((i) => (i - 1 + ideaSlidesD.length) % ideaSlidesD.length)} className="p-2 border border-gray-300 hover:bg-pink-50/40">
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button aria-label="Weiter" onClick={() => setIdeaIdxD((i) => (i + 1) % ideaSlidesD.length)} className="p-2 border border-gray-300 hover:bg-pink-50/40">
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
+            <div className="hidden sm:flex items-center justify-between border border-gray-200 bg-white p-4">
+              <div className="text-base font-thin tracking-wider text-gray-800">MEINE BEITRÄGE</div>
+              <button
+                className="text-xs font-light tracking-widest text-pink-500 hover:text-pink-600 transition-colors uppercase"
+                onClick={() => { setTab('create'); try { router.push('/dashboard?tab=blog&view=create') } catch {}; try { document.getElementById('blog-create')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch {} }}
+              >
+                + NEU
+              </button>
+            </div>
             {posts.map((p) => (
               <div key={p.id} className="border border-gray-200">
                 {/* Header row becomes grid on mobile so buttons fall below and align right */}

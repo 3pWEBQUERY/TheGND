@@ -353,14 +353,14 @@ export default function MarketingPage() {
                 )
               })}
             </ul>
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-gray-700">
                 Gesamt:
                 <span className="ml-2 font-semibold text-gray-900">
                   {formatCHF((Object.entries(cart) as [PlacementKey, Duration][])?.reduce((sum, [k, d]) => sum + PRICES[k][d], 0))}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 sm:justify-end">
                 <Button onClick={() => setCart({})} className="bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-4 py-2 h-auto text-xs uppercase tracking-widest">
                   Auswahl zurücksetzen
                 </Button>

@@ -80,6 +80,7 @@ export default function MessagingComponent() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [prefill, setPrefill] = useState<{ id: string; name?: string; avatar?: string; userType?: string } | null>(null)
+  const [translations, setTranslations] = useState<Record<string, { t: string; tr: boolean; showOrig: boolean }>>({})
 
   useEffect(() => {
     fetchConversations()
@@ -105,6 +106,30 @@ export default function MessagingComponent() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!session?.user?.id) return
+      const list = messages.filter(m => m.senderId !== session.user.id && !translations[m.id])
+      for (const m of list) {
+        try {
+          const res = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: m.content, targetLang: 'Deutsch' }) })
+          if (!res.ok) {
+            setTranslations(prev => ({ ...prev, [m.id]: { t: m.content, tr: false, showOrig: false } }))
+            continue
+          }
+          const data = await res.json().catch(() => ({}))
+          const translated = typeof data?.translated === 'string' ? data.translated : ''
+          const tr = translated && translated.trim() !== m.content.trim()
+          setTranslations(prev => ({ ...prev, [m.id]: { t: translated || m.content, tr, showOrig: false } }))
+        } catch {
+          setTranslations(prev => ({ ...prev, [m.id]: { t: m.content, tr: false, showOrig: false } }))
+        }
+      }
+    }
+    run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, session?.user?.id])
 
   // Focus message textarea when a conversation is selected
   useEffect(() => {
@@ -281,14 +306,8 @@ export default function MessagingComponent() {
       <div className="bg-white border border-gray-100 rounded-none sm:hidden">
         {!selectedConversation ? (
           <div className="h-[70vh] flex flex-col">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-start">
               <h2 className="text-base font-thin tracking-wider text-gray-800">NACHRICHTEN</h2>
-              <button 
-                className="text-xs font-light tracking-widest text-pink-500 hover:text-pink-600 transition-colors uppercase"
-                onClick={() => setNewConversationOpen(true)}
-              >
-                + NEU
-              </button>
             </div>
             <div className="flex-1 overflow-y-auto">
               {conversations.map(conversation => {
@@ -401,11 +420,25 @@ export default function MessagingComponent() {
               <div className="space-y-3">
                 {messages.map(message => {
                   const isOwnMessage = message.senderId === session?.user?.id
+                  const tr = translations[message.id]
+                  const showTranslated = tr && tr.tr && !tr.showOrig && !isOwnMessage
+                  const textToShow = showTranslated ? tr!.t : message.content
                   return (
                     <div key={message.id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] px-3 py-2 rounded-none ${isOwnMessage ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                        <p className="text-sm font-light tracking-wide">{message.content}</p>
-                        <div className={`flex items-center justify-end mt-1 space-x-1 text-[11px] font-light tracking-wide ${isOwnMessage ? 'text-pink-100' : 'text-gray-500'}`}>
+                        <p className="text-sm font-light tracking-wide">{textToShow}</p>
+                        <div className={`flex items-center justify-end mt-1 space-x-2 text-[11px] font-light tracking-wide ${isOwnMessage ? 'text-pink-100' : 'text-gray-500'}`}>
+                          {!isOwnMessage && tr?.tr && !tr.showOrig && (
+                            <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 uppercase tracking-widest">Übersetzt</span>
+                          )}
+                          {!isOwnMessage && tr?.tr && (
+                            <button
+                              className={`${isOwnMessage ? '' : 'text-gray-600 hover:text-gray-800'} uppercase tracking-widest`}
+                              onClick={() => setTranslations(prev => ({ ...prev, [message.id]: { ...(prev[message.id] || { t: message.content, tr: false, showOrig: false }), showOrig: !prev[message.id]?.showOrig } }))}
+                            >
+                              {tr.showOrig ? 'Übersetzung anzeigen' : 'Original anzeigen'}
+                            </button>
+                          )}
                           <span>{formatTime(message.createdAt)}</span>
                           {isOwnMessage && (message.isRead ? (<CheckCheck className="h-3 w-3" />) : (<Check className="h-3 w-3" />))}
                         </div>
@@ -575,7 +608,9 @@ export default function MessagingComponent() {
               <div className="space-y-4">
                 {messages.map(message => {
                   const isOwnMessage = message.senderId === session?.user?.id
-                  
+                  const tr = translations[message.id]
+                  const showTranslated = tr && tr.tr && !tr.showOrig && !isOwnMessage
+                  const textToShow = showTranslated ? tr!.t : message.content
                   return (
                     <div
                       key={message.id}
@@ -586,10 +621,21 @@ export default function MessagingComponent() {
                           ? 'bg-pink-500 text-white' 
                           : 'bg-gray-100 text-gray-900'
                       }`}>
-                        <p className="text-sm font-light tracking-wide">{message.content}</p>
-                        <div className={`flex items-center justify-end mt-2 space-x-1 text-xs font-light tracking-wide ${
+                        <p className="text-sm font-light tracking-wide">{textToShow}</p>
+                        <div className={`flex items-center justify-end mt-2 space-x-2 text-xs font-light tracking-wide ${
                           isOwnMessage ? 'text-pink-100' : 'text-gray-500'
                         }`}>
+                          {!isOwnMessage && tr?.tr && !tr.showOrig && (
+                            <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 uppercase tracking-widest">Übersetzt</span>
+                          )}
+                          {!isOwnMessage && tr?.tr && (
+                            <button
+                              className={`${isOwnMessage ? '' : 'text-gray-600 hover:text-gray-800'} uppercase tracking-widest`}
+                              onClick={() => setTranslations(prev => ({ ...prev, [message.id]: { ...(prev[message.id] || { t: message.content, tr: false, showOrig: false }), showOrig: !prev[message.id]?.showOrig } }))}
+                            >
+                              {tr.showOrig ? 'Übersetzung anzeigen' : 'Original anzeigen'}
+                            </button>
+                          )}
                           <span>{formatTime(message.createdAt)}</span>
                           {isOwnMessage && (
                             message.isRead ? (
@@ -649,7 +695,7 @@ export default function MessagingComponent() {
 
       {/* New Conversation Dialog */}
       {newConversationOpen && (
-        <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50 p-6">
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-6">
           <div className="bg-white max-w-lg w-full rounded-none">
             <div className="p-8">
               <div className="text-center mb-6">
@@ -709,8 +755,9 @@ export default function MessagingComponent() {
                 </div>
                 
                 <div className="flex justify-end pt-4">
-                  <button 
-                    className="text-xs font-light tracking-widest text-gray-600 hover:text-gray-800 transition-colors uppercase"
+                  <button
+                    type="button"
+                    className="bg-pink-500 hover:bg-pink-600 text-white text-xs font-light tracking-widest px-4 py-2 rounded-none uppercase"
                     onClick={() => {
                       setNewConversationOpen(false)
                       setSearchQuery('')

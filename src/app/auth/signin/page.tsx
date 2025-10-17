@@ -12,12 +12,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { signInSchema } from '@/lib/validations'
 import { z } from 'zod'
 import { ArrowLeft } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 type SignInForm = z.infer<typeof signInSchema>
 
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotMessage, setForgotMessage] = useState('')
+  const [forgotError, setForgotError] = useState('')
   const router = useRouter()
 
   const {
@@ -124,6 +130,15 @@ export default function SignInPage() {
                 {errors.password && (
                   <p className="text-xs font-light text-red-600 mt-1">{errors.password.message}</p>
                 )}
+                <div className="mt-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => { setForgotOpen(true); setForgotError(''); setForgotMessage(''); setForgotEmail('') }}
+                    className="text-xs font-light tracking-widest text-pink-600 hover:text-pink-700 uppercase"
+                  >
+                    PASSWORT VERGESSEN
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -146,6 +161,69 @@ export default function SignInPage() {
               </div>
             </div>
           </form>
+
+          {/* Passwort vergessen Dialog */}
+          <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+            <DialogContent className="rounded-none border-gray-200" showCloseButton>
+              <DialogHeader>
+                <DialogTitle className="text-lg font-thin tracking-wider text-gray-800">PASSWORT VERGESSEN</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {forgotMessage ? (
+                  <div className="p-3 text-sm font-light text-emerald-700 bg-emerald-50 border border-emerald-200">{forgotMessage}</div>
+                ) : null}
+                {forgotError ? (
+                  <div className="p-3 text-sm font-light text-red-700 bg-red-50 border border-red-200">{forgotError}</div>
+                ) : null}
+                <div className="space-y-2">
+                  <Label className="text-xs font-light tracking-widest text-gray-800 uppercase">E-Mail-Adresse</Label>
+                  <Input
+                    type="email"
+                    placeholder="thegnd@thegnd.io"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="border-0 border-b-2 border-gray-200 rounded-none px-0 py-3 text-sm font-light focus:border-pink-500 focus:ring-0 bg-transparent"
+                  />
+                </div>
+                <div>
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      setForgotError('')
+                      setForgotMessage('')
+                      const email = (forgotEmail || '').trim().toLowerCase()
+                      if (!email) {
+                        setForgotError('Bitte E-Mail-Adresse angeben')
+                        return
+                      }
+                      setForgotLoading(true)
+                      try {
+                        const res = await fetch('/api/auth/password/forgot', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email })
+                        })
+                        const data = await res.json().catch(() => ({}))
+                        if (!res.ok) {
+                          setForgotError(data?.error || 'Fehler beim Senden')
+                        } else {
+                          setForgotMessage('Wenn ein Konto existiert, wurde eine E-Mail gesendet.')
+                        }
+                      } catch (e) {
+                        setForgotError('Serverfehler')
+                      } finally {
+                        setForgotLoading(false)
+                      }
+                    }}
+                    disabled={forgotLoading}
+                    className="w-full bg-pink-500 hover:bg-pink-600 text-white font-light tracking-widest py-3 text-sm uppercase rounded-none"
+                  >
+                    {forgotLoading ? 'Senden…' : 'Link senden'}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

@@ -78,12 +78,20 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     try {
       const targetUserId = (session as any).user.id === dr.escortId ? dr.memberId : dr.escortId
       if (targetUserId) {
+        const statusMap: Record<string, string> = {
+          PENDING: 'OFFEN',
+          ACCEPTED: 'AKZEPTIERT',
+          DECLINED: 'ABGELEHNT',
+          CANCELED: 'STORNIERT',
+          EXPIRED: 'ABGELAUFEN',
+        }
+        const statusLabel = statusMap[status] || status
         await (prisma as any).notification.create({
           data: {
             userId: targetUserId,
             type: 'message',
             title: 'Date-Anfrage aktualisiert',
-            message: `Status: ${status} · von [uid:${(session as any).user.id}]`,
+            message: `Status: ${statusLabel} · von [uid:${(session as any).user.id}]`,
             isRead: false,
           }
         })

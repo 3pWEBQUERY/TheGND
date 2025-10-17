@@ -317,6 +317,9 @@ model User {
   reviewTicketsIssued   ReviewTicket[] @relation("TicketIssuedBy")
   reviewTicketsRedeemed ReviewTicket[] @relation("TicketRedeemedBy")
 
+  // Auth: password reset tokens
+  passwordResetTokens  PasswordResetToken[]
+
   @@map("users")
 }
 
@@ -332,6 +335,19 @@ model ProfileVisit {
   @@index([profileUserId, visitedAt])
   @@index([visitorId, visitedAt])
   @@map("profile_visits")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
 }
 
 // Profile Model with different fields based on UserType

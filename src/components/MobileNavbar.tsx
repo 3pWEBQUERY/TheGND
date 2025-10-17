@@ -100,18 +100,10 @@ export default function MobileNavbar() {
             <Home className={iconClass(isActive("/"))} />
           </Link>
 
-          {/* ESCORT (dropdown) */}
-          <button
-            type="button"
-            onClick={() => setOpenMenu((m) => (m === "escort" ? "none" : "escort"))}
-            className={`${baseItemClass} relative`}
-            aria-haspopup="menu"
-            aria-expanded={openMenu === "escort"}
-            aria-controls="escort-menu"
-            aria-label="Escort Menu"
-          >
-            <Users2 className={iconClass(isActive("/escorts"))} />
-          </button>
+          {/* NACHRICHTEN (moved up) */}
+          <Link href="/notifications" aria-label="Nachrichten" className={baseItemClass}>
+            <MessageSquare className={iconClass(isActive("/notifications"))} />
+          </Link>
 
           {/* LOGIN or USER MENU in the middle */}
           {session?.user ? (
@@ -125,7 +117,7 @@ export default function MobileNavbar() {
               aria-label="Mein Bereich"
             >
               <div className="flex flex-col items-center justify-center">
-                <Avatar className="size-5 mb-1 bg-white/10 ring-1 ring-white/30">
+                <Avatar className="size-8 mb-1 bg-white/10 ring-1 ring-white/30">
                   <AvatarImage src={avatarUrl ?? undefined} alt="avatar" />
                   <AvatarFallback className="text-[10px] font-medium tracking-widest text-white bg-white/10">
                     {session.user.email?.charAt(0).toUpperCase()}
@@ -147,10 +139,18 @@ export default function MobileNavbar() {
             </button>
           )}
 
-          {/* NACHRICHTEN */}
-          <Link href="/notifications" aria-label="Nachrichten" className={baseItemClass}>
-            <MessageSquare className={iconClass(isActive("/notifications"))} />
-          </Link>
+          {/* ESCORT (dropdown) - moved down */}
+          <button
+            type="button"
+            onClick={() => setOpenMenu((m) => (m === "escort" ? "none" : "escort"))}
+            className={`${baseItemClass} relative`}
+            aria-haspopup="menu"
+            aria-expanded={openMenu === "escort"}
+            aria-controls="escort-menu"
+            aria-label="Escort Menu"
+          >
+            <Users2 className={iconClass(isActive("/escorts"))} />
+          </button>
 
           {/* EINSTELLUNGEN */}
           <Link href="/settings" aria-label="Einstellungen" className={`${baseItemClass} rounded-r-2xl`}>

@@ -34,6 +34,7 @@ import Link from 'next/link'
 export default function NewestEscortsSlider({ heading = 'NEUE ESCORTS', items: incoming }: Props) {
   const [items, setItems] = useState<EscortItem[] | null>(incoming ?? null)
   const [loading, setLoading] = useState<boolean>(!incoming)
+  const [perSlide, setPerSlide] = useState<number>(2)
 
   useEffect(() => {
     if (incoming) return
@@ -52,6 +53,14 @@ export default function NewestEscortsSlider({ heading = 'NEUE ESCORTS', items: i
     })()
     return () => { cancelled = true }
   }, [incoming])
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const update = () => setPerSlide(mq.matches ? 4 : 2)
+    update()
+    try { mq.addEventListener('change', update) } catch { mq.addListener(update) }
+    return () => { try { mq.removeEventListener('change', update) } catch { mq.removeListener(update) } }
+  }, [])
 
   const cards = (items || []).map((e) => {
     const name = e.name || '—'
@@ -90,8 +99,8 @@ export default function NewestEscortsSlider({ heading = 'NEUE ESCORTS', items: i
     <div className="flex gap-4 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory">
       {Array.from({ length: 2 }).map((_, si) => (
         <div key={si} className="flex-none w-full snap-start">
-          <div className="grid grid-cols-2 gap-x-2 gap-y-6 sm:gap-6">
-            {Array.from({ length: 4 }).map((__, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-2 gap-y-6 sm:gap-6">
+            {Array.from({ length: perSlide }).map((__, i) => (
               <div key={i} className="group cursor-pointer rounded-none">
                 <div className="aspect-[2/3] sm:aspect-[3/4] bg-gray-200 relative overflow-hidden animate-pulse border border-gray-200" />
                 <div className="px-3 py-3">
@@ -124,7 +133,7 @@ export default function NewestEscortsSlider({ heading = 'NEUE ESCORTS', items: i
     )
   }
 
-  const slides = chunk(cards, 4)
+  const slides = chunk(cards, perSlide)
 
   return (
     <div className="bg-white border border-gray-200 p-6">
@@ -132,7 +141,7 @@ export default function NewestEscortsSlider({ heading = 'NEUE ESCORTS', items: i
       <div className="flex gap-4 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory">
         {slides.map((slide, si) => (
           <div key={si} className="flex-none w-full snap-start">
-            <div className="grid grid-cols-2 gap-x-2 gap-y-6 sm:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-2 gap-y-6 sm:gap-6">
               {slide}
             </div>
           </div>

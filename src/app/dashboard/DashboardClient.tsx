@@ -34,6 +34,7 @@ import BlogDashboard from '@/components/blog/BlogDashboard'
 import ConnectedEscortsSlider from '@/components/dashboard/ConnectedEscortsSlider'
 import DatesPanel from '@/components/dates/DatesPanel'
 import DatesCalendarWidget from '@/components/dates/DatesCalendarWidget'
+import NewestEscortsSlider from '@/components/dashboard/NewestEscortsSlider'
 
  
 
@@ -368,6 +369,9 @@ export default function DashboardClient() {
 
               {/* Profile Analytics (shown only if add-on PROFILE_ANALYTICS is globally active and enabled for user) */}
               <ProfileAnalyticsWidget />
+
+              {/* Newest Escorts Slider under Profile Analytics */}
+              <NewestEscortsSlider heading="NEUESTE ESCORTS" />
 
               {/* Connected Escorts Slider for business users */}
               {isBusiness && (

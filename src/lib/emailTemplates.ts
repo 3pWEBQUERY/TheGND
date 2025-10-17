@@ -15,8 +15,11 @@ export function buildWelcomeEmailHtml({ appUrl, userType, displayName, logoUrl }
   const greeting = safeName ? `Hallo ${escapeHtml(safeName)},` : 'Hallo,'
   const { href: ctaHref, label: ctaLabel } = buildCta(appUrl, userType)
   const base = appUrl.replace(/\/$/, '')
-  const effectiveLogo = (logoUrl && logoUrl.trim().length > 0)
-    ? logoUrl
+  const suppliedLogo = (logoUrl || '').trim()
+  const effectiveLogo = suppliedLogo
+    ? (suppliedLogo.startsWith('http://') || suppliedLogo.startsWith('https://')
+        ? suppliedLogo
+        : `${base}${suppliedLogo.startsWith('/') ? '' : '/'}${suppliedLogo}`)
     : `${base}/android-chrome-512x512.png`
   const brand = effectiveLogo
     ? `<img src="${escapeHtml(effectiveLogo)}" alt="THEGND" style="display:block;height:28px;width:auto;margin:0 auto;border-radius:0" />`

@@ -29,7 +29,8 @@ async function sendWelcomeEmail(toEmail: string, userType: string, displayName?:
   const from = (settings?.from as string) || process.env.RESEND_FROM || 'THEGND <noreply@thegnd.io>'
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://thegnd.io'
   const defaultSubject = 'Willkommen bei THEGND'
-  const defaultHtml = buildWelcomeEmailHtml({ appUrl, userType, displayName: displayName ?? null })
+  const logoUrl = typeof settings?.logoUrl === 'string' && settings.logoUrl.trim().length > 0 ? settings.logoUrl : null
+  const defaultHtml = buildWelcomeEmailHtml({ appUrl, userType, displayName: displayName ?? null, logoUrl })
   const plainGreeting = displayName && displayName.trim().length > 1 ? `Hallo ${displayName.trim()},` : 'Hallo,'
   const typeSuffix = userType ? ` (${userType})` : ''
   const defaultText = [

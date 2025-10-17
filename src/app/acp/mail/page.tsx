@@ -8,6 +8,7 @@ import { getWelcomePresets, buildWelcomeEmailHtml, buildWelcomeEmailText } from 
  type MailSettings = {
   enabled?: boolean
   from?: string
+  logoUrl?: string
 }
 
  type MailTemplates = {
@@ -24,7 +25,7 @@ export default function AcpMailPage() {
   const [savingTemplates, setSavingTemplates] = useState(false)
   const appUrl = useMemo(() => process.env.NEXT_PUBLIC_APP_URL || 'https://thegnd.io', [])
 
-  const [settings, setSettings] = useState<MailSettings>({ enabled: true, from: '' })
+  const [settings, setSettings] = useState<MailSettings>({ enabled: true, from: '', logoUrl: '' })
   const [welcomeSubject, setWelcomeSubject] = useState('Willkommen bei THEGND')
   const [welcomeHtml, setWelcomeHtml] = useState('')
   const [welcomeText, setWelcomeText] = useState('')
@@ -47,7 +48,7 @@ export default function AcpMailPage() {
         if (sJson?.value) {
           try {
             const v = JSON.parse(sJson.value)
-            if (!cancelled) setSettings({ enabled: v?.enabled ?? true, from: v?.from ?? '' })
+            if (!cancelled) setSettings({ enabled: v?.enabled ?? true, from: v?.from ?? '', logoUrl: v?.logoUrl ?? '' })
           } catch {}
         }
         if (tJson?.value) {
@@ -165,6 +166,17 @@ export default function AcpMailPage() {
               className="mt-2 w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 text-sm font-light bg-transparent focus:outline-none focus:ring-0 focus:border-pink-500"
             />
             <p className="mt-1 text-[11px] text-gray-500">Wenn leer, wird die Standard-Adresse aus den Umgebungsvariablen verwendet.</p>
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-widest text-gray-700">Logo URL (E-Mail)</label>
+            <input
+              type="text"
+              placeholder="https://…/logo-email.png"
+              value={settings.logoUrl || ''}
+              onChange={(e) => setSettings((s) => ({ ...s, logoUrl: e.target.value }))}
+              className="mt-2 w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 text-sm font-light bg-transparent focus:outline-none focus:ring-0 focus:border-pink-500"
+            />
+            <p className="mt-1 text-[11px] text-gray-500">Optional. Wenn gesetzt, wird dieses Logo oben in der Mail angezeigt. Keine runden Ecken werden verwendet.</p>
           </div>
         </div>
         <div className="mt-6 text-right">

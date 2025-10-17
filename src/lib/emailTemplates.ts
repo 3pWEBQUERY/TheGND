@@ -2,6 +2,7 @@ type WelcomeParams = {
   appUrl: string
   userType?: string
   displayName?: string | null
+  logoUrl?: string | null
 }
 
 function buildCta(appUrl: string, userType?: string): { href: string; label: string } {
@@ -20,11 +21,14 @@ function buildCta(appUrl: string, userType?: string): { href: string; label: str
   }
 }
 
-export function buildWelcomeEmailHtml({ appUrl, userType, displayName }: WelcomeParams) {
+export function buildWelcomeEmailHtml({ appUrl, userType, displayName, logoUrl }: WelcomeParams) {
   const safeName = displayName && displayName.trim().length > 1 ? displayName.trim() : null
   const greeting = safeName ? `Hallo ${escapeHtml(safeName)},` : 'Hallo,'
   const typeSuffix = userType ? ` (${escapeHtml(userType)})` : ''
   const { href: ctaHref, label: ctaLabel } = buildCta(appUrl, userType)
+  const brand = (logoUrl && logoUrl.trim().length > 0)
+    ? `<img src="${escapeHtml(logoUrl)}" alt="THEGND" style="display:block;height:28px;width:auto;margin:0 auto;" />`
+    : `<div style="font-size:18px;letter-spacing:2px;color:#ec4899;font-weight:700">THEGND</div>`
 
   return `<!doctype html>
   <html lang="de">
@@ -38,10 +42,10 @@ export function buildWelcomeEmailHtml({ appUrl, userType, displayName }: Welcome
     <table role="presentation" width="100%" cellPadding="0" cellSpacing="0" style="background:#f6f6f8;padding:24px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellPadding="0" cellSpacing="0" style="max-width:600px;background:#ffffff;border:1px solid #e5e7eb">
+          <table role="presentation" width="100%" cellPadding="0" cellSpacing="0" style="max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:0">
             <tr>
               <td style="padding:24px 24px 0 24px;text-align:center">
-                <div style="font-size:18px;letter-spacing:2px;color:#ec4899;font-weight:700">THEGND</div>
+                ${brand}
               </td>
             </tr>
             <tr>
@@ -51,7 +55,7 @@ export function buildWelcomeEmailHtml({ appUrl, userType, displayName }: Welcome
                 <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#111">Dein Account wurde erfolgreich angelegt${typeSuffix}.</p>
                 <p style="margin:0 0 16px 0;font-size:14px;line-height:20px;color:#111">Du kannst ${userType && userType !== 'MEMBER' ? 'jetzt mit deinem Onboarding beginnen' : 'dich jetzt anmelden und starten'}.</p>
                 <p style="margin:16px 0 24px 0">
-                  <a href="${ctaHref}" style="background:#ec4899;color:#fff;text-decoration:none;padding:12px 18px;border-radius:4px;display:inline-block;font-size:14px">${ctaLabel}</a>
+                  <a href="${ctaHref}" style="background:#ec4899;color:#fff;text-decoration:none;padding:12px 18px;border-radius:0;display:inline-block;font-size:14px">${ctaLabel}</a>
                 </p>
                 <p style="margin:0 0 8px 0;font-size:12px;line-height:18px;color:#555">Wenn du diese Registrierung nicht vorgenommen hast, ignoriere bitte diese E‑Mail.</p>
               </td>

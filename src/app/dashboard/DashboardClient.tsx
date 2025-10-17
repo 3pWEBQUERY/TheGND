@@ -370,8 +370,10 @@ export default function DashboardClient() {
               {/* Profile Analytics (shown only if add-on PROFILE_ANALYTICS is globally active and enabled for user) */}
               <ProfileAnalyticsWidget />
 
-              {/* Newest Escorts Slider under Profile Analytics */}
-              <NewestEscortsSlider heading="NEUESTE ESCORTS" />
+              {/* Newest Escorts Slider under Profile Analytics (only for MEMBER) */}
+              {userType === 'MEMBER' && (
+                <NewestEscortsSlider heading="NEUESTE ESCORTS" />
+              )}
 
               {/* Connected Escorts Slider for business users */}
               {isBusiness && (

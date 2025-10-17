@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Tabs from '@/components/Tabs'
+import { Trash2 } from 'lucide-react'
 
 export default function MarketingPage() {
   const { data: session, status } = useSession()
@@ -347,7 +348,14 @@ export default function MarketingPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-gray-900">{formatCHF(price)}</span>
-                      <button onClick={() => setCart((s) => { const n = { ...s }; delete (n as any)[key]; return n })} className="text-xs uppercase tracking-widest text-gray-500 hover:text-pink-600">Entfernen</button>
+                      <button
+                        onClick={() => setCart((s) => { const n = { ...s }; delete (n as any)[key]; return n })}
+                        className="p-2 text-gray-500 hover:text-pink-600 hover:bg-pink-50 rounded-none"
+                        aria-label="Entfernen"
+                        title="Entfernen"
+                      >
+                        <Trash2 size={16} strokeWidth={1.5} />
+                      </button>
                     </div>
                   </li>
                 )

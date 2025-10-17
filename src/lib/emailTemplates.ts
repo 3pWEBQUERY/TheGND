@@ -22,7 +22,7 @@ export function buildWelcomeEmailHtml({ appUrl, userType, displayName, logoUrl }
         : `${base}${suppliedLogo.startsWith('/') ? '' : '/'}${suppliedLogo}`)
     : `${base}/android-chrome-512x512.png`
   const brand = effectiveLogo
-    ? `<img src="${escapeHtml(effectiveLogo)}" alt="THEGND" style="display:block;height:36px;width:auto;margin:0 auto;border-radius:0" />`
+    ? `<img src="${escapeHtml(effectiveLogo)}" alt="THEGND" style="display:block;height:46px;width:auto;margin:0 auto;border-radius:0" />`
     : `<div style="font-size:18px;letter-spacing:2px;color:#ec4899;font-weight:700">THEGND</div>`
 
   return `<!doctype html>

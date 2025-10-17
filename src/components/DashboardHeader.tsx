@@ -355,16 +355,19 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                   aria-haspopup="true"
                   aria-expanded={profileNavOpen}
                   className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
-                    ['profile','feed','network','comments','stories'].includes(activeTab) ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
+                    ['profile','feed','network','comments','stories','dates'].includes(activeTab) ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
                   }`}
                 >
                   PROFIL
-                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${['profile','feed','network','comments','stories'].includes(activeTab) ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${['profile','feed','network','comments','stories','dates'].includes(activeTab) ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                 </button>
                 {profileNavOpen && (
                   <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-50">
                     <div className="py-2">
                       <Link href="/dashboard?tab=profile" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">PROFIL</Link>
+                      {userType === 'ESCORT' && (
+                        <Link href="/dashboard?tab=dates" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">DATE ANFRAGEN</Link>
+                      )}
                       <Link href="/dashboard?tab=feed" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">FEED</Link>
                       
                       <Link href="/dashboard?tab=network" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">NETZWERK</Link>
@@ -412,17 +415,6 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                 FORUM
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'forum' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
-              {userType === 'ESCORT' && (
-                <Link 
-                  href="/dashboard?tab=dates"
-                  className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${
-                    activeTab === 'dates' ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
-                  }`}
-                >
-                  DATE ANFRAGEN
-                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-300 ${activeTab === 'dates' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-                </Link>
-              )}
               <Link 
                 href="/dashboard?tab=blog"
                 className={`relative group text-sm font-light tracking-widest uppercase transition-colors ${

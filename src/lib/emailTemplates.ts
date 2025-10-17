@@ -7,27 +7,19 @@ type WelcomeParams = {
 
 function buildCta(appUrl: string, userType?: string): { href: string; label: string } {
   const base = appUrl.replace(/\/$/, '')
-  switch ((userType || '').toUpperCase()) {
-    case 'ESCORT':
-      return { href: `${base}/onboarding/escort/step-1`, label: 'Onboarding starten' }
-    case 'AGENCY':
-      return { href: `${base}/onboarding/agency/step-1`, label: 'Onboarding starten' }
-    case 'CLUB':
-      return { href: `${base}/onboarding/club/step-1`, label: 'Onboarding starten' }
-    case 'STUDIO':
-      return { href: `${base}/onboarding/studio/step-1`, label: 'Onboarding starten' }
-    default:
-      return { href: `${base}/auth/signin`, label: 'Jetzt anmelden' }
-  }
+  return { href: `${base}/auth/signin`, label: 'Jetzt anmelden' }
 }
 
 export function buildWelcomeEmailHtml({ appUrl, userType, displayName, logoUrl }: WelcomeParams) {
   const safeName = displayName && displayName.trim().length > 1 ? displayName.trim() : null
   const greeting = safeName ? `Hallo ${escapeHtml(safeName)},` : 'Hallo,'
-  const typeSuffix = userType ? ` (${escapeHtml(userType)})` : ''
   const { href: ctaHref, label: ctaLabel } = buildCta(appUrl, userType)
-  const brand = (logoUrl && logoUrl.trim().length > 0)
-    ? `<img src="${escapeHtml(logoUrl)}" alt="THEGND" style="display:block;height:28px;width:auto;margin:0 auto;" />`
+  const base = appUrl.replace(/\/$/, '')
+  const effectiveLogo = (logoUrl && logoUrl.trim().length > 0)
+    ? logoUrl
+    : `${base}/android-chrome-512x512.png`
+  const brand = effectiveLogo
+    ? `<img src="${escapeHtml(effectiveLogo)}" alt="THEGND" style="display:block;height:28px;width:auto;margin:0 auto;border-radius:0" />`
     : `<div style="font-size:18px;letter-spacing:2px;color:#ec4899;font-weight:700">THEGND</div>`
 
   return `<!doctype html>
@@ -49,11 +41,16 @@ export function buildWelcomeEmailHtml({ appUrl, userType, displayName, logoUrl }
               </td>
             </tr>
             <tr>
+              <td style="padding:8px 24px 0 24px">
+                <div style="height:2px;width:64px;margin:0 auto;background:#ec4899"></div>
+              </td>
+            </tr>
+            <tr>
               <td style="padding:16px 24px 0 24px">
                 <h1 style="margin:0 0 8px 0;font-size:20px;line-height:28px;color:#111">Willkommen bei THEGND</h1>
                 <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#111">${greeting}</p>
-                <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#111">Dein Account wurde erfolgreich angelegt${typeSuffix}.</p>
-                <p style="margin:0 0 16px 0;font-size:14px;line-height:20px;color:#111">Du kannst ${userType && userType !== 'MEMBER' ? 'jetzt mit deinem Onboarding beginnen' : 'dich jetzt anmelden und starten'}.</p>
+                <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#111">Dein Account wurde erfolgreich angelegt.</p>
+                <p style="margin:0 0 16px 0;font-size:14px;line-height:20px;color:#111">Du kannst dich jetzt anmelden und starten.</p>
                 <p style="margin:16px 0 24px 0">
                   <a href="${ctaHref}" style="background:#ec4899;color:#fff;text-decoration:none;padding:12px 18px;border-radius:0;display:inline-block;font-size:14px">${ctaLabel}</a>
                 </p>
@@ -85,12 +82,11 @@ function escapeHtml(input: string) {
 
 export function buildWelcomeEmailText(appUrl: string, userType?: string, displayName?: string | null) {
   const plainGreeting = displayName && displayName.trim().length > 1 ? `Hallo ${displayName.trim()},` : 'Hallo,'
-  const typeSuffix = userType ? ` (${userType})` : ''
   return [
     'Willkommen bei THEGND',
     '',
     `${plainGreeting}`,
-    `Dein Account wurde erfolgreich angelegt${typeSuffix}.`,
+    'Dein Account wurde erfolgreich angelegt.',
     'Du kannst dich jetzt anmelden und mit dem Onboarding fortfahren.',
     '',
     `Jetzt anmelden: ${appUrl.replace(/\/$/, '')}/auth/signin`,
@@ -99,42 +95,42 @@ export function buildWelcomeEmailText(appUrl: string, userType?: string, display
   ].join('\n')
 }
 
-export function getWelcomePresets(appUrl: string) {
+export function getWelcomePresets(appUrl: string, logoUrl?: string | null) {
   const base = appUrl || 'https://thegnd.io'
   return [
     {
       id: 'welcome_standard_member',
       label: 'Welcome – Standard (Member)',
       subject: 'Willkommen bei THEGND',
-      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'MEMBER', displayName: null }),
+      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'MEMBER', displayName: null, logoUrl: logoUrl ?? null }),
       text: buildWelcomeEmailText(base, 'MEMBER', null),
     },
     {
       id: 'welcome_standard_escort',
       label: 'Welcome – Standard (Escort)',
       subject: 'Willkommen bei THEGND',
-      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'ESCORT', displayName: null }),
+      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'ESCORT', displayName: null, logoUrl: logoUrl ?? null }),
       text: buildWelcomeEmailText(base, 'ESCORT', null),
     },
     {
       id: 'welcome_standard_agency',
       label: 'Welcome – Standard (Agency)',
       subject: 'Willkommen bei THEGND',
-      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'AGENCY', displayName: null }),
+      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'AGENCY', displayName: null, logoUrl: logoUrl ?? null }),
       text: buildWelcomeEmailText(base, 'AGENCY', null),
     },
     {
       id: 'welcome_standard_club',
       label: 'Welcome – Standard (Club)',
       subject: 'Willkommen bei THEGND',
-      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'CLUB', displayName: null }),
+      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'CLUB', displayName: null, logoUrl: logoUrl ?? null }),
       text: buildWelcomeEmailText(base, 'CLUB', null),
     },
     {
       id: 'welcome_standard_studio',
       label: 'Welcome – Standard (Studio)',
       subject: 'Willkommen bei THEGND',
-      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'STUDIO', displayName: null }),
+      html: buildWelcomeEmailHtml({ appUrl: base, userType: 'STUDIO', displayName: null, logoUrl: logoUrl ?? null }),
       text: buildWelcomeEmailText(base, 'STUDIO', null),
     },
   ] as Array<{ id: string; label: string; subject: string; html: string; text: string }>

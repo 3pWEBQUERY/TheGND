@@ -33,7 +33,7 @@ export default function AcpMailPage() {
   const [message, setMessage] = useState<string>('')
   const [error, setError] = useState<string>('')
 
-  const presets = useMemo(() => getWelcomePresets(appUrl), [appUrl])
+  const presets = useMemo(() => getWelcomePresets(appUrl, settings.logoUrl || ''), [appUrl, settings.logoUrl])
 
   useEffect(() => {
     let cancelled = false
@@ -56,14 +56,14 @@ export default function AcpMailPage() {
             const v = JSON.parse(tJson.value) as MailTemplates
             if (!cancelled) {
               setWelcomeSubject(v?.welcome?.subject || 'Willkommen bei THEGND')
-              const fallbackHtml = buildWelcomeEmailHtml({ appUrl, userType: 'MEMBER', displayName: null })
+              const fallbackHtml = buildWelcomeEmailHtml({ appUrl, userType: 'MEMBER', displayName: null, logoUrl: settings.logoUrl || null })
               const fallbackText = buildWelcomeEmailText(appUrl, 'MEMBER', null)
               setWelcomeHtml(v?.welcome?.html || fallbackHtml)
               setWelcomeText(v?.welcome?.text || fallbackText)
             }
           } catch {}
         } else {
-          const fallbackHtml = buildWelcomeEmailHtml({ appUrl, userType: 'MEMBER', displayName: null })
+          const fallbackHtml = buildWelcomeEmailHtml({ appUrl, userType: 'MEMBER', displayName: null, logoUrl: settings.logoUrl || null })
           const fallbackText = buildWelcomeEmailText(appUrl, 'MEMBER', null)
           if (!cancelled) {
             setWelcomeHtml(fallbackHtml)

@@ -17,6 +17,7 @@ import {
   Share2,
   MessageCircle,
   BookOpen,
+  Mail,
 } from 'lucide-react'
 
 export type LinkItem = { href: string; label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }
@@ -37,6 +38,7 @@ export const acpLinks: LinkItem[] = [
   { href: '/acp/messages', label: 'Nachrichten', Icon: MessageSquare },
   { href: '/acp/network', label: 'Netzwerk', Icon: Share2 },
   { href: '/acp/forum', label: 'Forum', Icon: MessageCircle },
+  { href: '/acp/mail', label: 'Mail', Icon: Mail },
 ]
 
 export default function AcpSidebar() {

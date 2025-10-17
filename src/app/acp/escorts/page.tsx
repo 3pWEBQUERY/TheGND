@@ -65,33 +65,33 @@ export default async function AdminEscortsPage({
 
       <CreateUserForm defaultType="ESCORT" />
 
-      <form action="/acp/escorts" method="get" className="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+      <form action="/acp/escorts" method="get" className="bg-white border border-gray-200 rounded-none p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
         <input
           type="text"
           name="q"
           defaultValue={q}
           placeholder="Suche (Email/Name)"
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
-        <select name="visibility" defaultValue={visibility} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+        <select name="visibility" defaultValue={visibility} className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm">
           <option value="">Sichtbarkeit: alle</option>
           <option value="PUBLIC">PUBLIC</option>
           <option value="PRIVATE">PRIVATE</option>
         </select>
-        <select name="active" defaultValue={activeParam} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+        <select name="active" defaultValue={activeParam} className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm">
           <option value="">Aktiv-Status: alle</option>
           <option value="true">Nur aktive</option>
           <option value="false">Nur gesperrte</option>
         </select>
-        <select name="hasProfile" defaultValue={hasProfile} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+        <select name="hasProfile" defaultValue={hasProfile} className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm">
           <option value="">Profil: alle</option>
           <option value="true">Nur mit Profil</option>
           <option value="false">Nur ohne Profil</option>
         </select>
-        <button className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
+        <button className="px-4 py-2 rounded-none border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
       </form>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-none overflow-hidden bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -117,7 +117,7 @@ export default async function AdminEscortsPage({
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded text-xs ${u.isActive ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                  <span className={`px-2 py-1 rounded-none text-xs ${u.isActive ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
                     {u.isActive ? 'Aktiv' : 'Gesperrt'}
                   </span>
                 </td>
@@ -177,7 +177,7 @@ export default async function AdminEscortsPage({
           {page > 1 && (
             <Link
               href={{ pathname: '/acp/escorts', query: { q, visibility, active: activeParam, hasProfile, page: String(page - 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Zurück
             </Link>
@@ -185,7 +185,7 @@ export default async function AdminEscortsPage({
           {page < totalPages && (
             <Link
               href={{ pathname: '/acp/escorts', query: { q, visibility, active: activeParam, hasProfile, page: String(page + 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Weiter
             </Link>

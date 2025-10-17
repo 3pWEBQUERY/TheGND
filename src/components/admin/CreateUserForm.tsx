@@ -33,7 +33,7 @@ export default function CreateUserForm({ defaultType = 'MEMBER' }: { defaultType
   }
 
   return (
-    <form onSubmit={onSubmit} className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
+    <form onSubmit={onSubmit} className="border border-gray-200 rounded-none p-4 bg-white space-y-3">
       <div className="text-sm font-medium text-gray-800">Neuen User erstellen</div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <input
@@ -42,7 +42,7 @@ export default function CreateUserForm({ defaultType = 'MEMBER' }: { defaultType
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
         <input
           type="password"
@@ -50,7 +50,7 @@ export default function CreateUserForm({ defaultType = 'MEMBER' }: { defaultType
           placeholder="Passwort"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
         <AdminSelect
           name="userType"
@@ -65,7 +65,7 @@ export default function CreateUserForm({ defaultType = 'MEMBER' }: { defaultType
           ]}
         />
       </div>
-      <button type="submit" disabled={loading} className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+      <button type="submit" disabled={loading} className="px-4 py-2 rounded-none border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
         {loading ? 'Erstellen...' : 'Erstellen'}
       </button>
     </form>

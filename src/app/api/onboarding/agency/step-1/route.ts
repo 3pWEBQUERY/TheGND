@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { businessOnboardingStep1Schema } from '@/lib/validations'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -18,14 +18,20 @@ export async function GET() {
     }
 
     const profile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
-    const result: Record<string, string> = {}
-    if (typeof profile?.companyName === 'string') result.companyName = profile.companyName
-    if (typeof profile?.businessType === 'string') result.businessType = profile.businessType
 
-    return NextResponse.json(result, { status: 200 })
+    let openingHours: any = undefined
+    try {
+      const oh = (profile as any)?.openingHours
+      openingHours = oh ? JSON.parse(oh) : undefined
+    } catch {}
+    return NextResponse.json({
+      companyName: profile?.companyName || '',
+      businessType: profile?.businessType || '',
+      openingHours: openingHours || undefined,
+    })
   } catch (error) {
-    console.error('Agency step 1 GET error:', error)
-    return NextResponse.json({ error: 'Server Fehler beim Laden' }, { status: 500 })
+    console.error('Agency step 1 onboarding GET error:', error)
+    return NextResponse.json({ error: 'Server Fehler beim Onboarding' }, { status: 500 })
   }
 }
 
@@ -50,15 +56,20 @@ export async function POST(request: NextRequest) {
       update: {
         companyName: validated.companyName,
         businessType: validated.businessType,
-      },
+        openingHours: validated.openingHours ? JSON.stringify(validated.openingHours) : undefined,
+      } as any,
       create: {
         userId: session.user.id,
         companyName: validated.companyName,
         businessType: validated.businessType,
-      },
+        openingHours: validated.openingHours ? JSON.stringify(validated.openingHours) : undefined,
+      } as any,
     })
 
-    await prisma.user.update({ where: { id: session.user.id }, data: { onboardingStatus: 'IN_PROGRESS' } })
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { onboardingStatus: 'IN_PROGRESS' },
+    })
 
     return NextResponse.json({ message: 'Schritt 1 gespeichert', profile }, { status: 200 })
   } catch (error) {
@@ -66,3 +77,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Server Fehler beim Onboarding' }, { status: 500 })
   }
 }
+

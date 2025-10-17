@@ -25,7 +25,7 @@ export default async function AdminHomePage() {
       <h1 className="text-3xl font-light tracking-wide text-gray-900">Admin Übersicht</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((c) => (
-          <Link key={c.label} href={c.href} className="border border-gray-200 rounded-lg p-6 hover:shadow-sm transition-shadow bg-white">
+          <Link key={c.label} href={c.href} className="border border-gray-200 rounded-none p-6 hover:shadow-sm transition-shadow bg-white">
             <div className="text-sm text-gray-500">{c.label}</div>
             <div className="mt-2 text-3xl font-semibold text-gray-900">{c.value}</div>
           </Link>

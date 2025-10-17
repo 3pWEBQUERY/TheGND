@@ -7,13 +7,13 @@ export const dynamic = 'force-dynamic'
 
 async function SendMessageForm() {
   return (
-    <form action="/api/acp/messages" method="post" className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
+    <form action="/api/acp/messages" method="post" className="border border-gray-200 rounded-none p-4 bg-white space-y-3">
       <div className="text-sm font-medium text-gray-800">Admin Nachricht senden</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <input name="receiverEmail" type="email" required placeholder="Empfänger Email" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
-        <input name="content" required placeholder="Nachricht" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+        <input name="receiverEmail" type="email" required placeholder="Empfänger Email" className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm" />
+        <input name="content" required placeholder="Nachricht" className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm" />
       </div>
-      <button className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Senden</button>
+      <button className="px-4 py-2 rounded-none border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Senden</button>
     </form>
   )
 }
@@ -64,37 +64,37 @@ export default async function AdminMessagesPage({
 
       <SendMessageForm />
 
-      <form action="/acp/messages" method="get" className="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+      <form action="/acp/messages" method="get" className="bg-white border border-gray-200 rounded-none p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
         <input
           type="text"
           name="q"
           defaultValue={q}
           placeholder="Suche Inhalt"
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
         <input
           type="text"
           name="sender"
           defaultValue={sender}
           placeholder="Von (Email)"
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
         <input
           type="text"
           name="receiver"
           defaultValue={receiver}
           placeholder="An (Email)"
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
-        <select name="read" defaultValue={readParam} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+        <select name="read" defaultValue={readParam} className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm">
           <option value="">Status: alle</option>
           <option value="true">Nur gelesen</option>
           <option value="false">Nur ungelesen</option>
         </select>
-        <button className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
+        <button className="px-4 py-2 rounded-none border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
       </form>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-none overflow-hidden bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -113,7 +113,7 @@ export default async function AdminMessagesPage({
                 <td className="px-4 py-3 text-gray-900">{m.receiver.email}</td>
                 <td className="px-4 py-3 text-gray-700 max-w-xl truncate">{m.content}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded text-xs ${m.isRead ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}> 
+                  <span className={`px-2 py-1 rounded-none text-xs ${m.isRead ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}> 
                     {m.isRead ? 'Gelesen' : 'Ungelesen'}
                   </span>
                 </td>
@@ -149,7 +149,7 @@ export default async function AdminMessagesPage({
           {page > 1 && (
             <Link
               href={{ pathname: '/acp/messages', query: { q, sender, receiver, read: readParam, page: String(page - 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Zurück
             </Link>
@@ -157,7 +157,7 @@ export default async function AdminMessagesPage({
           {page < totalPages && (
             <Link
               href={{ pathname: '/acp/messages', query: { q, sender, receiver, read: readParam, page: String(page + 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Weiter
             </Link>

@@ -60,13 +60,13 @@ export default async function AdminUsersPage({
 
       <CreateUserForm />
 
-      <form action="/acp/users" method="get" className="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+      <form action="/acp/users" method="get" className="bg-white border border-gray-200 rounded-none p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
         <input
           type="text"
           name="q"
           defaultValue={q}
           placeholder="Suche (Email)"
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
         <AdminSelect
           name="type"
@@ -86,10 +86,10 @@ export default async function AdminUsersPage({
             { value: 'false', label: 'Nur gesperrte' },
           ]}
         />
-        <button className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
+        <button className="px-4 py-2 rounded-none border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
       </form>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-none overflow-hidden bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -106,7 +106,7 @@ export default async function AdminUsersPage({
                 <td className="px-4 py-3 text-gray-900">{u.email}</td>
                 <td className="px-4 py-3 text-gray-700">{u.userType}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded text-xs ${u.isActive ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}> 
+                  <span className={`px-2 py-1 rounded-none text-xs ${u.isActive ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}> 
                     {u.isActive ? 'Aktiv' : 'Gesperrt'}
                   </span>
                 </td>
@@ -157,7 +157,7 @@ export default async function AdminUsersPage({
           {page > 1 && (
             <Link
               href={{ pathname: '/acp/users', query: { q, type, active: activeParam, page: String(page - 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Zurück
             </Link>
@@ -165,7 +165,7 @@ export default async function AdminUsersPage({
           {page < totalPages && (
             <Link
               href={{ pathname: '/acp/users', query: { q, type, active: activeParam, page: String(page + 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Weiter
             </Link>

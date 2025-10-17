@@ -42,13 +42,13 @@ export default async function AdminNetworkPage({
     <div className="space-y-8">
       <h1 className="text-2xl font-light tracking-wide text-gray-900">Netzwerk Übersicht</h1>
 
-      <form action="/acp/network" method="get" className="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <form action="/acp/network" method="get" className="bg-white border border-gray-200 rounded-none p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
         <input
           type="text"
           name="follower"
           defaultValue={follower}
           placeholder="Follower Email"
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-none px-3 py-2 text-sm"
         />
         <input
           type="text"
@@ -57,10 +57,10 @@ export default async function AdminNetworkPage({
           placeholder="Folgt Email"
           className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
         />
-        <button className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
+        <button className="px-4 py-2 rounded-none border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Filtern</button>
       </form>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-none overflow-hidden bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -101,7 +101,7 @@ export default async function AdminNetworkPage({
           {page > 1 && (
             <Link
               href={{ pathname: '/acp/network', query: { follower, following, page: String(page - 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Zurück
             </Link>
@@ -109,7 +109,7 @@ export default async function AdminNetworkPage({
           {page < totalPages && (
             <Link
               href={{ pathname: '/acp/network', query: { follower, following, page: String(page + 1) } }}
-              className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 rounded-none hover:bg-gray-50"
             >
               Weiter
             </Link>

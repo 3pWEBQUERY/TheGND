@@ -387,7 +387,7 @@ export default function MinimalistNavigation() {
                         <div className="grid grid-cols-2 gap-3">
                           <Link href="/stories" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
-                              <img src="/Stories.jpg" alt="Stories" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src="/Stories_.jpg" alt="Stories" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
                                 <span className="text-xs tracking-widest text-white">{t('content.stories', { defaultValue: 'STORIES' })}</span>

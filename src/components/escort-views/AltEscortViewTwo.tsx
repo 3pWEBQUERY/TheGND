@@ -13,6 +13,7 @@ import OnlineBadge from '@/components/OnlineBadge'
 import { SERVICES_DE } from '@/data/services.de'
 import VerifiedBadges from '@/components/VerifiedBadges'
 import React from 'react'
+import MobileBottomBar from '@/components/MobileBottomBar'
 import Link from 'next/link'
 import { BadgeCheck, ShieldCheck } from 'lucide-react'
 
@@ -251,6 +252,14 @@ export default function AltEscortViewTwo(props: {
         )}
       </div>
 
+      <MobileBottomBar
+        name={name}
+        locationText={city || country}
+        ratingAvg={ratingAvg}
+        ratingCount={ratingCount}
+        phone={contact?.phone || null}
+        commentsAnchor="kommentare"
+      />
       <Footer />
     </div>
   )

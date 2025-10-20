@@ -18,6 +18,7 @@ import VerifiedBadges from '@/components/VerifiedBadges'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { SiOnlyfans } from 'react-icons/si'
 import React from 'react'
+import MobileBottomBar from '@/components/MobileBottomBar'
 
 function toStr(v: any) { return (v === null || v === undefined) ? '' : String(v).trim() }
 function withUnit(v: any, unit: string) { const s = toStr(v); if (!s) return ''; const low = s.toLowerCase(); if (low.includes(unit.toLowerCase())) return s; if (/^\d+(?:[\.,]\d+)?$/.test(s)) return `${s.replace(',', '.')} ${unit}`; return s }
@@ -339,6 +340,14 @@ export default function AltEscortViewOne(props: {
           </main>
         </div>
       </section>
+      <MobileBottomBar
+        name={name}
+        locationText={city || country}
+        ratingAvg={ratingAvg}
+        ratingCount={ratingCount}
+        phone={contact?.phone || null}
+        commentsAnchor="kommentare"
+      />
       <Footer />
     </div>
   )

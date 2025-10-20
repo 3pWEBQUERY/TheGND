@@ -121,7 +121,7 @@ export default function EscortsGridSection() {
         </div>
         
         {/* Escort Grid - live data */}
-        <div className="sm:hidden mb-12 overflow-x-auto snap-x snap-mandatory">
+        <div className="sm:hidden mb-4 overflow-x-auto snap-x snap-mandatory">
           <div className="flex gap-4">
             {loading && !items && Array.from({ length: 4 }).map((_, si) => (
               <div key={`s-${si}`} className="shrink-0 w-[calc(100vw-24px)] snap-start">
@@ -266,7 +266,7 @@ export default function EscortsGridSection() {
             ))}
           </div>
         </div>
-        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-6 sm:gap-6 mb-12">
+        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-6 sm:gap-6 mb-4">
           {loading && !items &&
             Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="group cursor-pointer rounded-none">
@@ -413,7 +413,7 @@ export default function EscortsGridSection() {
             </div>
           )}
         </div>
-        
+
         <div className="text-center">
           <Button asChild variant="outline" className="text-sm font-light tracking-widest px-8 py-3 border-gray-300 hover:border-pink-500">
             <Link href="/escorts">ALLE ESCORTS ANSEHEN</Link>

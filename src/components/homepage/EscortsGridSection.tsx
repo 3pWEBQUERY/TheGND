@@ -1,6 +1,6 @@
  'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Star, ShieldCheck, BadgeCheck } from 'lucide-react'
@@ -103,6 +103,15 @@ export default function EscortsGridSection() {
       .replace(/(^-|-$)+/g, '')
   }
 
+  const mobileSlides = useMemo(() => {
+    if (!items || items.length === 0) return [] as EscortItem[][]
+    const slides: EscortItem[][] = []
+    for (let i = 0; i < items.length; i += 2) {
+      slides.push(items.slice(i, i + 2))
+    }
+    return slides
+  }, [items])
+
   return (
     <section id="escorts" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
@@ -112,7 +121,152 @@ export default function EscortsGridSection() {
         </div>
         
         {/* Escort Grid - live data */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-6 sm:gap-6 mb-12">
+        <div className="sm:hidden mb-12 overflow-x-auto snap-x snap-mandatory">
+          <div className="flex gap-4">
+            {loading && !items && Array.from({ length: 4 }).map((_, si) => (
+              <div key={`s-${si}`} className="shrink-0 w-[calc(100vw-24px)] snap-start">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-6">
+                  {Array.from({ length: 2 }).map((__, ci) => (
+                    <div key={ci} className="group cursor-pointer rounded-none">
+                      <div className="aspect-[2/3] bg-gray-200 relative overflow-hidden animate-pulse border border-gray-200" />
+                      <div className="px-3 py-3">
+                        <div className="h-3 w-3/4 bg-gray-200 animate-pulse" />
+                        <div className="h-2 w-1/2 bg-gray-100 mt-2 animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {mobileSlides.map((pair, si) => (
+              <div key={si} className="shrink-0 w-[calc(100vw-24px)] snap-start">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-6">
+                  {pair.map((e, index) => {
+                    const slug = e.name ? slugify(e.name) : 'escort'
+                    const href = `/escorts/${e.id}/${slug}`
+                    const isWeek = Boolean((e as any)?.isEscortOfWeek) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_WEEK'))
+                    const isMonth = Boolean((e as any)?.isEscortOfMonth) || (Array.isArray((e as any)?.badges) && (e as any).badges.includes('ESCORT_OF_MONTH'))
+                    const highlight = isMonth ? 'month' : (isWeek ? 'week' : null)
+                    const frameClasses = highlight
+                      ? (isMonth
+                          ? 'ring-2 ring-amber-400 shadow-lg shadow-amber-200/60'
+                          : 'ring-2 ring-pink-400 shadow-lg shadow-pink-200/60')
+                      : ''
+                    const isNew = (() => {
+                      const ts = (e as any)?.createdAt
+                      if (!ts) return false
+                      const t = new Date(ts as any).getTime()
+                      if (!t) return false
+                      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+                      return Date.now() - t <= SEVEN_DAYS
+                    })()
+                    const comments: any[] | undefined = Array.isArray((e as any)?.comments) ? (e as any).comments : undefined
+                    const reviews: any[] | undefined = Array.isArray((e as any)?.reviews) ? (e as any).reviews : undefined
+                    const ratingCountRaw = (e as any)?.ratingCount ?? (e as any)?.commentsCount ?? (e as any)?._count?.comments
+                    const ratingAverageRaw = (e as any)?.avgRating ?? (e as any)?.commentsAverage ?? (e as any)?.averageRating ?? (e as any)?.ratingAverage ?? (e as any)?.rating
+                    let ratingCount = typeof ratingCountRaw === 'number' ? ratingCountRaw : (comments ? comments.length : (reviews ? reviews.length : 0))
+                    let rating = typeof ratingAverageRaw === 'number' ? ratingAverageRaw : NaN
+                    if ((!Number.isFinite(rating) || rating <= 0) && ratingsMap[e.id]) {
+                      rating = ratingsMap[e.id].avg
+                      ratingCount = ratingsMap[e.id].count
+                    }
+                    if ((!Number.isFinite(rating) || rating <= 0) && comments && comments.length) {
+                      const sum = comments.reduce((acc, c: any) => acc + (Number(c?.rating ?? c?.stars) || 0), 0)
+                      rating = sum / comments.length
+                      ratingCount = comments.length
+                    } else if ((!Number.isFinite(rating) || rating <= 0) && reviews && reviews.length) {
+                      const sum = reviews.reduce((acc, r: any) => acc + (Number(r?.rating ?? r?.stars) || 0), 0)
+                      rating = sum / reviews.length
+                      ratingCount = reviews.length
+                    }
+                    rating = Math.max(0, Math.min(5, Number.isFinite(rating) ? (rating as number) : 0))
+                    const stars = Math.round(rating)
+                    return (
+                      <div key={`${e.id}-${index}`} className={`group cursor-pointer rounded-none`}>
+                        <Link href={href} className="block">
+                          <div className={`aspect-[2/3] sm:aspect-[3/4] bg-gray-200 relative overflow-hidden border border-gray-200 group-hover:border-pink-500 transition-colors ${frameClasses}`}>
+                            <span className={`absolute top-2 left-2 h-3 w-3 rounded-full border-2 border-white ${presenceMap[e.id]?.online ? 'bg-emerald-500' : 'bg-gray-300'}`} title={presenceMap[e.id]?.online ? 'Online' : 'Offline'} />
+                            {e.image ? (
+                              <img src={e.image} alt={e.name ?? ''} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="h-full w-full bg-gray-300 flex items-center justify-center">
+                                <span className="text-gray-500 text-sm">PHOTO</span>
+                              </div>
+                            )}
+                            {highlight && (
+                              <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-center">
+                                <span className={`${isMonth ? 'bg-amber-400 text-amber-900' : 'bg-pink-500 text-white'} px-2 py-1 text-[10px] uppercase tracking-widest font-medium`}>
+                                  {isMonth ? 'ESCORT OF THE MONTH' : 'ESCORT OF THE WEEK'}
+                                </span>
+                              </div>
+                            )}
+                            {(isNew || e.isVerified || e.isAgeVerified) && (
+                              <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                                {isNew && (
+                                  <span title="Neu" className="inline-flex items-center gap-1 h-6 px-2 bg-white/90 border border-pink-200 text-pink-600 text-[10px] font-semibold tracking-widest">
+                                    <span className="h-2 w-2 rounded-full bg-pink-600"></span>
+                                    NEU
+                                  </span>
+                                )}
+                                {e.isVerified && (
+                                  <span title="Verifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-emerald-200 text-emerald-700">
+                                    <BadgeCheck className="h-4 w-4" />
+                                  </span>
+                                )}
+                                {(e.isAgeVerified || e.isVerified) && (
+                                  <span title="Altersverifiziert" className="inline-flex items-center justify-center h-6 w-6 bg-white/90 border border-rose-200 text-rose-700">
+                                    <ShieldCheck className="h-4 w-4" />
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                        <div className="px-3 py-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Link href={href} className="block truncate">
+                                <h3 className="text-base font-medium tracking-widest text-gray-900 truncate">
+                                  {(e.name?.toUpperCase?.() ?? e.name) || '—'}
+                                </h3>
+                              </Link>
+                              {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
+                            </div>
+                            {rating > 0 && (
+                              <div className="flex items-center">
+                                <div className="sm:hidden">
+                                  <RatingDonut
+                                    value={rating}
+                                    showValue
+                                    size={28}
+                                    strokeWidth={4}
+                                    fillColor="#ec4899"
+                                  />
+                                </div>
+                                <div className="hidden sm:flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                                  <span className="tracking-wide font-medium">{`${rating.toFixed(1)}/5`}</span>
+                                  <span className="flex items-center">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                      <Star key={i} className={`h-4 w-4 ${i < stars ? 'text-pink-500' : 'text-gray-300'}`} fill="currentColor" />
+                                    ))}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          {(e.city || e.country) && (
+                            <div className="mt-1 text-sm text-gray-700">{e.city || e.country}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-6 sm:gap-6 mb-12">
           {loading && !items &&
             Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="group cursor-pointer rounded-none">

@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { EscortItem } from '@/types/escort'
 import { ShieldCheck, BadgeCheck, Star } from 'lucide-react'
+import RatingDonut from '@/components/RatingDonut'
 
 type Props = {
   items: EscortItem[] | null
@@ -263,13 +264,26 @@ export default function EscortsResultsGrid({ items, loading, total }: Props) {
                       {e.isVerified && <BadgeCheck className="h-4 w-4 text-pink-500 flex-shrink-0" />}
                     </div>
                     {rating > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
-                        <span className="tracking-wide font-medium">{`${rating.toFixed(1)}/5`}</span>
-                        <span className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className={`h-4 w-4 ${i < stars ? 'text-pink-500' : 'text-gray-300'}`} fill="currentColor" />
-                          ))}
-                        </span>
+                      <div className="flex items-center">
+                        {/* Mobile: show donut with numeric value inside */}
+                        <div className="sm:hidden">
+                          <RatingDonut
+                            value={rating}
+                            showValue
+                            size={28}
+                            strokeWidth={4}
+                            fillColor="#ec4899" /* pink-500 */
+                          />
+                        </div>
+                        {/* Desktop/Tablet: original text + stars */}
+                        <div className="hidden sm:flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                          <span className="tracking-wide font-medium">{`${rating.toFixed(1)}/5`}</span>
+                          <span className="flex items-center">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} className={`h-4 w-4 ${i < stars ? 'text-pink-500' : 'text-gray-300'}`} fill="currentColor" />
+                            ))}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>

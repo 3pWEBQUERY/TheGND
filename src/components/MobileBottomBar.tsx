@@ -79,7 +79,7 @@ export default function MobileBottomBar({
       {/* Bottom bar */}
       <div className="fixed inset-x-0 bottom-0 sm:hidden z-[10000]">
         <div ref={barRef} className="bg-gray-800/95 text-white shadow-lg border-t border-gray-700 rounded-none">
-          <div className="pl-4 pr-0 py-3">
+          <div className="px-5 py-4">
             <div className="text-lg font-light tracking-widest truncate">{safeName}</div>
             {rating > 0 && (
               <div className="mt-1 flex items-center gap-2 text-sm">

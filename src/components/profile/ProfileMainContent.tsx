@@ -36,8 +36,8 @@ export default function ProfileMainContent(props: {
   onUnlink: (orgId: string) => void
 
   // view section
-  selectedView: 'STANDARD' | 'ALT1' | 'ALT2' | null
-  onChangeView: (v: 'STANDARD' | 'ALT1' | 'ALT2') => void
+  selectedView: 'STANDARD' | 'ALT1' | 'ALT2' | 'FULL_SIDE' | null
+  onChangeView: (v: 'STANDARD' | 'ALT1' | 'ALT2' | 'FULL_SIDE') => void
   onSaveView: () => Promise<void> | void
   savingView: boolean
   savedViewAt: number | null

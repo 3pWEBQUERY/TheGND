@@ -6,8 +6,8 @@ import ProfileViewSelector from '@/components/profile/ProfileViewSelector'
 export default function ProfileViewSection(props: {
   isOwnProfile: boolean
   userType: string
-  selectedView: 'STANDARD' | 'ALT1' | 'ALT2' | null
-  onChange: (v: 'STANDARD' | 'ALT1' | 'ALT2') => void
+  selectedView: 'STANDARD' | 'ALT1' | 'ALT2' | 'FULL_SIDE' | null
+  onChange: (v: 'STANDARD' | 'ALT1' | 'ALT2' | 'FULL_SIDE') => void
   onSave: () => Promise<void> | void
   saving: boolean
   savedAt: number | null

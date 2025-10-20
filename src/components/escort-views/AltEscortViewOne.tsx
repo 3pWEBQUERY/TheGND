@@ -19,6 +19,7 @@ import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp,
 import { SiOnlyfans } from 'react-icons/si'
 import React from 'react'
 import MobileBottomBar from '@/components/MobileBottomBar'
+import DateRequestDialog from '@/components/dates/DateRequestDialog'
 
 function toStr(v: any) { return (v === null || v === undefined) ? '' : String(v).trim() }
 function withUnit(v: any, unit: string) { const s = toStr(v); if (!s) return ''; const low = s.toLowerCase(); if (low.includes(unit.toLowerCase())) return s; if (/^\d+(?:[\.,]\d+)?$/.test(s)) return `${s.replace(',', '.')} ${unit}`; return s }
@@ -99,6 +100,7 @@ export default function AltEscortViewOne(props: {
             </div>
             <div className="flex flex-wrap gap-2">
               <MessageButton toUserId={escortId} toDisplayName={name ?? undefined} toAvatar={image ?? undefined} />
+              <DateRequestDialog escortId={escortId} escortName={name} defaultCity={city} escortAvatar={image} />
               {contact.phone && (
                 <a href={`tel:${contact.phone}`} className="px-4 py-2 border border-gray-300 rounded-none text-sm tracking-widest hover:border-pink-500">ANRUFEN</a>
               )}
@@ -278,6 +280,14 @@ export default function AltEscortViewOne(props: {
               />
             </div>
 
+            {/* Media Gallery (Slider, no auto-slide) */}
+            <div className="bg-white border border-gray-200 p-6">
+              <h2 className="text-lg font-light tracking-widest text-gray-800">GALERIE</h2>
+              <div className="mt-4">
+                <SimpleSlider images={images} altBase={name ?? ''} />
+              </div>
+            </div>
+
             {/* ANDERE ANZEIGEN (Similar Escorts) */}
             {similarItems.length > 0 && (
               <div className="bg-white border border-gray-200 p-6">
@@ -329,14 +339,6 @@ export default function AltEscortViewOne(props: {
                 </div>
               </div>
             )}
-
-            {/* Media Gallery (Slider, no auto-slide) */}
-            <div className="bg-white border border-gray-200 p-6">
-              <h2 className="text-lg font-light tracking-widest text-gray-800">GALERIE</h2>
-              <div className="mt-4">
-                <SimpleSlider images={images} altBase={name ?? ''} />
-              </div>
-            </div>
           </main>
         </div>
       </section>

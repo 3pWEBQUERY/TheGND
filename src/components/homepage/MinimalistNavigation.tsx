@@ -83,7 +83,7 @@ function LocaleSwitcher() {
   )
 }
 
-export default function MinimalistNavigation() {
+export default function MinimalistNavigation({ darkBg = false }: { darkBg?: boolean } = {}) {
   const { data: session, status } = useSession()
   const { t } = useTranslation('common')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -177,7 +177,7 @@ export default function MinimalistNavigation() {
   }, [notifOpen])
 
   return (
-    <nav className="absolute top-0 w-full z-50 bg-transparent">
+    <nav className={`absolute top-0 w-full z-50 ${darkBg ? 'bg-neutral-900' : 'bg-transparent'}`}>
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">

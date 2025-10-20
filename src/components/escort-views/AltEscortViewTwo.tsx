@@ -258,6 +258,8 @@ export default function AltEscortViewTwo(props: {
         ratingAvg={ratingAvg}
         ratingCount={ratingCount}
         phone={contact?.phone || null}
+        escortId={escortId}
+        avatar={image || null}
         commentsAnchor="kommentare"
       />
       <Footer />

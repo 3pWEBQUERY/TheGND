@@ -17,6 +17,7 @@ import { Globe } from 'lucide-react'
 import Link from 'next/link'
 import { BadgeCheck, ShieldCheck } from 'lucide-react'
 import VerifiedBadges from '@/components/VerifiedBadges'
+import MobileBottomBar from '@/components/MobileBottomBar'
 import { FaInstagram, FaFacebook, FaXTwitter, FaYoutube, FaLinkedin, FaWhatsapp, FaTelegram, FaTiktok, FaSnapchat } from 'react-icons/fa6'
 import { SiOnlyfans } from 'react-icons/si'
 import RatingDonut from '@/components/RatingDonut'
@@ -989,6 +990,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
                         })}
                       </div>
                     )}
+                    <div id="kommentare" />
                     <ProfileComments targetUserId={escortId} />
                   </div>
                 ),
@@ -1096,6 +1098,16 @@ export default async function EscortProfilePage({ params, searchParams }: { para
           </section>
         )}
       </div>
+      <MobileBottomBar
+        name={name}
+        locationText={city || country}
+        ratingAvg={ratingAvg}
+        ratingCount={ratingCount}
+        phone={contact?.phone || null}
+        escortId={escortId}
+        avatar={image || null}
+        commentsAnchor="kommentare"
+      />
       <Footer />
     </div>
   )

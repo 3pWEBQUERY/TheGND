@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Star, Phone } from "lucide-react";
+import { Star, Phone, MessageCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   name?: string | null;
@@ -8,6 +9,8 @@ type Props = {
   ratingAvg?: number;
   ratingCount?: number;
   phone?: string | null;
+  escortId?: string | null;
+  avatar?: string | null;
   commentsAnchor?: string; // default: 'kommentare'
 };
 
@@ -17,19 +20,56 @@ export default function MobileBottomBar({
   ratingAvg = 0,
   ratingCount = 0,
   phone,
+  escortId,
+  avatar,
   commentsAnchor = "kommentare",
 }: Props) {
   const safeName = name || "ESCORT";
   const rating = Math.max(0, Math.min(5, Number.isFinite(ratingAvg) ? ratingAvg : 0));
   const stars = Math.round(rating);
+  const barRef = useRef<HTMLDivElement>(null)
+  const [barH, setBarH] = useState<number>(56)
+  useEffect(() => {
+    const el = barRef.current
+    if (!el) return
+    const update = () => {
+      try { setBarH(el.getBoundingClientRect().height || 56) } catch {}
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const msgHref = (() => {
+    if (!escortId) return null;
+    const qs = new URLSearchParams();
+    qs.set("tab", "messages");
+    qs.set("to", escortId);
+    if (name) qs.set("toName", String(name));
+    if (avatar) qs.set("toAvatar", String(avatar));
+    return `/dashboard?${qs.toString()}`;
+  })();
 
   return (
     <>
+      {/* Floating message button (left) */}
+      {msgHref ? (
+        <Link
+          href={msgHref}
+          className="fixed right-[76px] sm:hidden z-[10001] h-12 w-12 rounded-full bg-pink-500 text-white flex items-center justify-center shadow-lg border border-pink-200"
+          style={{ bottom: barH + 8 }}
+          aria-label="Nachricht"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Link>
+      ) : null}
+
       {/* Floating call button (only if phone exists) */}
       {phone ? (
         <a
           href={`tel:${phone}`}
-          className="fixed right-4 bottom-[88px] sm:hidden z-50 h-12 w-12 rounded-full bg-pink-500 text-white flex items-center justify-center shadow-lg border border-pink-200"
+          className="fixed right-4 sm:hidden z-[10001] h-12 w-12 rounded-full bg-pink-500 text-white flex items-center justify-center shadow-lg border border-pink-200"
+          style={{ bottom: barH + 8 }}
           aria-label="Anrufen"
         >
           <Phone className="h-6 w-6" />
@@ -37,9 +77,9 @@ export default function MobileBottomBar({
       ) : null}
 
       {/* Bottom bar */}
-      <div className="fixed inset-x-0 bottom-0 sm:hidden z-50">
-        <div className="mx-3 mb-3 rounded-t-md bg-gray-800/95 text-white shadow-lg border border-gray-700">
-          <div className="px-4 py-3">
+      <div className="fixed inset-x-0 bottom-0 sm:hidden z-[10000]">
+        <div ref={barRef} className="bg-gray-800/95 text-white shadow-lg border-t border-gray-700 rounded-none">
+          <div className="pl-4 pr-0 py-3">
             <div className="text-lg font-light tracking-widest truncate">{safeName}</div>
             {rating > 0 && (
               <div className="mt-1 flex items-center gap-2 text-sm">

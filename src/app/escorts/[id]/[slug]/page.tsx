@@ -25,6 +25,7 @@ import type React from 'react'
 import ProfileComments from '@/components/ProfileComments'
 import AltEscortViewOne from '@/components/escort-views/AltEscortViewOne'
 import AltEscortViewTwo from '@/components/escort-views/AltEscortViewTwo'
+import AltEscortViewFullSide from '@/components/escort-views/AltEscortViewFullSide'
 import OnlineBadge from '@/components/OnlineBadge'
 import ProfileAnalyticsTracker from '@/components/analytics/ProfileAnalyticsTracker'
 import { headers } from 'next/headers'
@@ -573,7 +574,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
   let selectedView = (data as any)?.profileView || 'STANDARD'
   const candidate = (typeof sp?.view === 'string' ? sp.view : Array.isArray(sp?.view) ? sp?.view?.[0] : undefined)
     || (typeof sp?.previewView === 'string' ? sp.previewView : Array.isArray(sp?.previewView) ? sp?.previewView?.[0] : undefined)
-  if (candidate && session?.user?.id === data.id && ['STANDARD', 'ALT1', 'ALT2'].includes(candidate)) {
+  if (candidate && session?.user?.id === data.id && ['STANDARD', 'ALT1', 'ALT2', 'FULL_SIDE'].includes(candidate)) {
     selectedView = candidate
   }
 
@@ -643,6 +644,9 @@ export default async function EscortProfilePage({ params, searchParams }: { para
   }
   if (selectedView === 'ALT2') {
     return <AltEscortViewTwo {...sharedProps} />
+  }
+  if (selectedView === 'FULL_SIDE') {
+    return <AltEscortViewFullSide {...sharedProps} />
   }
 
   return (

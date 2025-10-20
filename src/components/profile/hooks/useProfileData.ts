@@ -13,7 +13,7 @@ export function useProfileData(userId?: string) {
   const router = useRouter()
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedView, setSelectedView] = useState<'STANDARD' | 'ALT1' | 'ALT2' | null>(null)
+  const [selectedView, setSelectedView] = useState<'STANDARD' | 'ALT1' | 'ALT2' | 'FULL_SIDE' | null>(null)
   const [heroMobileLayout, setHeroMobileLayout] = useState<'cover' | 'half' | 'compact'>('cover')
 
   const fetchProfile = async () => {
@@ -39,7 +39,7 @@ export function useProfileData(userId?: string) {
       if (data?.user) {
         setProfileData(data)
         const pv = data?.user?.profile?.profileView as any
-        if (pv === 'STANDARD' || pv === 'ALT1' || pv === 'ALT2') {
+        if (pv === 'STANDARD' || pv === 'ALT1' || pv === 'ALT2' || pv === 'FULL_SIDE') {
           setSelectedView(pv)
         } else {
           setSelectedView('STANDARD')

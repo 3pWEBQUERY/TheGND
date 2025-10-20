@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-export function useProfileViewControls(selectedView: 'STANDARD' | 'ALT1' | 'ALT2' | null) {
+export function useProfileViewControls(selectedView: 'STANDARD' | 'ALT1' | 'ALT2' | 'FULL_SIDE' | null) {
   const [savingView, setSavingView] = useState(false)
   const [savedViewAt, setSavedViewAt] = useState<number | null>(null)
 

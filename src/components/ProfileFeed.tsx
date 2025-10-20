@@ -37,19 +37,27 @@ type Props = {
 }
 
 // Variants for profile view schematic
-export type ProfileViewVariant = 'STANDARD' | 'ALT1' | 'ALT2'
+export type ProfileViewVariant = 'STANDARD' | 'ALT1' | 'ALT2' | 'FULL_SIDE'
 
 // A small, image-free schematic/thumbnail to preview the page layout for a profile view.
 // This is purely illustrative (boxes/lines), no real images are used.
 export function ProfileViewPreview({ variant = 'STANDARD' }: { variant?: ProfileViewVariant }) {
-  const src = variant === 'STANDARD' ? '/Ansicht_1.png' : variant === 'ALT1' ? '/Ansicht_2.png' : '/Ansicht_3.png'
-  const label = variant === 'STANDARD' ? 'STANDARD' : variant === 'ALT1' ? 'ANSICHT 1' : 'ANSICHT 2'
+  const src =
+    variant === 'STANDARD' ? '/Ansicht_1.png' :
+    variant === 'ALT1' ? '/Ansicht_2.png' :
+    variant === 'ALT2' ? '/Ansicht_3.png' :
+    '/Ansicht_3.png'
+  const label =
+    variant === 'STANDARD' ? 'STANDARD' :
+    variant === 'ALT1' ? 'ANSICHT 1' :
+    variant === 'ALT2' ? 'ANSICHT 2' :
+    'FULL SIZE'
   return (
     <div className="w-full">
       <div className="text-xs font-light tracking-widest text-gray-600 mb-2 transition-colors group-hover:text-pink-600">PROFILANSICHT • {label}</div>
       <div className="relative w-full aspect-[16/9] bg-white border border-gray-200 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={`Profilansicht ${label}`} className={`absolute inset-0 h-full w-full object-cover ${variant === 'ALT1' || variant === 'ALT2' ? 'object-top' : ''}`} />
+        <img src={src} alt={`Profilansicht ${label}`} className={`absolute inset-0 h-full w-full object-cover ${variant === 'ALT1' || variant === 'ALT2' || variant === 'FULL_SIDE' ? 'object-top' : ''}`} />
       </div>
     </div>
   )

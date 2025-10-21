@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ matches: results }, { status: 200 })
     }
 
-    if (session.user.userType === 'ESCORT') {
+    if (session.user.userType === 'ESCORT' || session.user.userType === 'HOBBYHURE') {
       // Mutual matches for escorts: escort liked member AND member liked back
       let rows: any[] = []
       try {

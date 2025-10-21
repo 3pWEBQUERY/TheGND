@@ -1,2 +1,1 @@
--- AlterTable
-ALTER TABLE "public"."forums" ADD COLUMN     "icon" TEXT;
+-- adopted via baseline: no-op

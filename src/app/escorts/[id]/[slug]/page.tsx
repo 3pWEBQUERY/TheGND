@@ -164,7 +164,7 @@ async function getEscort(id: string) {
   } catch (e) {
     return null
   }
-  if (!user || !user.isActive || user.userType !== 'ESCORT') return null
+  if (!user || !user.isActive || (user.userType !== 'ESCORT' && user.userType !== 'HOBBYHURE')) return null
   const profile = user.profile
   let gallery: string[] = []
   let mediaImages: string[] = []
@@ -596,7 +596,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
     const byCity = await prisma.user.findMany({
       where: {
         isActive: true,
-        userType: 'ESCORT',
+        userType: { in: ['ESCORT','HOBBYHURE'] },
         id: { not: data.id },
         profile: {
           is: {
@@ -614,7 +614,7 @@ export default async function EscortProfilePage({ params, searchParams }: { para
       const more = await prisma.user.findMany({
         where: {
           isActive: true,
-          userType: 'ESCORT',
+          userType: { in: ['ESCORT','HOBBYHURE'] },
           id: { not: data.id },
           profile: {
             is: {

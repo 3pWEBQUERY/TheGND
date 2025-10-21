@@ -23,7 +23,7 @@ export default function HeroSection() {
           className="mx-auto h-[2px] w-40 rounded-full bg-gradient-to-r from-pink-600/0 via-pink-500/80 to-pink-600/0 mb-6"
           aria-hidden="true"
         />
-        <p className="text-lg font-light tracking-widest text-white max-w-md mx-auto">
+        <p className="text-base md:text-lg font-light tracking-widest text-white max-w-md mx-auto">
           FINDE DEINE VERIFIZIERTE ESCORT DAMEN IN DEINER NÄHE!
         </p>
       </div>

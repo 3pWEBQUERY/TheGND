@@ -365,7 +365,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                   <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-50">
                     <div className="py-2">
                       <Link href="/dashboard?tab=profile" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">PROFIL</Link>
-                      {userType === 'ESCORT' && (
+                      {(userType === 'ESCORT' || userType === 'HOBBYHURE') && (
                         <Link href="/dashboard?tab=dates" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">DATE ANFRAGEN</Link>
                       )}
                       <Link href="/dashboard?tab=feed" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">FEED</Link>
@@ -375,17 +375,17 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                       {canStories && (
                         <Link href="/dashboard?tab=stories" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">STORIES</Link>
                       )}
-                      {userType === 'ESCORT' && countryBlockEnabled && (
+                      {(userType === 'ESCORT' || userType === 'HOBBYHURE') && countryBlockEnabled && (
                         <Link href="/addons/laendersperre" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">LÄNDERSPERRE</Link>
                       )}
-                      {['ESCORT','AGENCY','CLUB','STUDIO'].includes(userType as any) && seoEnabled && seoAvailable && (
+                      {['ESCORT','HOBBYHURE','AGENCY','CLUB','STUDIO'].includes(userType as any) && seoEnabled && seoAvailable && (
                         <Link href="/addons/seo" onClick={() => setProfileNavOpen(false)} className="block px-4 py-2 text-sm font-light tracking-widest text-gray-700 hover:bg-pink-50 hover:text-pink-600">SEO</Link>
                       )}
                     </div>
                   </div>
                 )}
               </div>
-              {(userType === 'MEMBER' || userType === 'ESCORT') && (
+              {(userType === 'MEMBER' || userType === 'ESCORT' || userType === 'HOBBYHURE') && (
                 <Link 
                   href="/dashboard?tab=matching"
                   className={`relative group inline-flex items-center gap-2 text-sm font-light tracking-widest uppercase transition-colors ${
@@ -395,7 +395,7 @@ export default function DashboardHeader({ session, activeTab, setActiveTab }: Da
                   MATCHING
                   {/* Badge for counts */}
                   {(() => {
-                    const c = userType === 'ESCORT' ? matchingCounts.likes : (userType === 'MEMBER' ? matchingCounts.mutual : 0)
+                    const c = (userType === 'ESCORT' || userType === 'HOBBYHURE') ? matchingCounts.likes : (userType === 'MEMBER' ? matchingCounts.mutual : 0)
                     if (!c) return null
                     return (
                       <span className="h-5 w-5 inline-flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] leading-none">

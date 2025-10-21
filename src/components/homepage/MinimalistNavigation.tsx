@@ -90,7 +90,6 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
   const [discoverOpen, setDiscoverOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [navAd, setNavAd] = useState<{ url: string; targetUrl?: string | null } | null>(null)
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; isRead: boolean; createdAt: string }>>([])
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifLoading, setNotifLoading] = useState(false)
@@ -108,15 +107,7 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
     return pathNoLocale.startsWith(href)
   }
 
-  const fetchNavAd = async () => {
-    try {
-      const res = await fetch('/api/marketing/active?placement=SIDEBAR&include=pending&limit=1', { cache: 'no-store' })
-      if (!res.ok) return
-      const data = await res.json().catch(() => ({}))
-      const asset = Array.isArray(data?.assets) ? data.assets[0] : null
-      if (asset) setNavAd({ url: asset.url, targetUrl: asset.targetUrl ?? null })
-    } catch {}
-  }
+  
 
   useEffect(() => {
     const load = async () => {
@@ -132,10 +123,7 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
     setMounted(true)
   }, [session?.user?.id])
 
-  // Load active NAV menu banner (uses SIDEBAR placement key in backend)
-  useEffect(() => {
-    fetchNavAd()
-  }, [])
+  // Navigation-Banner entfernt
 
   // Cleanup any pending timers on unmount
   useEffect(() => {
@@ -323,13 +311,22 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
                       {/* Left column: primary categories as 9:16 cards (smaller, 2-up) */}
                       <div className="col-span-12 md:col-span-4">
                         <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-3">{t('sections.categories', { defaultValue: 'KATEGORIEN' })}</div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                           <Link href="/escorts" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
                             <div style={{ aspectRatio: '9 / 16' }} className="relative">
                               <img src="/Escorts.jpg" alt="Escorts" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
                               <div className="absolute inset-0 flex items-end p-3">
                                 <span className="text-xs tracking-widest text-white">{t('categories.escorts', { defaultValue: 'ESCORTS' })}</span>
+                              </div>
+                            </div>
+                          </Link>
+                          <Link href="/hobbyhuren" className="group block border border-gray-200 hover:border-pink-500 rounded-none overflow-hidden">
+                            <div style={{ aspectRatio: '9 / 16' }} className="relative">
+                              <img src="/Hobbyhuren.jpg" alt="Hobbyhuren" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent transition-colors group-hover:from-black/70"></div>
+                              <div className="absolute inset-0 flex items-end p-3">
+                                <span className="text-xs tracking-widest text-white">HOBBYHUREN</span>
                               </div>
                             </div>
                           </Link>
@@ -351,33 +348,6 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
                               </div>
                             </div>
                           </Link>
-                        </div>
-                        {/* Ad banner placeholder below primary cards */}
-                        <div className="mt-3 border border-gray-200 bg-white h-[405px] md:h-[445px] relative overflow-hidden">
-                          {navAd ? (
-                            navAd.targetUrl ? (
-                              <a href={navAd.targetUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 block group">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={navAd.url} alt="Navigation Menü Banner" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
-                              </a>
-                            ) : (
-                              <>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={navAd.url} alt="Navigation Menü Banner" className="absolute inset-0 w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
-                              </>
-                            )
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest text-gray-500">
-                              {t('misc.adBanner', { defaultValue: 'Werbebanner' })}
-                            </div>
-                          )}
-                          {navAd && (
-                            <div className="pointer-events-none absolute top-2 left-2 z-10">
-                              <span className="inline-block bg-pink-500 text-white text-[10px] uppercase tracking-widest px-2 py-0.5">WERBUNG</span>
-                            </div>
-                          )}
                         </div>
                       </div>
 

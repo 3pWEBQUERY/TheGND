@@ -29,7 +29,7 @@ export async function GET() {
       return NextResponse.json({ likes: 0, mutual }, { status: 200 })
     }
 
-    if (userType === 'ESCORT') {
+    if (userType === 'ESCORT' || userType === 'HOBBYHURE') {
       // Likes received count
       const likesRows = await prisma.$queryRaw<{ c: number }[]>`
         SELECT COUNT(*)::int AS c

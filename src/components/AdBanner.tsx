@@ -95,6 +95,9 @@ export default function AdBanner({ placement = 'default', className }: Props) {
     <div className={className}>
       <div className="w-full border border-gray-200 bg-gray-50 py-8 text-center text-sm text-gray-600 tracking-widest">
         ANZEIGE • PLATZIERUNG: {placement}
+        <div className="mt-2 text-xs tracking-normal text-gray-500">
+          Hier könnte Ihre Werbung stehen. <a href="/auth/signup" className="text-pink-600 hover:underline">Jetzt registrieren</a>, um Werbeplätze zu buchen.
+        </div>
       </div>
     </div>
   )

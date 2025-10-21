@@ -5,7 +5,7 @@ import { UserType, Gender } from '@prisma/client'
 export const signUpSchema = z.object({
   email: z.string().email('Ungültige Email-Adresse'),
   password: z.string().min(6, 'Passwort muss mindestens 6 Zeichen haben'),
-  userType: z.enum(['MEMBER', 'ESCORT', 'AGENCY', 'CLUB', 'STUDIO'])
+  userType: z.enum(['MEMBER', 'ESCORT', 'HOBBYHURE', 'AGENCY', 'CLUB', 'STUDIO'])
 })
 
 export const signInSchema = z.object({
@@ -294,6 +294,7 @@ export const getUserTypeDisplayName = (userType: UserType): string => {
   const typeMap = {
     MEMBER: 'Mitglied',
     ESCORT: 'Escort',
+    HOBBYHURE: 'Hobbyhure',
     AGENCY: 'Agentur',
     CLUB: 'Club',
     STUDIO: 'Studio'

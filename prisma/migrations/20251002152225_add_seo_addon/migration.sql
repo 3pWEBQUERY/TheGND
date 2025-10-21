@@ -1,2 +1,1 @@
--- AlterEnum
-ALTER TYPE "addon_key" ADD VALUE 'SEO';
+-- adopted via baseline: no-op

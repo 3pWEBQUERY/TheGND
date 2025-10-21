@@ -1,2 +1,1 @@
--- AlterTable
-ALTER TABLE "public"."profiles" ADD COLUMN     "openingHours" TEXT;
+-- adopted via baseline: no-op

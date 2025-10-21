@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
     const userId = session.user.id as string
-    const userType = session.user.userType as 'MEMBER' | 'ESCORT'
+    const userType = session.user.userType as any
     const body = await req.json().catch(() => ({} as any))
     const mode = String(body?.mode || 'hard').toLowerCase() as 'soft' | 'hard'
     const soft = mode === 'soft'
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         // If table does not exist yet, treat as cleared 0
         return NextResponse.json({ ok: true, cleared: 0, scope: 'member', mode }, { status: 200 })
       }
-    } else if (userType === 'ESCORT') {
+    } else if (userType === 'ESCORT' || userType === 'HOBBYHURE') {
       try {
         const rows = soft
           ? await prisma.$queryRaw<{ id: string }[]>`

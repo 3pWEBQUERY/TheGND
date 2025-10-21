@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 
-export type UserType = 'MEMBER' | 'ESCORT' | 'AGENCY' | 'CLUB' | 'STUDIO'
+export type UserType = 'MEMBER' | 'ESCORT' | 'HOBBYHURE' | 'AGENCY' | 'CLUB' | 'STUDIO'
 
 type Props = {
   userType: UserType
@@ -34,7 +34,7 @@ export default function OnboardingCTA({
   if (isEditMode) return null
 
   const allDone =
-    (userType === 'ESCORT' && escortAllCompleted) ||
+    ((userType === 'ESCORT' || userType === 'HOBBYHURE') && escortAllCompleted) ||
     (userType === 'AGENCY' && agencyAllCompleted) ||
     ((userType === 'CLUB' || userType === 'STUDIO') && clubStudioAllCompleted)
 

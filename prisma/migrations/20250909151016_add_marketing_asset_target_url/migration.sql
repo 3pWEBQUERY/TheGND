@@ -1,2 +1,1 @@
--- AlterTable
-ALTER TABLE "public"."marketing_assets" ADD COLUMN     "targetUrl" TEXT;
+-- adopted via baseline: no-op

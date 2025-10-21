@@ -18,6 +18,7 @@ type SignUpForm = z.infer<typeof signUpSchema>
 const userTypes = [
   { value: 'MEMBER', label: 'Mitglied', description: 'Für Privatnutzer' },
   { value: 'ESCORT', label: 'Escort', description: 'Für Escort-Dienstleister' },
+  { value: 'HOBBYHURE', label: 'Hobbyhure', description: 'Für private Anbieterinnen' },
   { value: 'AGENCY', label: 'Agentur', description: 'Für Escort-Agenturen' },
   { value: 'CLUB', label: 'Club', description: 'Für Gentlemen Clubs' },
   { value: 'STUDIO', label: 'Studio', description: 'Für Studios' }

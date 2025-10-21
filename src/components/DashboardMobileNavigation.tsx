@@ -76,7 +76,7 @@ export default function DashboardMobileNavigation({ session, activeTab, setActiv
         >
           PROFIL
         </button>
-        {(userType === 'MEMBER' || userType === 'ESCORT') && (
+        {(userType === 'MEMBER' || userType === 'ESCORT' || userType === 'HOBBYHURE') && (
           <button 
             onClick={() => setActiveTab('matching')}
             className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${
@@ -86,7 +86,7 @@ export default function DashboardMobileNavigation({ session, activeTab, setActiv
             <span className="inline-flex items-center gap-2">
               MATCHING
               {(() => {
-                const c = userType === 'ESCORT' ? matchingCounts.likes : (userType === 'MEMBER' ? matchingCounts.mutual : 0)
+                const c = (userType === 'ESCORT' || userType === 'HOBBYHURE') ? matchingCounts.likes : (userType === 'MEMBER' ? matchingCounts.mutual : 0)
                 if (!c) return null
                 return (
                   <span className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] leading-none">
@@ -105,7 +105,7 @@ export default function DashboardMobileNavigation({ session, activeTab, setActiv
         >
           FORUM
         </button>
-        {userType === 'ESCORT' && (
+        {(userType === 'ESCORT' || userType === 'HOBBYHURE') && (
           <button 
             onClick={() => setActiveTab('dates')}
             className={`text-sm font-light tracking-widest uppercase whitespace-nowrap py-2 px-4 border-b-2 transition-colors ${

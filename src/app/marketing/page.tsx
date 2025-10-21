@@ -14,7 +14,7 @@ export default function MarketingPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
-  type PlacementKey = 'home_top' | 'home_mid' | 'home_bottom' | 'home_banner' | 'home_tile' | 'results_top' | 'sidebar' | 'sponsored_post'
+  type PlacementKey = 'home_top' | 'home_mid' | 'home_bottom' | 'home_banner' | 'home_tile' | 'results_top' | 'sponsored_post'
   type Duration = 7 | 14 | 30
 
   // Auth guard: redirect unauthenticated users to sign-in
@@ -32,7 +32,6 @@ export default function MarketingPage() {
     home_banner: { 7: 149.99, 14: 259.99, 30: 449.99 },
     home_tile: { 7: 89.99, 14: 149.99, 30: 259.99 },
     results_top: { 7: 119.99, 14: 199.99, 30: 349.99 },
-    sidebar: { 7: 69.99, 14: 119.99, 30: 199.99 },
     sponsored_post: { 7: 99.99, 14: 169.99, 30: 299.99 },
   }
 
@@ -68,7 +67,6 @@ export default function MarketingPage() {
       if (raw) {
         const obj = JSON.parse(raw)
         if (!obj?.home_banner) obj.home_banner = 'https://'
-        if (!obj?.sidebar) obj.sidebar = 'https://'
         if (!obj?.sponsored_post) obj.sponsored_post = 'https://'
         setTargetUrls(obj)
       } else {
@@ -76,7 +74,6 @@ export default function MarketingPage() {
         setTargetUrls((s) => ({
           ...s,
           home_banner: s.home_banner ?? 'https://',
-          sidebar: s.sidebar ?? 'https://',
           sponsored_post: s.sponsored_post ?? 'https://',
         }))
       }
@@ -154,13 +151,6 @@ export default function MarketingPage() {
       defaultDuration: 14,
     },
     {
-      key: 'sidebar',
-      title: 'Navigation – Menü Banner',
-      dims: 'Empfehlung: 1200×2000px (Hochformat)',
-      desc: 'Großer Banner innerhalb des Navigations‑Mega‑Menüs – starke Sichtbarkeit beim Entdecken.',
-      defaultDuration: 30,
-    },
-    {
       key: 'sponsored_post',
       title: 'Feed – Sponsored Post',
       dims: 'Empfehlung: Titel + Bild 1200×800px',
@@ -205,7 +195,7 @@ export default function MarketingPage() {
                     <div className="grid grid-cols-12 gap-1">
                       <div className="col-span-2 space-y-1">
                         <div className="h-4 bg-gray-200" />
-                        <div className={`h-20 ${p.key === 'sidebar' ? 'bg-pink-400' : 'bg-gray-200'}`} />
+                        <div className={`h-20 bg-gray-200`} />
                         <div className="h-4 bg-gray-200" />
                         <div className="h-4 bg-gray-200" />
                       </div>
@@ -242,7 +232,7 @@ export default function MarketingPage() {
                 {/* Controls */}
                 <div className="mt-6 flex items-end justify-between gap-6 flex-wrap">
                   <div className="flex-1 min-w-52">
-                    {(p.key === 'home_banner' || p.key === 'home_top' || p.key === 'home_mid' || p.key === 'home_bottom' || p.key === 'sidebar' || p.key === 'sponsored_post') && (
+                    {(p.key === 'home_banner' || p.key === 'home_top' || p.key === 'home_mid' || p.key === 'home_bottom' || p.key === 'sponsored_post') && (
                       <div className="mb-4">
                         <span className="text-xs font-light tracking-widest text-gray-800 uppercase">Ziel-URL</span>
                         <input
@@ -252,7 +242,7 @@ export default function MarketingPage() {
                           onChange={(e) => setTargetUrls((s) => ({ ...s, [p.key]: e.target.value }))}
                           className="mt-2 w-full border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 text-sm font-light bg-transparent focus:outline-none focus:ring-0 focus:border-pink-500"
                         />
-                        <p className="mt-1 text-[11px] text-gray-500">Wird beim ausgewählten Placement verlinkt (z. B. Menü‑Banner, Story‑Banner, Sponsored Post). Kann später unter „Meine Buchungen“ angepasst werden.</p>
+                        <p className="mt-1 text-[11px] text-gray-500">Wird beim ausgewählten Placement verlinkt (z. B. Story‑Banner, Sponsored Post). Kann später unter „Meine Buchungen“ angepasst werden.</p>
                       </div>
                     )}
                     <span className="text-xs font-light tracking-widest text-gray-800 uppercase">DAUER</span>
@@ -321,7 +311,7 @@ export default function MarketingPage() {
             <Button className="bg-transparent text-gray-700 border border-gray-300 hover:bg-pink-50/40 rounded-none px-4 py-2 h-auto text-xs uppercase tracking-widest">MEINE BUCHUNGEN</Button>
           </Link>
         </div>
-        <p className="text-sm text-gray-600 mt-4">Buche prominente Werbeplätze auf THEGND – passend zu deinem Ziel: Startseite, Suche, Sidebar oder als Sponsored Post.</p>
+        <p className="text-sm text-gray-600 mt-4">Buche prominente Werbeplätze auf THEGND – passend zu deinem Ziel: Startseite, Suche oder als Sponsored Post.</p>
 
         <div className="mt-8">
           <Tabs tabs={tabs} initialId="placements" />
@@ -342,7 +332,7 @@ export default function MarketingPage() {
                         <span className="uppercase tracking-widest text-gray-900">{p.title}</span>
                       </div>
                       <div className="text-xs text-gray-600">{durationLabel(duration)} • {p.dims}</div>
-                      {(key === 'home_banner' || key === 'sidebar' || key === 'sponsored_post') && (targetUrls[key]?.trim()) && (
+                      {(key === 'home_banner' || key === 'sponsored_post') && (targetUrls[key]?.trim()) && (
                         <div className="text-[11px] text-gray-500 mt-1">Ziel-URL: {targetUrls[key]}</div>
                       )}
                     </div>

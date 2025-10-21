@@ -160,6 +160,7 @@ datasource db {
 enum UserType {
   MEMBER
   ESCORT
+  HOBBYHURE
   AGENCY
   CLUB
   STUDIO

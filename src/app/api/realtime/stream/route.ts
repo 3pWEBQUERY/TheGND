@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
                 WHERE mma."memberId" = ${userId} AND mma.action = 'LIKE'
               `
               mutual = Array.isArray(rows) && rows[0] ? rows[0].c : 0
-            } else if (userType === 'ESCORT') {
+            } else if (userType === 'ESCORT' || userType === 'HOBBYHURE') {
               const likesRows = await prisma.$queryRaw<{ c: number }[]>`
                 SELECT COUNT(*)::int AS c
                 FROM "member_match_actions"

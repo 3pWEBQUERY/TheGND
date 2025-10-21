@@ -149,7 +149,7 @@ export async function GET(request: Request) {
   }
 
   const where: any = {
-    userType: 'ESCORT',
+    userType: { in: ['ESCORT'] },
     isActive: true,
     profile: { isNot: null },
     ...(and.length ? { AND: and } : {}),
@@ -204,7 +204,7 @@ export async function GET(request: Request) {
 
   const enriched = usersBase.map((u: any) => {
     const isVerified = u.profile?.visibility === 'VERIFIED'
-    const isEscort = u.userType === 'ESCORT'
+    const isEscort = u.userType === 'ESCORT' || u.userType === 'HOBBYHURE'
     const isAgeVerified = isEscort && (approvedSet.has(u.id) || isVerified)
     return { u, isVerified, isAgeVerified, isEscort }
   })
@@ -306,7 +306,7 @@ export async function GET(request: Request) {
       image: getPrimaryImage(u.profile) ?? null,
       visibility: u.profile?.visibility ?? null,
       isVerified: u.profile?.visibility === 'VERIFIED',
-      isAgeVerified: u.userType === 'ESCORT' && (approvedSet.has(u.id) || u.profile?.visibility === 'VERIFIED'),
+      isAgeVerified: (u.userType === 'ESCORT' || u.userType === 'HOBBYHURE') && (approvedSet.has(u.id) || u.profile?.visibility === 'VERIFIED'),
       isEscortOfWeek: isWeek,
       isEscortOfMonth: isMonth,
       badges,

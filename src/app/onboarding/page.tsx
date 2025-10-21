@@ -9,6 +9,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import MemberSteps from '@/components/onboarding/MemberSteps'
 import EscortSteps from '@/components/onboarding/EscortSteps'
+import HobbyhureSteps from '@/components/onboarding/HobbyhureSteps'
 import BusinessSteps from '@/components/onboarding/BusinessSteps'
 import OnboardingHeader from '@/components/onboarding/OnboardingHeader'
 import OnboardingCTA from '@/components/onboarding/OnboardingCTA'
@@ -77,9 +78,10 @@ export default function OnboardingPage() {
 
   const handleStartOnboarding = () => {
     if (!session?.user?.userType) return
-    const userType = session.user.userType as UserType
+    const userType = session.user.userType as any
     if (userType === 'MEMBER') router.push('/onboarding/member')
     else if (userType === 'ESCORT') router.push('/onboarding/escort/step-1')
+    else if (userType === 'HOBBYHURE') router.push('/onboarding/hobbyhure/step-1')
     else if (userType === 'AGENCY') router.push('/onboarding/agency/step-1')
     else if (userType === 'CLUB') router.push('/onboarding/club/step-1')
     else if (userType === 'STUDIO') router.push('/onboarding/studio/step-1')
@@ -170,6 +172,19 @@ export default function OnboardingPage() {
 
               {session.user.userType === 'ESCORT' && (
                 <EscortSteps
+                  escortStep1Completed={escortStep1Completed}
+                  escortStep2Completed={escortStep2Completed}
+                  escortStep3Completed={escortStep3Completed}
+                  escortStep4Completed={escortStep4Completed}
+                  escortStep5Completed={escortStep5Completed}
+                  escortStep6Completed={escortStep6Completed}
+                  escortStep7Completed={escortStep7Completed}
+                  addEditParam={addEditParam}
+                />
+              )}
+
+              {session.user.userType === 'HOBBYHURE' && (
+                <HobbyhureSteps
                   escortStep1Completed={escortStep1Completed}
                   escortStep2Completed={escortStep2Completed}
                   escortStep3Completed={escortStep3Completed}

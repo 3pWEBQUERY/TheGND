@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(req: Request) {
   const { isAdmin } = await requireAdmin()
@@ -27,6 +28,12 @@ export async function POST(req: Request) {
       update: { value },
       create: { key, value },
     })
+    try {
+      revalidatePath('/')
+      revalidatePath('/robots.txt')
+      revalidatePath('/sitemap.xml')
+      revalidatePath('/manifest.webmanifest')
+    } catch {}
     return NextResponse.json(saved)
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'failed' }, { status: 400 })
@@ -40,5 +47,11 @@ export async function DELETE(req: Request) {
   const { key } = body
   if (!key) return NextResponse.json({ error: 'key required' }, { status: 400 })
   await prisma.appSetting.delete({ where: { key } })
+  try {
+    revalidatePath('/')
+    revalidatePath('/robots.txt')
+    revalidatePath('/sitemap.xml')
+    revalidatePath('/manifest.webmanifest')
+  } catch {}
   return NextResponse.json({ ok: true })
 }

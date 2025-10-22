@@ -147,6 +147,22 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
     }),
+
+  // Uploader for site assets (logo, favicon)
+  siteAssets: f({
+    image: { maxFileSize: "8MB", maxFileCount: 5 },
+  })
+    .middleware(async () => {
+      const session = (await getServerSession(authOptions as any)) as any
+      if (!session?.user?.id) {
+        throw new UploadThingError("Unauthorized")
+      }
+      // Optionally, verify admin status if requireAdmin is heavy; here we just pass userId
+      return { userId: session.user.id }
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: (file as any).ufsUrl || (file as any).url, type: file.type };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

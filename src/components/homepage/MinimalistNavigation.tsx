@@ -11,6 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useTranslation } from 'react-i18next'
 import { usePathname, useRouter } from 'next/navigation'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { usePublicSettingsCtx } from '@/components/providers/public-settings-provider'
+import { useDateFormatter } from '@/hooks/useDateFormatter'
 
 const LOCALES = ["de","en","fr","it","es","pt","nl","pl","cs","hu","ro"] as const
 const FLAGS: Record<string, string> = { de:"🇩🇪", en:"🇬🇧", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", pt:"🇵🇹", nl:"🇳🇱", pl:"🇵🇱", cs:"🇨🇿", hu:"🇭🇺", ro:"🇷🇴" }
@@ -87,6 +89,8 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
   const { data: session, status } = useSession()
   const { t } = useTranslation('common')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const site = usePublicSettingsCtx()
+  const df = useDateFormatter()
   const [discoverOpen, setDiscoverOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -282,7 +286,14 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
               </SheetContent>
             </Sheet>
             <div className="text-2xl font-light tracking-widest text-white">
-              <Link href="/">THEGND</Link>
+              <Link href="/">
+                {site?.logo?.kind === 'image' && site.logo.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={site.logo.imageUrl} alt={site.name || 'Logo'} className="h-7 w-auto" />
+                ) : (
+                  <span>{site?.logo?.text || site?.name || 'THEGND'}</span>
+                )}
+              </Link>
             </div>
           </div>
           
@@ -552,7 +563,7 @@ export default function MinimalistNavigation({ darkBg = false }: { darkBg?: bool
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
                                 <div className="text-sm font-light tracking-wide text-gray-800 truncate">{n.title}</div>
-                                <div className="text-xs font-light tracking-wide text-gray-400 ml-2 shrink-0">{new Date(n.createdAt).toLocaleString('de-DE')}</div>
+                                <div className="text-xs font-light tracking-wide text-gray-400 ml-2 shrink-0">{df.formatDateTime(n.createdAt)}</div>
                               </div>
                               <div className="text-xs font-light tracking-wide text-gray-600 truncate">{n.message}</div>
                             </div>

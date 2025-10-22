@@ -11,9 +11,10 @@
     "signin": "SIGN IN",
     "signup": "SIGN UP"
   },
-  "sections": { "categories": "CATEGORIES", "content": "CONTENT" },
+  "sections": { "categories": "CATEGORIES", "content": "CONTENT", "community": "COMMUNITY" },
   "categories": {
     "escorts": "ESCORTS",
+    "hobbyhuren": "HOBBYHUREN",
     "agencies": "AGENCIES",
     "clubsStudios": "CLUBS & STUDIOS"
   },
@@ -23,7 +24,7 @@
     "jobs": "JOBS",
     "rent": "RENT"
   },
-  "labels": { "highlight": "HIGHLIGHT", "magazine": "MAGAZINE" },
+  "labels": { "highlight": "HIGHLIGHT", "magazine": "MAGAZINE", "blog": "BLOG", "forum": "FORUM" },
   "texts": {
     "discoveryHighlight": "Discover verified profiles",
     "magazineTeaser": "News & Stories"

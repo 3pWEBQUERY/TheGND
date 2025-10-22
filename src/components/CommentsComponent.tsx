@@ -11,6 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import RatingDonut from '@/components/RatingDonut'
 import { useToast } from '@/components/ui/toast'
 import * as Tooltip from '@radix-ui/react-tooltip'
+import { useDateFormatter } from '@/hooks/useDateFormatter'
 
 interface CommentItem {
   id: string
@@ -33,6 +34,7 @@ export default function CommentsComponent() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const { show } = useToast()
+  const df = useDateFormatter()
   const myId = session?.user?.id as string | undefined
   const myType = session?.user?.userType as string | undefined
   const canModerate = useMemo(() => !!myId, [myId])
@@ -354,7 +356,7 @@ export default function CommentsComponent() {
                           <div className="text-xs text-gray-800 truncate flex items-center gap-2">
                             <span className="truncate">{c.author?.profile?.displayName || c.author?.email || 'Nutzer'}</span>
                             <span className="text-gray-400">•</span>
-                            <span className="text-gray-500">{new Date(c.createdAt).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })}</span>
+                            <span className="text-gray-500">{df.formatDateTime(c.createdAt)}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -459,7 +461,7 @@ export default function CommentsComponent() {
                           <div className="text-xs text-gray-800 truncate flex items-center gap-2">
                             <span className="truncate">{c.author?.profile?.displayName || c.author?.email || 'Nutzer'}</span>
                             <span className="text-gray-400">•</span>
-                            <span className="text-gray-500">{new Date(c.createdAt).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })}</span>
+                            <span className="text-gray-500">{df.formatDateTime(c.createdAt)}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">

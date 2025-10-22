@@ -1,18 +1,22 @@
+"use client"
+
 import Link from 'next/link'
-import { SiX, SiTumblr, SiInstagram } from 'react-icons/si'
+import { SiX, SiInstagram } from 'react-icons/si'
+import { usePublicSettingsCtx } from '@/components/providers/public-settings-provider'
 
 export default function Footer() {
+  const site = usePublicSettingsCtx()
   return (
     <footer className="bg-neutral-950 bg-gradient-to-b from-black to-neutral-900 border-t border-neutral-800/60 py-16">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center">
-          <h3 className="text-3xl font-light tracking-[0.35em] text-neutral-100 mb-3">THEGND</h3>
+          <h3 className="text-3xl font-light tracking-[0.35em] text-neutral-100 mb-3">{site?.name || 'THEGND'}</h3>
           <div
             className="mx-auto h-[2px] w-16 rounded-full bg-gradient-to-r from-pink-600/0 via-pink-500/80 to-pink-600/0 mb-6"
             aria-hidden="true"
           />
           <p className="text-[13px] md:text-sm font-light text-neutral-300 leading-relaxed mb-8 max-w-md mx-auto">
-            Finde dein Escort Treffen direkt auf THEGND.
+            {site?.tagline || 'Finde dein Escort Treffen direkt auf THEGND.'}
           </p>
           <div className="flex justify-center gap-6 mb-6">
             <a
@@ -60,9 +64,7 @@ export default function Footer() {
               FEEDBACK
             </Link>
           </div>
-          <p className="text-[11px] md:text-xs font-light text-neutral-400 tracking-[0.25em]">
-            © 2025 THEGND. ALL RIGHTS RESERVED.
-          </p>
+          <p className="text-[11px] md:text-xs font-light text-neutral-400 tracking-[0.25em]"> 2025 {site?.name || 'THEGND'}. ALL RIGHTS RESERVED.</p>
         </div>
       </div>
     </footer>

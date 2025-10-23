@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +27,9 @@ const genderOptions = [
 export default function MemberOnboardingPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEditMode = searchParams.get('edit') === '1'
+  const addEditParam = (href: string) => (isEditMode ? `${href}?edit=1` : href)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -58,8 +61,7 @@ export default function MemberOnboardingPage() {
         return
       }
 
-      // Redirect to main onboarding page to continue with next steps
-      router.push('/onboarding')
+      router.push(addEditParam('/onboarding'))
     } catch (error) {
       setError('Ein Fehler ist aufgetreten')
     } finally {
@@ -73,7 +75,7 @@ export default function MemberOnboardingPage() {
       <nav className="absolute top-0 w-full z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <Link href="/onboarding" className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
+            <Link href={addEditParam('/onboarding')} className="flex items-center text-sm font-light tracking-widest text-gray-600 hover:text-pink-500 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
               ZURÜCK ZUM ONBOARDING
             </Link>
@@ -227,7 +229,7 @@ export default function MemberOnboardingPage() {
               <Button 
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/onboarding')}
+                onClick={() => router.push(addEditParam('/onboarding'))}
                 className="flex-1 border-gray-300 text-gray-600 font-light tracking-widest py-4 text-sm uppercase hover:border-pink-500 hover:text-pink-500 rounded-none"
               >
                 Zurück

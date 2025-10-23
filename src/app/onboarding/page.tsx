@@ -53,9 +53,12 @@ export default function OnboardingPage() {
     profileData.user.profile.bio ||
     profileData.user.profile.preferences
   )
-  const isProfileMediaCompleted = profileData?.user?.profile?.avatar
+  const isProfileMediaCompleted = !!(
+    profileData?.user?.profile?.avatar ||
+    (Array.isArray(profileData?.user?.profile?.gallery) && profileData.user.profile.gallery.length > 0)
+  )
 
-  const handleContinueToMedia = () => router.push('/onboarding/member/media')
+  const handleContinueToMedia = () => router.push(addEditParam('/onboarding/member/media'))
 
   const handleCompleteOnboarding = async () => {
     try {
@@ -165,7 +168,7 @@ export default function OnboardingPage() {
                 <MemberSteps
                   isPersonalDetailsCompleted={!!isPersonalDetailsCompleted}
                   isProfileMediaCompleted={!!isProfileMediaCompleted}
-                  onStartMember={() => router.push('/onboarding/member')}
+                  onStartMember={() => router.push(addEditParam('/onboarding/member'))}
                   onContinueToMedia={handleContinueToMedia}
                 />
               )}

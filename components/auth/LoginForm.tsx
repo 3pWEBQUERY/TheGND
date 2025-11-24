@@ -25,6 +25,7 @@ export function LoginForm() {
         const res = await loginUser(data);
         if (res.success) {
             alert("Login erfolgreich!");
+            router.refresh();
             router.push("/"); // Redirect to home/dashboard
         } else {
             alert(res.error);

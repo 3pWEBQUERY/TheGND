@@ -26,7 +26,7 @@ export default function Home() {
     <div className="flex min-h-screen bg-[#121212] text-white">
       <Sidebar />
 
-      <main className="ml-0 flex-1 pb-24 sm:ml-64">
+      <main className="ml-0 flex-1 pb-24 transition-all duration-300 sm:ml-[var(--sidebar-width)]">
         <div className="p-8">
           {/* Header Navigation */}
           <div className="mb-6 flex items-center justify-between">

@@ -47,6 +47,7 @@ export function RegisterForm() {
         const res = await registerUser({ ...data, role, image });
         if (res.success) {
             alert("Registrierung erfolgreich!");
+            router.refresh();
             router.push("/login");
         } else {
             alert(res.error);
